@@ -2,8 +2,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<properties>
-		<bundle.symbolicName>setsApp</bundle.symbolicName>
-		<bundle.namespace>edu.ucsf.rbvi.setsApp.internal</bundle.namespace>
+		<bundle.symbolicName>CyAnimator</bundle.symbolicName>
+		<bundle.namespace>edu.ucsf.rbvi.CyAnimator.internal</bundle.namespace>
 		<cytoscape.api.version>3.1.0-SNAPSHOT</cytoscape.api.version>
 		
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
@@ -11,7 +11,7 @@
 	</properties>
 
 	<groupId>edu.ucsf.rbvi</groupId>
-	<artifactId>setsApp</artifactId>
+	<artifactId>CyAnimator</artifactId>
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 
