@@ -20,8 +20,10 @@ import java.awt.geom.Point2D;
 import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.image.*;
 import java.awt.Paint;
+import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -30,30 +32,39 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.task.write.ExportNetworkImageTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TunableSetter;
+import org.cytoscape.work.util.ListSingleSelection;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 public class CyFrame {
 	
 	private String frameid = "";
+	private static String PNG = "Portable Network Graphics (PNG) File (*.png)";
 	private HashMap<String, double[]> nodePosMap;
 	private HashMap<String, Color> nodeColMap;
 	private HashMap<String, Integer> nodeOpacityMap;
-	private HashMap<String, Float> nodeBorderWidthMap;
+	private HashMap<String, Double> nodeBorderWidthMap;
 	private HashMap<String, double[]> nodeSizeMap;
 	private HashMap<String, Color> nodeLabelColMap;
 
 	private HashMap<String, Integer> edgeOpacityMap;
 	private HashMap<String, Color> edgeColMap;
-	private HashMap<String, Float> edgeWidthMap;
+	private HashMap<String, Double> edgeWidthMap;
 	private HashMap<String, Color> edgeLabelColMap;
 	
 	private Paint backgroundPaint = null;
@@ -77,7 +88,9 @@ public class CyFrame {
 	private List<String> edgeIdList = null;
 	private int intercount = 0;
 	private Point2D centerPoint = null;
-	private DGraphView dview = null; 
+	private TaskManager<?,?> taskManager;
+
+//	private DGraphView dview = null; 
 	
 	/**
 	 * Creates this CyFrame by initializing and populating all of the fields.
@@ -87,24 +100,26 @@ public class CyFrame {
 	public CyFrame(BundleContext bc){
 		bundleContext = bc;
 		appManager = (CyApplicationManager) getService(CyApplicationManager.class);
+		taskManager = (TaskManager<?, ?>) getService(TaskManager.class);
 		nodePosMap = new HashMap<String, double[]>();
 		nodeColMap = new HashMap<String, Color>();
 		nodeLabelColMap = new HashMap<String, Color>();
 		nodeSizeMap = new HashMap<String, double[]>();
-		nodeBorderWidthMap = new HashMap<String, Float>();
+		nodeBorderWidthMap = new HashMap<String, Double>();
 		edgeMap = new HashMap<String, View<CyEdge>>();
 		nodeMap = new HashMap<String, View<CyNode>>();
 		nodeOpacityMap = new HashMap<String, Integer>();
 		edgeOpacityMap = new HashMap<String, Integer>();
 		edgeColMap = new HashMap<String, Color>();
 		edgeLabelColMap = new HashMap<String, Color>();
-		edgeWidthMap = new HashMap<String, Float>();
+		edgeWidthMap = new HashMap<String, Double>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
 		edgeTable = currentNetwork.getDefaultEdgeTable();
-		this.dview = (DGraphView)networkView;
-		this.centerPoint = dview.getCenter();
+	//	this.dview = (DGraphView)networkView;
+		this.centerPoint = new Point2D.Double(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
+									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION));
 
 		nodeIdList = new ArrayList<String>();
 		edgeIdList = new ArrayList<String>();
@@ -142,92 +157,99 @@ public class CyFrame {
 	 * CyNetworkView and stores them in this frame.
 	 */
 	public void populate() {
-		backgroundPaint = networkView.getBackgroundPaint();
-		zoom = networkView.getZoom();
-		xalign = networkView.getComponent().getAlignmentX();
-		yalign = networkView.getComponent().getAlignmentY();
+		backgroundPaint = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
+		zoom = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
+		xalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+		yalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
 		
-		dview = (DGraphView)networkView;
+	//	dview = (DGraphView)networkView;
 		
+		CyTable nodeTable = networkView.getModel().getDefaultNodeTable();
 		for(CyNode node: nodeList){
 		
 			View<CyNode> nodeView = networkView.getNodeView(node);
 			if(nodeView == null){ continue; }
-			
+			String nodeName = nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+
 			//stores the x and y position of the node
 			double[] xy = new double[2];
-			xy[0] = nodeView.getXPosition();
-			xy[1] = nodeView.getYPosition();
-			nodePosMap.put(node.getIdentifier(), xy);
+			xy[0] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
+			xy[1] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
+			nodePosMap.put(nodeName, xy);
 			
-			double height = nodeView.getHeight();
-			double width = nodeView.getWidth();
+			double height = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
+			double width = nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH);
 			double[] size = {height, width};
-			nodeSizeMap.put(node.getIdentifier(), size);
+			nodeSizeMap.put(nodeName, size);
 			
-			float borderWidth = nodeView.getBorderWidth();
-			nodeBorderWidthMap.put(node.getIdentifier(), borderWidth);
+			double borderWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH);
+			nodeBorderWidthMap.put(nodeName, borderWidth);
 			
 			//grab color and opacity
-			Color nodeColor = (Color)nodeView.getUnselectedPaint();
+			Color nodeColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT);
 			Integer trans = nodeColor.getAlpha();
 			//store in respective hashmap
-			nodeColMap.put(node.getIdentifier(), (Color)nodeView.getUnselectedPaint());
-			nodeOpacityMap.put(node.getIdentifier(), trans);
+			nodeColMap.put(nodeName, (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT));
+			nodeOpacityMap.put(nodeName, trans);
 
 			// Grab the label information
-			Color labelColor = (Color)nodeView.getLabel().getTextPaint();
-			nodeLabelColMap.put(node.getIdentifier(), labelColor);
+			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
+			nodeLabelColMap.put(nodeName, labelColor);
 
-			centerPoint = dview.getCenter();
+			centerPoint = new Point2D.Double(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
+											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION));
 			
 		}
 
+		CyTable edgeTable = networkView.getModel().getDefaultEdgeTable();
 		for(CyEdge edge: edgeList){
 			
 			View<CyEdge> edgeView = networkView.getEdgeView(edge);
 			if(edgeView == null){  continue; }
-			
+			String edgeName = edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+
 			//grab color and opacity
-			Color p = (Color)edgeView.getUnselectedPaint();
+			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_PAINT);
 			Integer trans = p.getAlpha();
 			//store in respective hashmap
-			edgeColMap.put(edge.getIdentifier(), p);
-			edgeOpacityMap.put(edge.getIdentifier(), trans);
-			edgeWidthMap.put(edge.getIdentifier(), edgeView.getStrokeWidth());
+			edgeColMap.put(edgeName, p);
+			edgeOpacityMap.put(edgeName, trans);
+			edgeWidthMap.put(edgeName, edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH));
 
 			// Grab the label information
-			Color labelColor = (Color)edgeView.getLabel().getTextPaint();
-			edgeLabelColMap.put(edge.getIdentifier(), labelColor);
+			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
+			edgeLabelColMap.put(edgeName, labelColor);
 		}
 	}
 	
 	/**
 	 * Captures and stores a thumbnail image from the current CyNetworkView for
 	 * this frame.
+	 * @throws IOException throws exception if cannot create or read temporary file
 	 */
-	public void captureImage() {
+	public void captureImage() throws IOException {
 		
 		double scale = .35;
 		double wscale = .25;
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-		
-		InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(view);
-		int width  = (int) (ifc.getWidth() * wscale);
-		int height = (int) (ifc.getHeight() * scale);
-
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-		Graphics2D g = (Graphics2D) image.getGraphics();
-		g.scale(scale, scale);
-		
-		//ifc.paint(g);
-		ifc.print(g);
-		g.dispose();
-
-		networkImage = image;
+		ExportNetworkImageTaskFactory exportImageTaskFactory = (ExportNetworkImageTaskFactory) getService(ExportNetworkImageTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
+			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
+			Map<String, Object> tunables = new HashMap<String, Object>();
+			List<String> fileTypeList = new ArrayList<String>();
+			fileTypeList.add(PNG);
+			ListSingleSelection<String> fileType = new ListSingleSelection<String>(fileTypeList);
+			fileType.setSelectedValue(PNG);
+			tunables.put("options", fileType);
+			File temporaryImageFile = File.createTempFile("temporaryCytoscapeImage", ".png");
+			tunables.put("OutputFile", temporaryImageFile);
+			taskManager.execute(tunableSetter.createTaskIterator(
+					exportImageTaskFactory.createTaskIterator(view), tunables));
+			BufferedImage image = ImageIO.read(temporaryImageFile);
+			networkImage = image;
+		}
 	
 	}
 	
@@ -270,60 +292,65 @@ public class CyFrame {
 		
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
-				addNodeView(currentView, nodeMap.get(node), node);
+			//	addNodeView(currentView, nodeMap.get(node), node);
 				nodeView = currentView.getNodeView(node);
-				Cytoscape.getVisualMappingManager().vizmapNode(nodeView, currentView);
+			//	Cytoscape.getVisualMappingManager().vizmapNode(nodeView, currentView);
 			}
+			String nodeName = curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 			
-			double[] xy = nodePosMap.get(node.getIdentifier());
-			Color p = nodeColMap.get(node.getIdentifier());
-			Integer trans = nodeOpacityMap.get(node.getIdentifier());
+			double[] xy = nodePosMap.get(nodeName);
+			Color p = nodeColMap.get(nodeName);
+			Integer trans = nodeOpacityMap.get(nodeName);
 			// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
 			//if(xy == null || nodeView == null){ continue; }
 			
-			nodeView.setXPosition(xy[0]);
-			nodeView.setYPosition(xy[1]);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
 			
-			double[] size = nodeSizeMap.get(node.getIdentifier());
-			nodeView.setHeight(size[0]);
-			nodeView.setWidth(size[1]);
+			double[] size = nodeSizeMap.get(nodeName);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
 			
-			nodeView.setBorderWidth(nodeBorderWidthMap.get(node.getIdentifier()));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
 			
-			nodeView.setUnselectedPaint(new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
 
-			Color labelColor = nodeLabelColMap.get(node.getIdentifier());
-			nodeView.getLabel().setTextPaint(new Color(labelColor.getRed(), 
-			                                 labelColor.getGreen(), labelColor.getBlue(), 
-			                                 labelColor.getAlpha()));
+			Color labelColor = nodeLabelColMap.get(nodeName);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
+										new Color(labelColor.getRed(), 
+										labelColor.getGreen(), labelColor.getBlue(), 
+										labelColor.getAlpha()));
 		}
 
 		for(CyEdge edge: getEdgeList())
 		{
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
 			if (edgeView == null) {
-				addEdgeView(currentView, edgeMap.get(edge), edge);
+			//	addEdgeView(currentView, edgeMap.get(edge), edge);
 				edgeView = currentView.getEdgeView(edge);
 			}
-			Color p = edgeColMap.get(edge.getIdentifier());
+			String edgeName = curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+			Color p = edgeColMap.get(edgeName);
 			if (p == null || edgeView == null) continue;
-			Integer trans = edgeOpacityMap.get(edge.getIdentifier());
-			edgeView.setUnselectedPaint(new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-			edgeView.setStrokeWidth(edgeWidthMap.get(edge.getIdentifier()));
+			Integer trans = edgeOpacityMap.get(edgeName);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
-			Color labelColor = edgeLabelColMap.get(edge.getIdentifier());
-			edgeView.getLabel().setTextPaint(new Color(labelColor.getRed(), 
-			                                 labelColor.getGreen(), labelColor.getBlue(),
-			                                 labelColor.getAlpha()));
+			Color labelColor = edgeLabelColMap.get(edgeName);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
+										new Color(labelColor.getRed(), 
+										labelColor.getGreen(), labelColor.getBlue(),
+										labelColor.getAlpha()));
 		}
-		currentView.setBackgroundPaint(backgroundPaint);
-		currentView.setZoom(zoom);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
 		//networkView.getComponent().
-		dview = (DGraphView)currentView;
+	//	dview = (DGraphView)currentView;
 		
 		//InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(networkView);
 		
-		dview.setCenter(centerPoint.getX(), centerPoint.getY());
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
 		
 		//dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
 		//ifc.setBounds(arg0, arg1, arg2, arg3)
@@ -546,7 +573,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return width of node border
 	 */
-	public float getNodeBorderWidth(String nodeID){
+	public double getNodeBorderWidth(String nodeID){
 		if (nodeBorderWidthMap.containsKey(nodeID))
 			return nodeBorderWidthMap.get(nodeID);
 		return 0.0f;
@@ -557,7 +584,7 @@ public class CyFrame {
 	  * @param nodeID
 	  * @param width
 	  */
-	public void setNodeBorderWidth(String nodeID, float width){
+	public void setNodeBorderWidth(String nodeID, double width){
 		nodeBorderWidthMap.put(nodeID, width);
 	}
 
@@ -586,7 +613,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @return the edge width 
 	 */
-	public float getEdgeWidth(String edgeID){
+	public double getEdgeWidth(String edgeID){
 		if (edgeWidthMap.containsKey(edgeID))
 			return edgeWidthMap.get(edgeID);
 		return 0.0f;
@@ -597,7 +624,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @param width
 	 */
-	public void setEdgeWidth(String edgeID, float width){
+	public void setEdgeWidth(String edgeID, double width){
 		edgeWidthMap.put(edgeID, width);
 	}
 
@@ -709,27 +736,21 @@ public class CyFrame {
  	 */
 	public void writeImage(String fileName) throws IOException {
 		display();
-		CyNetworkView curView = Cytoscape.getCurrentNetworkView();
-		// Get the component to export
-		InternalFrameComponent ifc =
-		         Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(curView);
+		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-	
-		// Handle the exportTextAsShape property
-		DGraphView theViewToPrint = (DingNetworkView) curView;
-		boolean exportTextAsShape =
-		     new Boolean(CytoscapeInit.getProperties().getProperty("exportTextAsShape")).booleanValue();
-
-		theViewToPrint.setPrintingTextAsShape(exportTextAsShape);
-		Exporter pngExporter = new BitmapExporter("png", 5.0f);
-		// Exporter jpegExporter = new BitmapExporter("jpeg", 4.0f);
-		
-		FileOutputStream outputFile = new FileOutputStream(fileName);
-		//pngExporter.export(curView, outputFile);
-		pngExporter.export(curView, outputFile);
-		outputFile.close();
-		
-		// System.out.println("writing...");
+		ExportNetworkImageTaskFactory exportImageTaskFactory = (ExportNetworkImageTaskFactory) getService(ExportNetworkImageTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
+			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
+			Map<String, Object> tunables = new HashMap<String, Object>();
+			List<String> fileTypeList = new ArrayList<String>();
+			fileTypeList.add(PNG);
+			ListSingleSelection<String> fileType = new ListSingleSelection<String>(fileTypeList);
+			fileType.setSelectedValue(PNG);
+			tunables.put("options", fileType);
+			tunables.put("OutputFile", new File(fileName));
+			taskManager.execute(tunableSetter.createTaskIterator(
+					exportImageTaskFactory.createTaskIterator(view), tunables));
+		}
 	}
 
 	/**
@@ -750,17 +771,37 @@ public class CyFrame {
 		this.centerPoint = pnt;
 	}
 	
+	/**
+	 * Returns the BundleContext of this CyFrame.
+	 * @return the BundleContext of this CyFrame.
+	 */
+	public BundleContext getBundleContext() {
+		return bundleContext;
+	}
 	// At some point, need to pull the information from nv
 	// and map it to the new nv.
-	private void addNodeView(CyNetworkView view, View<CyNode> nv, CyNode node) {
+/*	private void addNodeView(CyNetworkView view, View<CyNode> nv, CyNode node) {
 		view.addNodeView(node.getRootGraphIndex());
-	}
+	} */
 
-	private void addEdgeView(CyNetworkView view, View<CyEdge> ev, CyEdge edge) {
+/*	private void addEdgeView(CyNetworkView view, View<CyEdge> ev, CyEdge edge) {
 		view.addEdgeView(edge.getRootGraphIndex());
-	}
+	} */
 
 	public Object getService(Class<?> serviceClass) {
 		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
+	}
+	
+	private Object getService(Class<?> serviceClass, String filter) {
+		try {
+			ServiceReference[] services = bundleContext.getServiceReferences(serviceClass.getName(), filter);
+			if (services != null && services.length > 0) {
+				return bundleContext.getService(services[0]);
+			}
+		} catch (Exception ex) {
+			// ignore
+			// ex.printStackTrace();
+		}
+		return null;
 	}
 }

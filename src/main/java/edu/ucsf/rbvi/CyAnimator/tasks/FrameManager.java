@@ -60,8 +60,9 @@ public class FrameManager {
 	 * Creates a CyFrame from the current network and view.
 	 * 
 	 * @return CyFrame of the current CyNetworkView 
+	 * @throws IOException throws exception if cannot export image.
 	 */
-	public CyFrame captureCurrentFrame(){
+	public CyFrame captureCurrentFrame() throws IOException{
 		
 	//	CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
 		CyFrame frame = new CyFrame(bundleContext);
@@ -109,8 +110,9 @@ public class FrameManager {
 	/**
 	 * Adds the current frame to the keyFrameList and creates a new timer or
 	 * updates the existing timer.
+	 * @throws IOException throws exception if cannot export image
 	 */
-	public void addKeyFrame(){
+	public void addKeyFrame() throws IOException{
 		keyFrameList.add(captureCurrentFrame());
 		
 		if(keyFrameList.size() > 1 && timer != null){ 

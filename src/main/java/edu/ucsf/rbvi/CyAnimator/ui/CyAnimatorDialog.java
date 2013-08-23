@@ -82,6 +82,8 @@ import javax.swing.JButton;
 import javax.swing.Icon;
 import javax.swing.Action;
 
+import org.osgi.framework.BundleContext;
+
 import java.awt.Font;
 
 
@@ -90,6 +92,10 @@ public class CyAnimatorDialog extends JDialog
                               implements ActionListener, java.beans.PropertyChangeListener, FocusListener {
 
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6650485843548244554L;
 	private JButton captureButton;
 	private JButton playButton;
 	private JButton stopButton;
@@ -113,20 +119,22 @@ public class CyAnimatorDialog extends JDialog
 	private DragAndDropManager dragnDrop;
 	private FrameManager frameManager;
 
+	private BundleContext bc;
 //	private CyLogger logger;
 	
 	int thumbnailPopupIndex = 0;
 	ArrayList<CyFrame> frameList;
 	       
 	
-	public CyAnimatorDialog(/*CyLogger logger*/){
+	public CyAnimatorDialog(BundleContext bundleContext/*CyLogger logger*/){
 	/*	Cytoscape.getSwingPropertyChangeSupport().addPropertyChangeListener(this);
 		
 		//add as listener to CytoscapeDesktop
 		Cytoscape.getDesktop().getSwingPropertyChangeSupport().addPropertyChangeListener(this); */
 	
 		this.setTitle("CyAnimator");
-		frameManager = new FrameManager();
+		bc = bundleContext;
+		frameManager = new FrameManager(bc);
 		
 		
 		frameList = frameManager.getKeyFrameList();
@@ -235,7 +243,12 @@ public class CyAnimatorDialog extends JDialog
 		
 		//add current frame to key frame list
 		if(command.equals("capture")){
-			frameManager.addKeyFrame();
+			try {
+				frameManager.addKeyFrame();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			updateThumbnails();
 		}
 		

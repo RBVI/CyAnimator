@@ -42,7 +42,7 @@ public class WriteTask extends AbstractTask {
 			file.mkdir();
 		}
 	
-		monitor.setStatusMessage("Writing frames");
+		monitor.showMessage(Level.INFO, "Writing frames");
 		monitor.setProgress(0.0);;
 
 		for(int i=0; i<this.frameManager.frames.length; i++) {

@@ -24,12 +24,6 @@
 
 package edu.ucsf.rbvi.CyAnimator.model;
 
-
-import giny.model.Node;
-import giny.view.NodeView;
-import giny.model.Edge;
-import giny.view.EdgeView;
-
 import java.awt.Color;
 import java.awt.Paint;
 import java.awt.geom.Point2D;
@@ -37,11 +31,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.math.*;
-
-import cytoscape.CyNetwork;
-import cytoscape.Cytoscape;
-import cytoscape.view.CyNetworkView;
-
 
 public class Interpolator {
 	
@@ -102,7 +91,7 @@ public class Interpolator {
 
 		//initialize the CyFrame array
 		for(int i=0; i<cyFrameArray.length; i++){
-			cyFrameArray[i] = new CyFrame(frameList.get(0).getCurrentNetwork());
+			cyFrameArray[i] = new CyFrame(frameList.get(0).getBundleContext());
 		}
 
 		int start = 0;
@@ -616,8 +605,8 @@ public class Interpolator {
 			for(String nodeid: idList){
 
 				//get the border widths of the node from each of the two frames
-				float widthOne = frameOne.getNodeBorderWidth(nodeid);
-				float widthTwo = frameTwo.getNodeBorderWidth(nodeid);
+				double widthOne = frameOne.getNodeBorderWidth(nodeid);
+				double widthTwo = frameTwo.getNodeBorderWidth(nodeid);
 				
 				
 				//if (widthOne == null) sizeOne = new Integer(1);
@@ -631,8 +620,8 @@ public class Interpolator {
 					continue;
 				}
 
-				float widthInclength = (widthTwo - widthOne)/framenum;
-				float[] widthArray = new float[framenum+2];
+				double widthInclength = (widthTwo - widthOne)/framenum;
+				double[] widthArray = new double[framenum+2];
 				widthArray[1] = widthOne + widthInclength;
 					
 				for(int k=1; k<framenum+1; k++){
@@ -813,8 +802,8 @@ public class Interpolator {
 			for(String edgeid: idList){
 				
 				//get the edge widths of the edge from each of the two frames
-				float widthOne = frameOne.getEdgeWidth(edgeid);
-				float widthTwo = frameTwo.getEdgeWidth(edgeid);
+				double widthOne = frameOne.getEdgeWidth(edgeid);
+				double widthTwo = frameTwo.getEdgeWidth(edgeid);
 				
 				
 				//if (widthOne == null) sizeOne = new Integer(1);
@@ -828,8 +817,8 @@ public class Interpolator {
 					continue;
 				}
 
-				float widthInclength = (widthTwo - widthOne)/framenum;
-				float[] widthArray = new float[framenum+2];
+				double widthInclength = (widthTwo - widthOne)/framenum;
+				double[] widthArray = new double[framenum+2];
 				widthArray[1] = widthOne + widthInclength;
 					
 				for(int k=1; k<framenum+1; k++){
