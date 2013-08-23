@@ -249,6 +249,7 @@ public class CyFrame {
 					exportImageTaskFactory.createTaskIterator(view), tunables));
 			BufferedImage image = ImageIO.read(temporaryImageFile);
 			networkImage = image;
+			temporaryImageFile.delete();
 		}
 	
 	}
@@ -788,7 +789,7 @@ public class CyFrame {
 		view.addEdgeView(edge.getRootGraphIndex());
 	} */
 
-	public Object getService(Class<?> serviceClass) {
+	private Object getService(Class<?> serviceClass) {
 		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
 	}
 	

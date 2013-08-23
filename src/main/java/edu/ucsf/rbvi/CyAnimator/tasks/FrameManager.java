@@ -270,7 +270,7 @@ public class FrameManager {
 		return timer;
 	}
 	
-	public Object getService(Class<?> serviceClass) {
+	private Object getService(Class<?> serviceClass) {
 		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
 	}
 }
