@@ -22,7 +22,7 @@
  */
 
 
-package edu.ucsf.rbvi.CyAnimator.model;
+package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.Color;
 import java.awt.Paint;

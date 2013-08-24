@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import java.awt.event.ActionEvent;
 
@@ -6,7 +6,7 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.osgi.framework.BundleContext;
 
-import edu.ucsf.rbvi.CyAnimator.ui.CyAnimatorDialog;
+import edu.ucsf.rbvi.CyAnimator.internal.ui.CyAnimatorDialog;
 
 public class CyAnimatorDialogTask extends AbstractTask {
 
@@ -19,7 +19,7 @@ public class CyAnimatorDialogTask extends AbstractTask {
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
 		CyAnimatorDialog dialog = new CyAnimatorDialog(bc);
-		dialog.actionPerformed(new ActionEvent(null, 0, null));
+		dialog.actionPerformed(null);
 	}
 
 }

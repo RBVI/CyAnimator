@@ -15,11 +15,15 @@ import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.ucsf.rbvi.CyAnimator.tasks.CyAnimatorDialogTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTaskFactory;
 
 public class CyActivator extends AbstractCyActivator {
-
+	private static Logger logger = LoggerFactory
+			.getLogger(edu.ucsf.rbvi.CyAnimator.internal.CyActivator.class);
+	
 	public CyActivator() {
 		super();
 	}
@@ -45,13 +49,13 @@ public class CyActivator extends AbstractCyActivator {
 	private void setStandardProperties(Properties p, String title, String command, String gravity) {
 		if (title != null) {
 			p.setProperty(TITLE, title);
-			p.setProperty(PREFERRED_MENU, "Apps.SetsApp");
-			p.setProperty(IN_MENU_BAR,"false");
+			p.setProperty(PREFERRED_MENU, "Apps");
+			p.setProperty(IN_MENU_BAR,"true");
 			p.setProperty(MENU_GRAVITY, gravity);
 		}
 		if (command != null) {
 			p.setProperty(COMMAND,command);
-			p.setProperty(COMMAND_NAMESPACE,"setsApp");
+			p.setProperty(COMMAND_NAMESPACE,"CyAnimator");
 		}
 	}
 

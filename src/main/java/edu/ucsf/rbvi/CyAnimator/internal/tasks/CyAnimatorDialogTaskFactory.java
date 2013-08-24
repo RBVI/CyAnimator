@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.work.AbstractTaskFactory;

@@ -10,10 +10,10 @@
  * 
  */
 
-package edu.ucsf.rbvi.CyAnimator.ui;
+package edu.ucsf.rbvi.CyAnimator.internal.ui;
 
-import edu.ucsf.rbvi.CyAnimator.model.CyFrame;
-import edu.ucsf.rbvi.CyAnimator.tasks.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.FrameManager;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -169,36 +169,36 @@ public class CyAnimatorDialog extends JDialog
 		captureButton.addActionListener(this);
 		captureButton.setActionCommand("capture");
 		
-		ImageIcon playIcon = createImageIcon("play.png", "Play Button");
+		ImageIcon playIcon = createImageIcon("/images/play.png", "Play Button");
 		playButton = new JButton(playIcon);
 		playButton.addActionListener(this);
 		playButton.setActionCommand("play");    
 
-		ImageIcon stopIcon = createImageIcon("stop.png", "Stop Button");
+		ImageIcon stopIcon = createImageIcon("/images/stop.png", "Stop Button");
 		stopButton = new JButton(stopIcon);
 		stopButton.addActionListener(this);
 		stopButton.setActionCommand("stop");
 
-		ImageIcon pauseIcon = createImageIcon("pause.png", "Pause Button");
+		ImageIcon pauseIcon = createImageIcon("/images/pause.png", "Pause Button");
 		pauseButton = new JButton(pauseIcon);
 		pauseButton.addActionListener(this);
 		pauseButton.setActionCommand("pause");
 		pauseButton.addPropertyChangeListener("Text", this);
 		
-		ImageIcon forwardIcon = createImageIcon("fastForward.png", "Step Forward Button");
+		ImageIcon forwardIcon = createImageIcon("/images/fastForward.png", "Step Forward Button");
 		forwardButton = new JButton(forwardIcon);
 		forwardButton.addActionListener(this);
 		forwardButton.setActionCommand("step forward");
 		forwardButton.setToolTipText("Step Forward One Frame");
 		
 		
-		ImageIcon backwardIcon = createImageIcon("reverse.png", "Step Backward Button");
+		ImageIcon backwardIcon = createImageIcon("/images/reverse.png", "Step Backward Button");
 		backwardButton = new JButton(backwardIcon);
 		backwardButton.addActionListener(this);
 		backwardButton.setActionCommand("step backward");
 		backwardButton.setToolTipText("Step Backward One Frame");
 		
-		ImageIcon recordIcon = createImageIcon("record.png", "Record Animation");
+		ImageIcon recordIcon = createImageIcon("/images/record.png", "Record Animation");
 		recordButton = new JButton(recordIcon);
 		recordButton.addActionListener(this);
 		recordButton.setActionCommand("record");
@@ -239,7 +239,9 @@ public class CyAnimatorDialog extends JDialog
 	
 	public void actionPerformed(ActionEvent e){
 		
-		String command = e.getActionCommand();
+		String command = "";
+		if (e != null)
+			command = e.getActionCommand();
 		
 		//add current frame to key frame list
 		if(command.equals("capture")){

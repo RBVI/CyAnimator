@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import java.io.File;
 import java.io.IOException;

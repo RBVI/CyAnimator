@@ -10,7 +10,7 @@
  */
 
 
-package edu.ucsf.rbvi.CyAnimator.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,8 +26,8 @@ import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
 
-import edu.ucsf.rbvi.CyAnimator.model.CyFrame;
-import edu.ucsf.rbvi.CyAnimator.model.Interpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
+import edu.ucsf.rbvi.CyAnimator.internal.model.Interpolator;
 
 public class FrameManager {
 

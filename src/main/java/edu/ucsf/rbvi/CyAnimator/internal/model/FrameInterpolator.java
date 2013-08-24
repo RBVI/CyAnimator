@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.model;
+package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.util.List;
 
