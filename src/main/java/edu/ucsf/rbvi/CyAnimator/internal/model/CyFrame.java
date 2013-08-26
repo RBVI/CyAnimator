@@ -39,13 +39,15 @@ import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
-import org.cytoscape.task.write.ExportNetworkImageTaskFactory;
+import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskManager;
+import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.util.ListSingleSelection;
 import org.osgi.framework.BundleContext;
@@ -54,7 +56,7 @@ import org.osgi.framework.ServiceReference;
 public class CyFrame {
 	
 	private String frameid = "";
-	private static String PNG = "Portable Network Graphics (PNG) File (*.png)";
+	private static String PNG = "png";
 	private HashMap<String, double[]> nodePosMap;
 	private HashMap<String, Color> nodeColMap;
 	private HashMap<String, Integer> nodeOpacityMap;
@@ -234,7 +236,7 @@ public class CyFrame {
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-		ExportNetworkImageTaskFactory exportImageTaskFactory = (ExportNetworkImageTaskFactory) getService(ExportNetworkImageTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
 			Map<String, Object> tunables = new HashMap<String, Object>();
@@ -243,13 +245,29 @@ public class CyFrame {
 			ListSingleSelection<String> fileType = new ListSingleSelection<String>(fileTypeList);
 			fileType.setSelectedValue(PNG);
 			tunables.put("options", fileType);
-			File temporaryImageFile = File.createTempFile("temporaryCytoscapeImage", ".png");
+			final File temporaryImageFile = File.createTempFile("temporaryCytoscapeImage", ".png");
 			tunables.put("OutputFile", temporaryImageFile);
 			taskManager.execute(tunableSetter.createTaskIterator(
-					exportImageTaskFactory.createTaskIterator(view), tunables));
-			BufferedImage image = ImageIO.read(temporaryImageFile);
-			networkImage = image;
-			temporaryImageFile.delete();
+					exportImageTaskFactory.createTaskIterator(view), tunables),
+					new TaskObserver() {
+						
+						public void taskFinished(ObservableTask arg0) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						public void allFinished() {
+							BufferedImage image = null;
+							try {
+								image = ImageIO.read(temporaryImageFile);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							networkImage = image;
+						//	temporaryImageFile.delete();
+						}
+					});
 		}
 	
 	}
@@ -739,7 +757,7 @@ public class CyFrame {
 		display();
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-		ExportNetworkImageTaskFactory exportImageTaskFactory = (ExportNetworkImageTaskFactory) getService(ExportNetworkImageTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
 			Map<String, Object> tunables = new HashMap<String, Object>();
