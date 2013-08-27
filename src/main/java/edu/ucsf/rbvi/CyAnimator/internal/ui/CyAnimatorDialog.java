@@ -13,7 +13,7 @@
 package edu.ucsf.rbvi.CyAnimator.internal.ui;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
-import edu.ucsf.rbvi.CyAnimator.internal.tasks.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;

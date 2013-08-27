@@ -10,7 +10,7 @@
  */
 
 
-package edu.ucsf.rbvi.CyAnimator.internal.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,9 +25,6 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 import org.osgi.framework.BundleContext;
-
-import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
-import edu.ucsf.rbvi.CyAnimator.internal.model.Interpolator;
 
 public class FrameManager {
 
@@ -179,7 +176,7 @@ public class FrameManager {
 	 */
 	public void recordAnimation(String directory) throws IOException {
 		WriteTask task = new WriteTask(this, "Writing output files", directory);
-		taskManager.execute(new TaskIterator(task));;
+		taskManager.execute(new TaskIterator(task));
 	}
 	
 	/**
