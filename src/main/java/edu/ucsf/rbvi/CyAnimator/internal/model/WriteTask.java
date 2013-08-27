@@ -54,7 +54,16 @@ public class WriteTask extends AbstractTask {
 			if (canceled) return;
 		
 			try {
-				this.frameManager.frames[i].writeImage(name);
+				BooleanWrapper finished = new BooleanWrapper(false);
+				this.frameManager.frames[i].writeImage(name, finished);
+				while (!finished.getValue())
+					try {
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					};
+
 			} catch (IOException e) {
 				monitor.showMessage(Level.ERROR, "Failed to write file "+name);
 				return;

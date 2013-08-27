@@ -759,7 +759,7 @@ public class CyFrame {
  	 *
  	 * @param fileName the file to write the image to
  	 */
-	public void writeImage(String fileName) throws IOException {
+	public void writeImage(String fileName, final BooleanWrapper finished) throws IOException {
 		display();
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
@@ -774,7 +774,18 @@ public class CyFrame {
 			tunables.put("options", fileType);
 			tunables.put("OutputFile", new File(fileName));
 			taskManager.execute(tunableSetter.createTaskIterator(
-					exportImageTaskFactory.createTaskIterator(view), tunables));
+					exportImageTaskFactory.createTaskIterator(view), tunables),
+					new TaskObserver() {
+						
+						public void taskFinished(ObservableTask arg0) {
+							// TODO Auto-generated method stub
+						}
+						
+						public void allFinished() {
+							// TODO Auto-generated method stub
+							finished.setValue(true);
+						}
+					});
 		}
 	}
 
