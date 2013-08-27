@@ -398,6 +398,13 @@ public class CyAnimatorDialog extends JDialog
 		for(CyFrame frame: frameList){
 
 			//get the thumbnail image
+			while (frame.getFrameImage() == null)
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				};
 			ImageIcon ic = new ImageIcon(frame.getFrameImage());
 
 			//put the image on the thumbnail button

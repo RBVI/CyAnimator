@@ -92,6 +92,7 @@ public class CyFrame {
 	private Point2D centerPoint = null;
 	private TaskManager<?,?> taskManager;
 
+	private static int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
 //	private DGraphView dview = null; 
 	
 	/**
@@ -257,14 +258,19 @@ public class CyFrame {
 						}
 						
 						public void allFinished() {
-							BufferedImage image = null;
+							BufferedImage image = null, scaledImage = null;
 							try {
 								image = ImageIO.read(temporaryImageFile);
+								int type = image.getType() == 0? BufferedImage.TYPE_INT_ARGB : image.getType();
+								scaledImage = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, type);
+								Graphics2D g = scaledImage.createGraphics();
+								g.drawImage(image, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, null);
+								g.dispose();
 							} catch (IOException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							networkImage = image;
+							networkImage = scaledImage;
 						//	temporaryImageFile.delete();
 						}
 					});
