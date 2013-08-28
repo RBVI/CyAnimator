@@ -67,7 +67,9 @@ public class CyFrame {
 	private HashMap<String, Color> nodeLabelColMap;
 
 	private HashMap<String, Integer> edgeOpacityMap;
+	private HashMap<String, Integer> edgeStrokeOpacityMap;
 	private HashMap<String, Color> edgeColMap;
+	private HashMap<String, Color> edgeStrokeColMap;
 	private HashMap<String, Double> edgeWidthMap;
 	private HashMap<String, Color> edgeLabelColMap;
 	
@@ -117,7 +119,9 @@ public class CyFrame {
 		nodeOpacityMap = new HashMap<String, Integer>();
 		nodeFillOpacityMap = new HashMap<String, Integer>();
 		edgeOpacityMap = new HashMap<String, Integer>();
+		edgeStrokeOpacityMap = new HashMap<String, Integer>();
 		edgeColMap = new HashMap<String, Color>();
+		edgeStrokeColMap = new HashMap<String, Color>();
 		edgeLabelColMap = new HashMap<String, Color>();
 		edgeWidthMap = new HashMap<String, Double>();
 		this.currentNetwork = appManager.getCurrentNetwork();
@@ -223,12 +227,19 @@ public class CyFrame {
 			String edgeName = edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 
 			//grab color and opacity
-			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_PAINT);
 			Integer trans = p.getAlpha();
 			//store in respective hashmap
 			edgeColMap.put(edgeName, p);
 			edgeOpacityMap.put(edgeName, trans);
 			edgeWidthMap.put(edgeName, edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH));
+
+			//grab color and opacity
+			Color pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			Integer transStroke = p.getAlpha();
+			//store in respective hashmap
+			edgeStrokeColMap.put(edgeName, pStroke);
+			edgeStrokeOpacityMap.put(edgeName, transStroke);
 
 			// Grab the label information
 			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
@@ -367,10 +378,13 @@ public class CyFrame {
 				edgeView = currentView.getEdgeView(edge);
 			}
 			String edgeName = curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
-			Color p = edgeColMap.get(edgeName);
-			if (p == null || edgeView == null) continue;
-			Integer trans = edgeOpacityMap.get(edgeName);
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
+			if ((p == null && pStroke == null) || edgeView == null) continue;
+			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
+			if (p != null)
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			if (pStroke != null)
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
 			Color labelColor = edgeLabelColMap.get(edgeName);
@@ -550,6 +564,18 @@ public class CyFrame {
 	}
 
 	/**
+	 * Get the edge color for an edge in this frame
+	 *
+	 * @param edgeID the ID of the edge whose color to retrieve
+	 * @return the color 
+	 */
+	public Color getEdgeStrokeColor(String edgeID) {
+		if (edgeStrokeColMap.containsKey(edgeID))
+			return edgeStrokeColMap.get(edgeID);
+		return null;
+	}
+
+	/**
 	 * Set the edge color for a edge in this frame
 	 *
 	 * @param edge the ID of the edge whose color to retrieve
@@ -557,6 +583,16 @@ public class CyFrame {
 	 */
 	public void setEdgeColor(String edgeID, Color color) {
 		edgeColMap.put(edgeID, color);
+	}
+
+	/**
+	 * Set the edge color for a edge in this frame
+	 *
+	 * @param edge the ID of the edge whose color to retrieve
+	 * @param color the color for this edge
+	 */
+	public void setEdgeStrokeColor(String edgeID, Color color) {
+		edgeStrokeColMap.put(edgeID, color);
 	}
 
 	/**
@@ -572,6 +608,18 @@ public class CyFrame {
 	}
 
 	/**
+	 * Get the edge opacity for an edge in this frame
+	 *
+	 * @param edgeID the ID of the edge whose opacity to retrieve
+	 * @return the opacity 
+	 */
+	public Integer getEdgeStrokeOpacity(String edgeID) {
+		if (edgeStrokeOpacityMap.containsKey(edgeID))
+			return edgeStrokeOpacityMap.get(edgeID);
+		return new Integer(0);
+	}
+
+	/**
 	 * Set the edge opacity for an edge in this frame
 	 *
 	 * @param edge the ID of the edge whose opacity to retrieve
@@ -579,6 +627,16 @@ public class CyFrame {
 	 */
 	public void setEdgeOpacity(String edgeID, Integer opacity) {
 		edgeOpacityMap.put(edgeID, opacity);
+	}
+
+	/**
+	 * Set the edge opacity for an edge in this frame
+	 *
+	 * @param edge the ID of the edge whose opacity to retrieve
+	 * @param opacity the opacity for this edge
+	 */
+	public void setEdgeStrokeOpacity(String edgeID, Integer opacity) {
+		edgeStrokeOpacityMap.put(edgeID, opacity);
 	}
 
 	/**
