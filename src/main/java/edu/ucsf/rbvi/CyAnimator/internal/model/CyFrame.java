@@ -60,6 +60,8 @@ public class CyFrame {
 	private HashMap<String, double[]> nodePosMap;
 	private HashMap<String, Color> nodeColMap;
 	private HashMap<String, Integer> nodeOpacityMap;
+	private HashMap<String, Color> nodeFillColMap;
+	private HashMap<String, Integer> nodeFillOpacityMap;
 	private HashMap<String, Double> nodeBorderWidthMap;
 	private HashMap<String, double[]> nodeSizeMap;
 	private HashMap<String, Color> nodeLabelColMap;
@@ -106,12 +108,14 @@ public class CyFrame {
 		taskManager = (TaskManager<?, ?>) getService(TaskManager.class);
 		nodePosMap = new HashMap<String, double[]>();
 		nodeColMap = new HashMap<String, Color>();
+		nodeFillColMap = new HashMap<String, Color>();
 		nodeLabelColMap = new HashMap<String, Color>();
 		nodeSizeMap = new HashMap<String, double[]>();
 		nodeBorderWidthMap = new HashMap<String, Double>();
 		edgeMap = new HashMap<String, View<CyEdge>>();
 		nodeMap = new HashMap<String, View<CyNode>>();
 		nodeOpacityMap = new HashMap<String, Integer>();
+		nodeFillOpacityMap = new HashMap<String, Integer>();
 		edgeOpacityMap = new HashMap<String, Integer>();
 		edgeColMap = new HashMap<String, Color>();
 		edgeLabelColMap = new HashMap<String, Color>();
@@ -192,8 +196,15 @@ public class CyFrame {
 			Color nodeColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT);
 			Integer trans = nodeColor.getAlpha();
 			//store in respective hashmap
-			nodeColMap.put(nodeName, (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT));
+			nodeColMap.put(nodeName, nodeColor);
 			nodeOpacityMap.put(nodeName, trans);
+
+			//grab color and opacity
+			Color nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
+			Integer transFill = nodeColor.getAlpha();
+			//store in respective hashmap
+			nodeFillColMap.put(nodeName, nodeFillColor);
+			nodeFillOpacityMap.put(nodeName, transFill);
 
 			// Grab the label information
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
@@ -212,7 +223,7 @@ public class CyFrame {
 			String edgeName = edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 
 			//grab color and opacity
-			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_PAINT);
+			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
 			Integer trans = p.getAlpha();
 			//store in respective hashmap
 			edgeColMap.put(edgeName, p);
@@ -324,8 +335,8 @@ public class CyFrame {
 			String nodeName = curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 			
 			double[] xy = nodePosMap.get(nodeName);
-			Color p = nodeColMap.get(nodeName);
-			Integer trans = nodeOpacityMap.get(nodeName);
+			Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
+			Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
 			// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
 			//if(xy == null || nodeView == null){ continue; }
 			
@@ -339,6 +350,7 @@ public class CyFrame {
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
 			
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
 
 			Color labelColor = nodeLabelColMap.get(nodeName);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
@@ -358,7 +370,7 @@ public class CyFrame {
 			Color p = edgeColMap.get(edgeName);
 			if (p == null || edgeView == null) continue;
 			Integer trans = edgeOpacityMap.get(edgeName);
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
 			Color labelColor = edgeLabelColMap.get(edgeName);
@@ -494,6 +506,18 @@ public class CyFrame {
 	}
 
 	/**
+	 * Get the node color for a node in this frame
+	 *
+	 * @param nodeID the ID of the node whose color to retrieve
+	 * @return the color 
+	 */
+	public Color getNodeFillColor(String nodeID) {
+		if (nodeFillColMap.containsKey(nodeID))
+			return nodeFillColMap.get(nodeID);
+		return null;
+	}
+
+	/**
 	 * Set the node color for a node in this frame
 	 *
 	 * @param nodeID the ID of the node whose color to retrieve
@@ -501,6 +525,16 @@ public class CyFrame {
 	 */
 	public void setNodeColor(String nodeID, Color color) {
 		nodeColMap.put(nodeID, color);
+	}
+
+	/**
+	 * Set the node color for a node in this frame
+	 *
+	 * @param nodeID the ID of the node whose color to retrieve
+	 * @param color the color for this node
+	 */
+	public void setNodeFillColor(String nodeID, Color color) {
+		nodeFillColMap.put(nodeID, color);
 	}
 
 	/**
@@ -560,6 +594,18 @@ public class CyFrame {
 	}
 
 	/**
+	 * Get the node opacity for a node in this frame
+	 *
+	 * @param nodeID the ID of the node whose opacity to retrieve
+	 * @return the opacity 
+	 */
+	public Integer getNodeFillOpacity(String nodeID) {
+		if (nodeFillOpacityMap.containsKey(nodeID))
+			return nodeFillOpacityMap.get(nodeID);
+		return new Integer(0);
+	}
+
+	/**
 	 * Set the node opacity for an node in this frame
 	 *
 	 * @param node the ID of the node whose opacity to retrieve
@@ -567,6 +613,16 @@ public class CyFrame {
 	 */
 	public void setNodeOpacity(String nodeID, Integer opacity) {
 		nodeOpacityMap.put(nodeID, opacity);
+	}
+
+	/**
+	 * Set the node opacity for an node in this frame
+	 *
+	 * @param node the ID of the node whose opacity to retrieve
+	 * @param opacity the opacity for this node
+	 */
+	public void setNodeFillOpacity(String nodeID, Integer opacity) {
+		nodeFillOpacityMap.put(nodeID, opacity);
 	}
 
 	/**

@@ -436,26 +436,46 @@ public class Interpolator {
 				
 				Color colorOne = frameOne.getNodeColor(nodeid);
 				Color colorTwo = frameTwo.getNodeColor(nodeid);
-				if(colorOne == null && colorTwo == null){ continue; }
-
-				// Handle missing (or appearing) nodes
-				if (colorOne == null) 
-					colorOne = colorTwo;
-				else if (colorTwo == null)
-					colorTwo = colorOne;
-			
-				if (colorOne == colorTwo) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeColor(nodeid, colorOne);
-					}	
-				} else {
-					Color[] paints = interpolateColor(colorOne, colorTwo, framenum, false);
-
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeColor(nodeid, paints[k]);
-					}	
+				Color colorFillOne = frameOne.getNodeFillColor(nodeid);
+				Color colorFillTwo = frameTwo.getNodeFillColor(nodeid);
+				if(colorOne != null || colorTwo != null) {
+					// Handle missing (or appearing) nodes
+					if (colorOne == null) 
+						colorOne = colorTwo;
+					else if (colorTwo == null)
+						colorTwo = colorOne;
+				
+					if (colorOne == colorTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeColor(nodeid, colorOne);
+						}	
+					} else {
+						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, false);
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeColor(nodeid, paints[k]);
+						}	
+					}
 				}
 				
+				if (colorFillOne != null || colorFillTwo != null) {
+					if (colorFillOne == null)
+						colorFillOne = colorFillTwo;
+					else if (colorFillTwo == null)
+						colorFillTwo = colorFillOne;
+
+					if (colorFillOne == colorFillTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeFillColor(nodeid, colorFillOne);
+						}	
+					} else {
+						Color[] paints = interpolateColor(colorFillOne, colorFillTwo, framenum, false);
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeFillColor(nodeid, paints[k]);
+						}	
+					}
+				}
 			}	
 			return cyFrameArray;
 		}
@@ -495,26 +515,43 @@ public class Interpolator {
 				//Get the node transparencies and set up the transparency interpolation
 				Integer transOne = frameOne.getNodeOpacity(nodeid);
 				Integer transTwo = frameTwo.getNodeOpacity(nodeid);
+				Integer transFillOne = frameOne.getNodeFillOpacity(nodeid);
+				Integer transFillTwo = frameTwo.getNodeFillOpacity(nodeid);
 				
 				if (transOne == null) transOne = new Integer(0);
 				if (transTwo == null) transTwo = new Integer(0);
+				if (transFillOne == null) transFillOne = new Integer(0);
+				if (transFillTwo == null) transFillTwo = new Integer(0);
 
 				if (transOne.intValue() == transTwo.intValue()) {
 					for(int k=1; k<framenum+1; k++){
 						cyFrameArray[start+k].setNodeOpacity(nodeid, transOne);
 					}
-					continue;
+				} else {
+					int transIncLength = (transTwo - transOne)/framenum;
+					int[] transArray = new int[framenum+2];
+					transArray[1] = transOne + transIncLength;
+					
+					for(int k=1; k<framenum+1; k++){
+						transArray[k+1] = transArray[k] + transIncLength;
+						cyFrameArray[start+k].setNodeOpacity(nodeid, transArray[k]);
+					}
 				}
 				
-				int transIncLength = (transTwo - transOne)/framenum;
-				int[] transArray = new int[framenum+2];
-				transArray[1] = transOne + transIncLength;
-				
-				for(int k=1; k<framenum+1; k++){
-					transArray[k+1] = transArray[k] + transIncLength;
-					cyFrameArray[start+k].setNodeOpacity(nodeid, transArray[k]);
-				}	
-				
+				if (transFillOne.intValue() == transFillTwo.intValue()) {
+					for(int k=1; k<framenum+1; k++){
+						cyFrameArray[start+k].setNodeFillOpacity(nodeid, transFillOne);
+					}
+				} else {
+					int transIncLength = (transFillTwo - transFillOne)/framenum;
+					int[] transArray = new int[framenum+2];
+					transArray[1] = transFillOne + transIncLength;
+					
+					for(int k=1; k<framenum+1; k++){
+						transArray[k+1] = transArray[k] + transIncLength;
+						cyFrameArray[start+k].setNodeFillOpacity(nodeid, transArray[k]);
+					}
+				}
 			}
 			return cyFrameArray;
 		}
