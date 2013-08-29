@@ -933,18 +933,50 @@ public class Interpolator {
 			{
 				Color colorOne = frameOne.getEdgeLabelColor(edgeid);
 				Color colorTwo = frameTwo.getEdgeLabelColor(edgeid);
-				if(colorOne == null && colorTwo == null){ continue; }
-
-				if (colorOne == colorTwo) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeLabelColor(edgeid, colorOne);
-					}	
-				} else {
-					Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
-
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeLabelColor(edgeid, paints[k]);
-					}	
+				if(colorOne != null || colorTwo != null) {
+					if (colorOne == colorTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelColor(edgeid, colorOne);
+						}	
+					} else {
+						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelColor(edgeid, paints[k]);
+						}	
+					}
+				}
+				Integer sizeOne = frameOne.getEdgeLabelFontSize(edgeid);
+				Integer sizeTwo = frameTwo.getEdgeLabelFontSize(edgeid);
+				if(sizeOne != null || sizeTwo != null) {
+					if (sizeOne == sizeTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne);
+						}	
+					} else {
+						int sizeInc = (sizeTwo - sizeOne)/ framenum, sizeIncrease = sizeInc;
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + sizeIncrease);
+							sizeIncrease += sizeInc;
+						}	
+					}
+				}
+				Integer transOne = frameOne.getEdgeLabelTrans(edgeid);
+				Integer transTwo = frameTwo.getEdgeLabelTrans(edgeid);
+				if(transOne != null || transTwo != null) {
+					if (transOne == transTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne);
+						}	
+					} else {
+						int transInc = (transTwo - transOne)/ framenum, transIncrease = transInc;
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne + transIncrease);
+							transIncrease += transInc;
+						}	
+					}
 				}
 			}	
 			return cyFrameArray;

@@ -72,6 +72,8 @@ public class CyFrame {
 	private HashMap<String, Color> edgeStrokeColMap;
 	private HashMap<String, Double> edgeWidthMap;
 	private HashMap<String, Color> edgeLabelColMap;
+	private HashMap<String, Integer> edgeLabelFontSizeMap;
+	private HashMap<String, Integer> edgeLabelTransMap;
 	
 	private Paint backgroundPaint = null;
 	private double zoom = 0;
@@ -123,6 +125,8 @@ public class CyFrame {
 		edgeColMap = new HashMap<String, Color>();
 		edgeStrokeColMap = new HashMap<String, Color>();
 		edgeLabelColMap = new HashMap<String, Color>();
+		edgeLabelFontSizeMap = new HashMap<String, Integer>();
+		edgeLabelTransMap = new HashMap<String, Integer>();
 		edgeWidthMap = new HashMap<String, Double>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
@@ -244,6 +248,10 @@ public class CyFrame {
 			// Grab the label information
 			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
 			edgeLabelColMap.put(edgeName, labelColor);
+			Integer labelFontSize = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE),
+					labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
+			edgeLabelFontSizeMap.put(edgeName, labelFontSize);
+			edgeLabelTransMap.put(edgeName, labelTransMap);
 		}
 	}
 	
@@ -254,8 +262,8 @@ public class CyFrame {
 	 */
 	public void captureImage() throws IOException {
 		
-		double scale = .35;
-		double wscale = .25;
+	/*	double scale = .35;
+		double wscale = .25; */
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
@@ -360,8 +368,10 @@ public class CyFrame {
 			
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
 			
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
+			if (p != null)
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			if (pFill != null)
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
 
 			Color labelColor = nodeLabelColMap.get(nodeName);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
@@ -392,6 +402,10 @@ public class CyFrame {
 										new Color(labelColor.getRed(), 
 										labelColor.getGreen(), labelColor.getBlue(),
 										labelColor.getAlpha()));
+			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
+					labelTrans = edgeLabelTransMap.get(edgeName);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
 		}
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
@@ -779,12 +793,52 @@ public class CyFrame {
 	}
 
 	/**
+	 *
+	 * @param edgeID
+	 * @return edge label size
+	 */
+	public Integer getEdgeLabelFontSize(String edgeID) {
+		if (edgeLabelFontSizeMap.containsKey(edgeID))
+			return edgeLabelFontSizeMap.get(edgeID);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param edgeID
+	 * @return edge transparency
+	 */
+	public Integer getEdgeLabelTrans(String edgeID) {
+		if (edgeLabelTransMap.containsKey(edgeID))
+			return edgeLabelTransMap.get(edgeID);
+		return null;
+	}
+
+	/**
 	  * 
 	  * @param edgeID
 	  * @param color
 	  */
 	public void setEdgeLabelColor(String edgeID, Color color){
 		edgeLabelColMap.put(edgeID, color);
+	}
+
+	/**
+	  * 
+	  * @param edgeID
+	  * @param size font size
+	  */
+	public void setEdgeLabelFontSize(String edgeID, Integer size){
+		edgeLabelFontSizeMap.put(edgeID, size);
+	}
+
+	/**
+	  * 
+	  * @param edgeID
+	  * @param trans transparency
+	  */
+	public void setEdgeLabelTrans(String edgeID, Integer trans){
+		edgeLabelTransMap.put(edgeID, trans);
 	}
 
 	/**
