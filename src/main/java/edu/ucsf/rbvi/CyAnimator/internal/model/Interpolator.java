@@ -48,6 +48,7 @@ public class Interpolator {
 		//add any desired interpolators to their respective interpolator lists
 		nodeInterpolators.add(new interpolateNodePosition());
 		nodeInterpolators.add(new interpolateNodeColor());
+		nodeInterpolators.add(new interpolateNodeBorderColor());
 		nodeInterpolators.add(new interpolateNodeOpacity());
 		nodeInterpolators.add(new interpolateNodeSize());
 		nodeInterpolators.add(new interpolateNodeBorderWidth());
@@ -672,6 +673,58 @@ public class Interpolator {
 	}
 
 	/**
+	 * Linearly interpolate node border color
+	 * @author Allan Wu
+	 *
+	 */
+	class interpolateNodeBorderColor implements FrameInterpolator {
+		
+		public interpolateNodeBorderColor() {}
+		
+		public CyFrame[] interpolate(List<String> idList, CyFrame frameOne,
+				CyFrame frameTwo, int start, int end, CyFrame[] cyFrameArray) {
+
+			int framenum = (end-start) - 1;	
+	
+			for(String nodeid: idList)
+			{
+				Color colorOne = frameOne.getNodeBorderColor(nodeid);
+				Color colorTwo = frameTwo.getNodeBorderColor(nodeid);
+				if(colorOne != null || colorTwo != null) {
+					if (colorOne == colorTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeBorderColor(nodeid, colorOne);
+						}	
+					} else {
+						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeBorderColor(nodeid, paints[k]);
+						}	
+					}
+				}
+				Integer transOne = frameOne.getNodeBorderTrans(nodeid);
+				Integer transTwo = frameTwo.getNodeBorderTrans(nodeid);
+				if(transOne != null || transTwo != null) {
+					if (transOne == transTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne);
+						}	
+					} else {
+						double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne + (int) sizeIncrease);
+							sizeIncrease += sizeInc;
+						}	
+					}
+				}
+			}	
+			return cyFrameArray;
+		}
+	}
+
+	/**
 	 * 
 	 * Linearly interpolates label size and color
 	 *
@@ -691,18 +744,50 @@ public class Interpolator {
 			{
 				Color colorOne = frameOne.getNodeLabelColor(nodeid);
 				Color colorTwo = frameTwo.getNodeLabelColor(nodeid);
-				if(colorOne == null && colorTwo == null){ continue; }
-
-				if (colorOne == colorTwo) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeLabelColor(nodeid, colorOne);
-					}	
-				} else {
-					Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
-
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeLabelColor(nodeid, paints[k]);
-					}	
+				if(colorOne != null || colorTwo != null) {
+					if (colorOne == colorTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelColor(nodeid, colorOne);
+						}	
+					} else {
+						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelColor(nodeid, paints[k]);
+						}	
+					}
+				}
+				Integer sizeOne = frameOne.getNodeLabelFontSize(nodeid);
+				Integer sizeTwo = frameTwo.getNodeLabelFontSize(nodeid);
+				if(sizeOne != null || sizeTwo != null) {
+					if (sizeOne == sizeTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
+						}	
+					} else {
+						double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) framenum), sizeIncrease = sizeInc;
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne + (int) sizeIncrease);
+							sizeIncrease += sizeInc;
+						}	
+					}
+				}
+				Integer transOne = frameOne.getNodeLabelTrans(nodeid);
+				Integer transTwo = frameTwo.getNodeLabelTrans(nodeid);
+				if(transOne != null || transTwo != null) {
+					if (transOne == transTwo) {
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne);
+						}	
+					} else {
+						double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
+	
+						for(int k=1; k<framenum+1; k++){
+							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne + (int) sizeIncrease);
+							sizeIncrease += sizeInc;
+						}	
+					}
 				}
 			}	
 			return cyFrameArray;
@@ -954,10 +1039,10 @@ public class Interpolator {
 							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne);
 						}	
 					} else {
-						int sizeInc = (sizeTwo - sizeOne)/ framenum, sizeIncrease = sizeInc;
+						double sizeInc = ((double) sizeTwo - (double) sizeOne)/ ((double) framenum), sizeIncrease = sizeInc;
 	
 						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + sizeIncrease);
+							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
 							sizeIncrease += sizeInc;
 						}	
 					}

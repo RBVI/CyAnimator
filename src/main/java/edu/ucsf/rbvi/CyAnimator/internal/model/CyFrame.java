@@ -63,8 +63,12 @@ public class CyFrame {
 	private HashMap<String, Color> nodeFillColMap;
 	private HashMap<String, Integer> nodeFillOpacityMap;
 	private HashMap<String, Double> nodeBorderWidthMap;
+	private HashMap<String, Color> nodeBorderColorMap;
+	private HashMap<String, Integer> nodeBorderTransMap;
 	private HashMap<String, double[]> nodeSizeMap;
 	private HashMap<String, Color> nodeLabelColMap;
+	private HashMap<String, Integer> nodeLabelFontSizeMap;
+	private HashMap<String, Integer> nodeLabelTransMap;
 
 	private HashMap<String, Integer> edgeOpacityMap;
 	private HashMap<String, Integer> edgeStrokeOpacityMap;
@@ -114,8 +118,12 @@ public class CyFrame {
 		nodeColMap = new HashMap<String, Color>();
 		nodeFillColMap = new HashMap<String, Color>();
 		nodeLabelColMap = new HashMap<String, Color>();
+		nodeLabelFontSizeMap = new HashMap<String, Integer>();
+		nodeLabelTransMap = new HashMap<String, Integer>();
 		nodeSizeMap = new HashMap<String, double[]>();
 		nodeBorderWidthMap = new HashMap<String, Double>();
+		nodeBorderColorMap = new HashMap<String, Color>();
+		nodeBorderTransMap = new HashMap<String, Integer>();
 		edgeMap = new HashMap<String, View<CyEdge>>();
 		nodeMap = new HashMap<String, View<CyNode>>();
 		nodeOpacityMap = new HashMap<String, Integer>();
@@ -199,6 +207,10 @@ public class CyFrame {
 			
 			double borderWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH);
 			nodeBorderWidthMap.put(nodeName, borderWidth);
+			Color borderColor = (Color) nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT);
+			nodeBorderColorMap.put(nodeName, borderColor);
+			Integer borderTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
+			nodeBorderTransMap.put(nodeName, borderTrans);
 			
 			//grab color and opacity
 			Color nodeColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT);
@@ -217,6 +229,10 @@ public class CyFrame {
 			// Grab the label information
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
+			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
+			nodeLabelFontSizeMap.put(nodeName, labelFontSize);
+			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
+			nodeLabelTransMap.put(nodeName, labelTrans);
 
 			centerPoint = new Point2D.Double(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
 											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION));
@@ -367,7 +383,9 @@ public class CyFrame {
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
 			
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
-			
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
+
 			if (p != null)
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
 			if (pFill != null)
@@ -378,6 +396,8 @@ public class CyFrame {
 										new Color(labelColor.getRed(), 
 										labelColor.getGreen(), labelColor.getBlue(), 
 										labelColor.getAlpha()));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
 		}
 
 		for(CyEdge edge: getEdgeList())
@@ -739,6 +759,86 @@ public class CyFrame {
 	  */
 	public void setNodeBorderWidth(String nodeID, double width){
 		nodeBorderWidthMap.put(nodeID, width);
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @return node border color
+	 */
+	public Color getNodeBorderColor(String nodeID) {
+		if (nodeBorderColorMap.containsKey(nodeID))
+			return nodeBorderColorMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param color node border color
+	 */
+	public void setNodeBorderColor(String nodeID, Color color) {
+		nodeBorderColorMap.put(nodeID, color);
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @return node border transparency
+	 */
+	public Integer getNodeBorderTrans(String nodeID) {
+		if (nodeBorderTransMap.containsKey(nodeID))
+			return nodeBorderTransMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param trans node border transparency
+	 */
+	public void setNodeBorderTrans(String nodeID, Integer trans) {
+		nodeBorderTransMap.put(nodeID, trans);
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @return node label font size
+	 */
+	public Integer getNodeLabelFontSize(String nodeID) {
+		if (nodeLabelFontSizeMap.containsKey(nodeID))
+			return nodeLabelFontSizeMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param size node label font size
+	 */
+	public void setNodeLabelFontSize(String nodeID, Integer size) {
+		nodeLabelFontSizeMap.put(nodeID, size);
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @return node label transparency
+	 */
+	public Integer getNodeLabelTrans(String nodeID) {
+		if (nodeLabelTransMap.containsKey(nodeID))
+			return nodeLabelTransMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param trans node label transparency
+	 */
+	public void setNodeLabelTrans(String nodeID, Integer trans) {
+		nodeLabelTransMap.put(nodeID, trans);
 	}
 
 	/**
