@@ -392,7 +392,7 @@ public class Interpolator {
 					//Do the position interpolation
 					if((xyTwo[0] - xyOne[0]) == 0){
 						xy[1] = xyOne[1];
-						xy[2] = xyOne[1];
+						xy[2] = xyOne[2];
 					}else{
 
 						xy[1] = xyOne[1] + ((xArray[k] - xyOne[0])*((xyTwo[1]-xyOne[1])/(xyTwo[0] - xyOne[0])));
