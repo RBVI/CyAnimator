@@ -363,7 +363,7 @@ public class Interpolator {
 
 				// Handle missing (or appearing) nodes
 				if (xyOne == null || xyTwo == null) {
-					double[] xy = new double[2];
+					double[] xy = new double[3];
 					if (xyOne == null)
 						xy = xyTwo;
 					else
@@ -381,19 +381,22 @@ public class Interpolator {
 
 				for(int k=1; k<framenum+1; k++){
 
-					double[] xy = new double[2];
+					double[] xy = new double[3];
 					xy[0] = 0;
 					xy[1] = 0;
+					xy[2] = 0;
 
 					xArray[k+1] = xArray[k] + incrementLength;
 					xy[0] = xArray[k];
 
 					//Do the position interpolation
 					if((xyTwo[0] - xyOne[0]) == 0){
-						xy[1] = xyOne[1]; 
+						xy[1] = xyOne[1];
+						xy[2] = xyOne[1];
 					}else{
 
 						xy[1] = xyOne[1] + ((xArray[k] - xyOne[0])*((xyTwo[1]-xyOne[1])/(xyTwo[0] - xyOne[0])));
+						xy[2] = xyOne[1] + ((xArray[k] - xyOne[0])*((xyTwo[2]-xyOne[2])/(xyTwo[0] - xyOne[0])));
 					}
 
 					cyFrameArray[start+k].setNodePosition(nodeid, xy);

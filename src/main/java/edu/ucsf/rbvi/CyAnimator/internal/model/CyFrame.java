@@ -195,9 +195,10 @@ public class CyFrame {
 			String nodeName = nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 
 			//stores the x and y position of the node
-			double[] xy = new double[2];
+			double[] xy = new double[3];
 			xy[0] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
 			xy[1] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
+			xy[2] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION);
 			nodePosMap.put(nodeName, xy);
 			
 			double height = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
@@ -377,6 +378,7 @@ public class CyFrame {
 			
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
 			
 			double[] size = nodeSizeMap.get(nodeName);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
