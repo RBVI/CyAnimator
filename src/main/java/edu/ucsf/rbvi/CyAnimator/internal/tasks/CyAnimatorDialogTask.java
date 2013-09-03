@@ -1,7 +1,5 @@
 package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
-import java.awt.event.ActionEvent;
-
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;

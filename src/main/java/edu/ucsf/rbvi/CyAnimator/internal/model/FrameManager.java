@@ -20,9 +20,7 @@ import java.util.List;
 
 import javax.swing.Timer;
 
-import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.service.util.CyServiceRegistrar;
-import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 

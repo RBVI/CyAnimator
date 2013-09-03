@@ -16,75 +16,39 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextPane;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
-import javax.swing.table.*;
-import javax.swing.Timer;
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.*;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
-import java.awt.Image;
-
-import javax.imageio.ImageIO;
-
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.sql.Time;
-import java.text.DecimalFormat;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusListener;
-import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JButton;
-import javax.swing.Icon;
-import javax.swing.Action;
-
 import org.cytoscape.service.util.CyServiceRegistrar;
-
-import java.awt.Font;
 
 
 
@@ -111,7 +75,6 @@ public class CyAnimatorDialog extends JDialog
 	final JFileChooser fc = new JFileChooser();
 	
 	private ArrayList<JPopupMenu> menuList;
-	private ArrayList<JButton> thumbnailList;
 	
 	private JScrollPane framePane;
 	private JPanel framePanel;
@@ -140,7 +103,6 @@ public class CyAnimatorDialog extends JDialog
 		frameList = frameManager.getKeyFrameList();
 		
 		menuList = new ArrayList<JPopupMenu>();
-		thumbnailList = new ArrayList<JButton>();
 		
 		framePane = new JScrollPane();
 		framePanel = new JPanel();
@@ -160,10 +122,7 @@ public class CyAnimatorDialog extends JDialog
 		mainPanel.addPropertyChangeListener(this);
 		
 		BoxLayout mainbox = new BoxLayout(mainPanel, BoxLayout.Y_AXIS);
-		mainPanel.setLayout(mainbox);
-		
-		JPanel oldPanel = new JPanel();
-		
+		mainPanel.setLayout(mainbox);		
 		
 		captureButton = new JButton("Add Frame");
 		captureButton.addActionListener(this);

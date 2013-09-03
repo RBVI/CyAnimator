@@ -13,20 +13,6 @@ public class CyAnimatorDialogTaskFactory extends AbstractNetworkViewTaskFactory 
 		bc = bundleContext;
 	}
 	
-/*	@Override
-	public boolean isReady() {
-		if (bc != null) {
-			CyApplicationManager appManager = bc.getService(CyApplicationManager.class);
-			if (appManager != null && appManager.getCurrentNetworkView() != null) return true;
-		}
-		return false;
-	}
-	
-	public TaskIterator createTaskIterator() {
-		// TODO Auto-generated method stub
-		return new TaskIterator(new CyAnimatorDialogTask(bc));
-	} */
-
 	public TaskIterator createTaskIterator(CyNetworkView arg0) {
 		// TODO Auto-generated method stub
 		return new TaskIterator(new CyAnimatorDialogTask(bc));

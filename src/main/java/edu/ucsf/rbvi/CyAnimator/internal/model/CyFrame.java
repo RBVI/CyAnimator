@@ -16,19 +16,14 @@
 package edu.ucsf.rbvi.CyAnimator.internal.model;   
 
 import java.util.*;
-import java.awt.geom.Point2D;
 import java.awt.Graphics2D;
 import java.awt.Color;
-import java.awt.Image;
-import java.awt.Point;
 import java.awt.image.*;
 import java.awt.Paint;
 import java.io.File;
 import java.io.IOException;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +94,7 @@ public class CyFrame {
 	private List<String> nodeIdList = null;
 	private List<String> edgeIdList = null;
 	private int intercount = 0;
-	private Point2D centerPoint = null;
+	private Point3D centerPoint = null;
 	private TaskManager<?,?> taskManager;
 
 	private static int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
@@ -141,8 +136,9 @@ public class CyFrame {
 		nodeTable = currentNetwork.getDefaultNodeTable();
 		edgeTable = currentNetwork.getDefaultEdgeTable();
 	//	this.dview = (DGraphView)networkView;
-		this.centerPoint = new Point2D.Double(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
-									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION));
+		this.centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
+									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
+									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
 
 		nodeIdList = new ArrayList<String>();
 		edgeIdList = new ArrayList<String>();
@@ -235,8 +231,9 @@ public class CyFrame {
 			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeLabelTransMap.put(nodeName, labelTrans);
 
-			centerPoint = new Point2D.Double(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
-											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION));
+			centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
+											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
+											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
 			
 		}
 
@@ -438,7 +435,8 @@ public class CyFrame {
 		
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
-		
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
+
 		//dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
 		//ifc.setBounds(arg0, arg1, arg2, arg3)
 		currentView.updateView();
@@ -1064,7 +1062,7 @@ public class CyFrame {
 	 * 
 	 * @return the center for this frame
 	 */
-	public Point2D getCenterPoint() {
+	public Point3D getCenterPoint() {
 		return this.centerPoint;
 	}
 
@@ -1073,7 +1071,7 @@ public class CyFrame {
 	 * 
 	 * @param center point for a frame
 	 */
-	public void setCenterPoint(Point2D pnt) {
+	public void setCenterPoint(Point3D pnt) {
 		this.centerPoint = pnt;
 	}
 	
@@ -1094,20 +1092,4 @@ public class CyFrame {
 		view.addEdgeView(edge.getRootGraphIndex());
 	} */
 
-/*	private Object getService(Class<?> serviceClass) {
-		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
-	}
-	
-	private Object getService(Class<?> serviceClass, String filter) {
-		try {
-			ServiceReference[] services = bundleContext.getServiceReferences(serviceClass.getName(), filter);
-			if (services != null && services.length > 0) {
-				return bundleContext.getService(services[0]);
-			}
-		} catch (Exception ex) {
-			// ignore
-			// ex.printStackTrace();
-		}
-		return null;
-	} */
 }

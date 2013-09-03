@@ -25,12 +25,7 @@
 package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.Color;
-import java.awt.Paint;
-import java.awt.geom.Point2D;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.math.*;
 
 public class Interpolator {
 	
@@ -1176,9 +1171,11 @@ public class Interpolator {
 			
 			double xone = frameOne.getCenterPoint().getX();
 			double yone = frameOne.getCenterPoint().getY();
+			double zone = frameOne.getCenterPoint().getZ();
 			
 			double xtwo = frameTwo.getCenterPoint().getX();
 			double ytwo = frameTwo.getCenterPoint().getY();
+			double ztwo = frameTwo.getCenterPoint().getZ();
 			
 			double incrementLength = (xtwo - xone)/framenum;
 			double[] xArray = new double[framenum+2];
@@ -1186,18 +1183,19 @@ public class Interpolator {
 
 			for(int k=1; k<framenum+1; k++){
 
-				Point2D xy = new Point2D.Double(0, 0);
+				Point3D xy = new Point3D(0, 0, 0);
 				
 				xArray[k+1] = xArray[k] + incrementLength;
 				//xy.setLocation(xArray[k], arg1)[0] = xArray[k];
 
 				//Do the position interpolation
 				if((xtwo - xone) == 0){
-					xy.setLocation(xArray[k], yone);
+					xy.setLocation(xArray[k], yone, zone);
 				}else{
 
 					double y = yone + ((xArray[k] - xone)*((ytwo-yone)/(xtwo -xone)));
-					xy.setLocation(xArray[k], y);
+					double z = zone + ((xArray[k] - xone)*((ztwo-zone)/(xtwo -xone)));
+					xy.setLocation(xArray[k], y, z);
 				}
 
 				cyFrameArray[start+k].setCenterPoint(xy);
