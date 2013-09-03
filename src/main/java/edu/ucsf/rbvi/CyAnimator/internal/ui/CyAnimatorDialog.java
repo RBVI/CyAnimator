@@ -82,7 +82,7 @@ import javax.swing.JButton;
 import javax.swing.Icon;
 import javax.swing.Action;
 
-import org.osgi.framework.BundleContext;
+import org.cytoscape.service.util.CyServiceRegistrar;
 
 import java.awt.Font;
 
@@ -119,14 +119,14 @@ public class CyAnimatorDialog extends JDialog
 	private DragAndDropManager dragnDrop;
 	private FrameManager frameManager;
 
-	private BundleContext bc;
+	private CyServiceRegistrar bc;
 //	private CyLogger logger;
 	
 	int thumbnailPopupIndex = 0;
 	ArrayList<CyFrame> frameList;
 	       
 	
-	public CyAnimatorDialog(BundleContext bundleContext/*CyLogger logger*/){
+	public CyAnimatorDialog(CyServiceRegistrar bundleContext/*CyLogger logger*/){
 	/*	Cytoscape.getSwingPropertyChangeSupport().addPropertyChangeListener(this);
 		
 		//add as listener to CytoscapeDesktop

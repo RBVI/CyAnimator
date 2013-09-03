@@ -13,7 +13,8 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
-import org.cytoscape.work.TaskFactory;
+import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.task.NetworkViewTaskFactory;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +40,10 @@ public class CyActivator extends AbstractCyActivator {
 			haveGUI = false;
 		}
 		else {
-			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(context);
+			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(getService(context, CyServiceRegistrar.class));
 			Properties dialogTaskProperties = new Properties();
 			setStandardProperties(dialogTaskProperties, "CyAnimator", null, "1.0");
-			registerService(context, dialogTaskFactory, TaskFactory.class, dialogTaskProperties);
+			registerService(context, dialogTaskFactory, NetworkViewTaskFactory.class, dialogTaskProperties);
 		}
 	}
 	

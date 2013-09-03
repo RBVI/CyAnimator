@@ -1,22 +1,22 @@
 package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
-import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.work.AbstractTaskFactory;
+import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.task.AbstractNetworkViewTaskFactory;
+import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
-import org.osgi.framework.BundleContext;
 
-public class CyAnimatorDialogTaskFactory extends AbstractTaskFactory {
+public class CyAnimatorDialogTaskFactory extends AbstractNetworkViewTaskFactory {
 
-	private BundleContext bc;
+	private CyServiceRegistrar bc;
 	
-	public CyAnimatorDialogTaskFactory(BundleContext bundleContext) {
+	public CyAnimatorDialogTaskFactory(CyServiceRegistrar bundleContext) {
 		bc = bundleContext;
 	}
 	
-	@Override
+/*	@Override
 	public boolean isReady() {
 		if (bc != null) {
-			CyApplicationManager appManager = (CyApplicationManager) getService(CyApplicationManager.class);
+			CyApplicationManager appManager = bc.getService(CyApplicationManager.class);
 			if (appManager != null && appManager.getCurrentNetworkView() != null) return true;
 		}
 		return false;
@@ -25,9 +25,10 @@ public class CyAnimatorDialogTaskFactory extends AbstractTaskFactory {
 	public TaskIterator createTaskIterator() {
 		// TODO Auto-generated method stub
 		return new TaskIterator(new CyAnimatorDialogTask(bc));
-	}
-	
-	private Object getService(Class<?> serviceClass) {
-		return bc.getService(bc.getServiceReference(serviceClass.getName()));
+	} */
+
+	public TaskIterator createTaskIterator(CyNetworkView arg0) {
+		// TODO Auto-generated method stub
+		return new TaskIterator(new CyAnimatorDialogTask(bc));
 	}
 }

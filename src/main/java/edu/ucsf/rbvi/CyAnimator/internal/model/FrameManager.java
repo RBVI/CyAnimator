@@ -21,10 +21,10 @@ import java.util.List;
 import javax.swing.Timer;
 
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
-import org.osgi.framework.BundleContext;
 
 public class FrameManager {
 
@@ -40,15 +40,15 @@ public class FrameManager {
 	//frames per second
 	private int fps = 30;
 	
-	private BundleContext bundleContext;
+	private CyServiceRegistrar bundleContext;
 	private TaskManager<?,?> taskManager;
 	//keeps track of the current frame being displayed during animation
 	int frameIndex = 0;
 	
 	
-	public FrameManager(BundleContext bc){
+	public FrameManager(CyServiceRegistrar bc){
 		bundleContext = bc;
-		taskManager = (TaskManager<?, ?>) getService(TaskManager.class);
+		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
 		
 	}
@@ -267,7 +267,4 @@ public class FrameManager {
 		return timer;
 	}
 	
-	private Object getService(Class<?> serviceClass) {
-		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
-	}
 }

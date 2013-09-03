@@ -39,6 +39,7 @@ import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
@@ -50,7 +51,6 @@ import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.util.ListSingleSelection;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public class CyFrame {
@@ -85,7 +85,7 @@ public class CyFrame {
 	private double xalign;
 	private double yalign;
 	
-	private BundleContext bundleContext;
+	private CyServiceRegistrar bundleContext;
 	private CyApplicationManager appManager;
 	private CyNetworkView networkView = null;
 	private CyNetwork currentNetwork = null;
@@ -110,10 +110,10 @@ public class CyFrame {
 	 * 
 	 * @param currentNetwork
 	 */
-	public CyFrame(BundleContext bc){
+	public CyFrame(CyServiceRegistrar bc){
 		bundleContext = bc;
-		appManager = (CyApplicationManager) getService(CyApplicationManager.class);
-		taskManager = (TaskManager<?, ?>) getService(TaskManager.class);
+		appManager = bundleContext.getService(CyApplicationManager.class);
+		taskManager = bundleContext.getService(TaskManager.class);
 		nodePosMap = new HashMap<String, double[]>();
 		nodeColMap = new HashMap<String, Color>();
 		nodeFillColMap = new HashMap<String, Color>();
@@ -163,7 +163,7 @@ public class CyFrame {
 		}
 
 		// Remember the visual style
-		VisualMappingManager visualManager = (VisualMappingManager) getService(VisualMappingManager.class);
+		VisualMappingManager visualManager = bundleContext.getService(VisualMappingManager.class);
 		vizStyle = visualManager.getCurrentVisualStyle();
 
 		// Get our initial nodeList
@@ -284,9 +284,9 @@ public class CyFrame {
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		NetworkViewTaskFactory exportImageTaskFactory = bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
-			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
+			TunableSetter tunableSetter = bundleContext.getService(TunableSetter.class);
 			Map<String, Object> tunables = new HashMap<String, Object>();
 			List<String> fileTypeList = new ArrayList<String>();
 			fileTypeList.add(PNG);
@@ -330,7 +330,7 @@ public class CyFrame {
 	 * based upon the visual data stored as part of the CyFrame.  
 	 */
 	public void display() {
-		VisualMappingManager visualManager = (VisualMappingManager) getService(VisualMappingManager.class);
+		VisualMappingManager visualManager = (VisualMappingManager) bundleContext.getService(VisualMappingManager.class);
 		visualManager.setVisualStyle(vizStyle, networkView);
 
 		// We want to use the current view in case we're interpolating
@@ -1033,9 +1033,9 @@ public class CyFrame {
 		display();
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
-		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
-			TunableSetter tunableSetter = (TunableSetter) getService(TunableSetter.class);
+			TunableSetter tunableSetter = (TunableSetter) bundleContext.getService(TunableSetter.class);
 			Map<String, Object> tunables = new HashMap<String, Object>();
 			List<String> fileTypeList = new ArrayList<String>();
 			fileTypeList.add(PNG);
@@ -1081,7 +1081,7 @@ public class CyFrame {
 	 * Returns the BundleContext of this CyFrame.
 	 * @return the BundleContext of this CyFrame.
 	 */
-	public BundleContext getBundleContext() {
+	public CyServiceRegistrar getBundleContext() {
 		return bundleContext;
 	}
 	// At some point, need to pull the information from nv
@@ -1094,7 +1094,7 @@ public class CyFrame {
 		view.addEdgeView(edge.getRootGraphIndex());
 	} */
 
-	private Object getService(Class<?> serviceClass) {
+/*	private Object getService(Class<?> serviceClass) {
 		return bundleContext.getService(bundleContext.getServiceReference(serviceClass.getName()));
 	}
 	
@@ -1109,5 +1109,5 @@ public class CyFrame {
 			// ex.printStackTrace();
 		}
 		return null;
-	}
+	} */
 }
