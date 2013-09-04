@@ -217,7 +217,13 @@ public class CyFrame {
 			nodeOpacityMap.put(nodeName, trans);
 
 			//grab color and opacity
-			Color nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
+			Color nodeFillColor;
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR) ||
+				vizStyle.getVisualMappingFunction(BasicVisualLexicon.NODE_FILL_COLOR) != null)
+				nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
+			else if ((nodeFillColor = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR)) != null);
+			else
+				nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
 			Integer transFill = nodeColor.getAlpha();
 			//store in respective hashmap
 			nodeFillColMap.put(nodeName, nodeFillColor);
@@ -250,10 +256,23 @@ public class CyFrame {
 			//store in respective hashmap
 			edgeColMap.put(edgeName, p);
 			edgeOpacityMap.put(edgeName, trans);
-			edgeWidthMap.put(edgeName, edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH));
+			Double edgeWidth;
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH) ||
+				vizStyle.getVisualMappingFunction(BasicVisualLexicon.EDGE_WIDTH) != null)
+				edgeWidth = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH);
+			else if ((edgeWidth = vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_WIDTH)) != null);
+			else
+				edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
+			edgeWidthMap.put(edgeName, edgeWidth);
 
 			//grab color and opacity
-			Color pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			Color pStroke;
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT) ||
+				vizStyle.getVisualMappingFunction(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT) != null)
+				pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			else if ((pStroke = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) != null);
+			else
+				pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
 			Integer transStroke = p.getAlpha();
 			//store in respective hashmap
 			edgeStrokeColMap.put(edgeName, pStroke);
