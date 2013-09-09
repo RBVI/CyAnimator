@@ -227,7 +227,7 @@ public class CyFrame {
 					}
 				}
 			}
-			Integer transFill = nodeColor.getAlpha();
+			Integer transFill = nodeView.getVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY);
 			//store in respective hashmap
 			nodeFillColMap.put(nodeName, nodeFillColor);
 			nodeFillOpacityMap.put(nodeName, transFill);
@@ -282,7 +282,7 @@ public class CyFrame {
 					}
 				}
 			}
-			Integer transStroke = p.getAlpha();
+			Integer transStroke = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY);
 			//store in respective hashmap
 			edgeStrokeColMap.put(edgeName, pStroke);
 			edgeStrokeOpacityMap.put(edgeName, transStroke);
@@ -421,8 +421,8 @@ public class CyFrame {
 			Color labelColor = nodeLabelColMap.get(nodeName);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
 										new Color(labelColor.getRed(), 
-										labelColor.getGreen(), labelColor.getBlue(), 
-										labelColor.getAlpha()));
+										labelColor.getGreen(), labelColor.getBlue()));
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
 		}
@@ -447,8 +447,8 @@ public class CyFrame {
 			Color labelColor = edgeLabelColMap.get(edgeName);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
 										new Color(labelColor.getRed(), 
-										labelColor.getGreen(), labelColor.getBlue(),
-										labelColor.getAlpha()));
+										labelColor.getGreen(), labelColor.getBlue()));
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
 			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
 					labelTrans = edgeLabelTransMap.get(edgeName);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
