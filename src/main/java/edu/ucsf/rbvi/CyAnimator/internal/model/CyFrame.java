@@ -217,13 +217,16 @@ public class CyFrame {
 			nodeOpacityMap.put(nodeName, trans);
 
 			//grab color and opacity
-			Color nodeFillColor;
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR) ||
-				vizStyle.getVisualMappingFunction(BasicVisualLexicon.NODE_FILL_COLOR) != null)
+			Color nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
+			if (nodeView.isSet(BasicVisualLexicon.NODE_FILL_COLOR)) {
 				nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
-			else if ((nodeFillColor = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR)) != null);
-			else
-				nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
+				if (nodeFillColor == null) {
+					nodeFillColor = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.NODE_FILL_COLOR);
+					if (nodeFillColor == null) {
+						nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
+					}
+				}
+			}
 			Integer transFill = nodeColor.getAlpha();
 			//store in respective hashmap
 			nodeFillColMap.put(nodeName, nodeFillColor);
@@ -256,23 +259,29 @@ public class CyFrame {
 			//store in respective hashmap
 			edgeColMap.put(edgeName, p);
 			edgeOpacityMap.put(edgeName, trans);
-			Double edgeWidth;
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH) ||
-				vizStyle.getVisualMappingFunction(BasicVisualLexicon.EDGE_WIDTH) != null)
+			Double edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
+			if (edgeView.isSet(BasicVisualLexicon.EDGE_WIDTH)) {
 				edgeWidth = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH);
-			else if ((edgeWidth = vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_WIDTH)) != null);
-			else
-				edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
+				if (edgeWidth == null) {
+					edgeWidth = vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_WIDTH);
+					if (edgeWidth == null) {
+						edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
+					}
+				}
+			}
 			edgeWidthMap.put(edgeName, edgeWidth);
 
 			//grab color and opacity
-			Color pStroke;
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT) ||
-				vizStyle.getVisualMappingFunction(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT) != null)
+			Color pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
+			if (edgeView.isSet(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
 				pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
-			else if ((pStroke = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) != null);
-			else
-				pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
+				if (pStroke == null) {
+					pStroke = (Color)vizStyle.getDefaultValue(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+					if (pStroke == null) {
+						pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
+					}
+				}
+			}
 			Integer transStroke = p.getAlpha();
 			//store in respective hashmap
 			edgeStrokeColMap.put(edgeName, pStroke);
