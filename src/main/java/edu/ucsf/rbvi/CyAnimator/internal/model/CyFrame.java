@@ -52,27 +52,27 @@ public class CyFrame {
 	
 	private String frameid = "";
 	private static String PNG = "png";
-	private HashMap<String, double[]> nodePosMap;
-	private HashMap<String, Color> nodeColMap;
-	private HashMap<String, Integer> nodeOpacityMap;
-	private HashMap<String, Color> nodeFillColMap;
-	private HashMap<String, Integer> nodeFillOpacityMap;
-	private HashMap<String, Double> nodeBorderWidthMap;
-	private HashMap<String, Color> nodeBorderColorMap;
-	private HashMap<String, Integer> nodeBorderTransMap;
-	private HashMap<String, double[]> nodeSizeMap;
-	private HashMap<String, Color> nodeLabelColMap;
-	private HashMap<String, Integer> nodeLabelFontSizeMap;
-	private HashMap<String, Integer> nodeLabelTransMap;
+	private HashMap<Long, double[]> nodePosMap;
+	private HashMap<Long, Color> nodeColMap;
+	private HashMap<Long, Integer> nodeOpacityMap;
+	private HashMap<Long, Color> nodeFillColMap;
+	private HashMap<Long, Integer> nodeFillOpacityMap;
+	private HashMap<Long, Double> nodeBorderWidthMap;
+	private HashMap<Long, Color> nodeBorderColorMap;
+	private HashMap<Long, Integer> nodeBorderTransMap;
+	private HashMap<Long, double[]> nodeSizeMap;
+	private HashMap<Long, Color> nodeLabelColMap;
+	private HashMap<Long, Integer> nodeLabelFontSizeMap;
+	private HashMap<Long, Integer> nodeLabelTransMap;
 
-	private HashMap<String, Integer> edgeOpacityMap;
-	private HashMap<String, Integer> edgeStrokeOpacityMap;
-	private HashMap<String, Color> edgeColMap;
-	private HashMap<String, Color> edgeStrokeColMap;
-	private HashMap<String, Double> edgeWidthMap;
-	private HashMap<String, Color> edgeLabelColMap;
-	private HashMap<String, Integer> edgeLabelFontSizeMap;
-	private HashMap<String, Integer> edgeLabelTransMap;
+	private HashMap<Long, Integer> edgeOpacityMap;
+	private HashMap<Long, Integer> edgeStrokeOpacityMap;
+	private HashMap<Long, Color> edgeColMap;
+	private HashMap<Long, Color> edgeStrokeColMap;
+	private HashMap<Long, Double> edgeWidthMap;
+	private HashMap<Long, Color> edgeLabelColMap;
+	private HashMap<Long, Integer> edgeLabelFontSizeMap;
+	private HashMap<Long, Integer> edgeLabelTransMap;
 	
 	private Paint backgroundPaint = null;
 	private double zoom = 0;
@@ -86,13 +86,13 @@ public class CyFrame {
 	private CyNetwork currentNetwork = null;
 	private CyTable nodeTable = null, edgeTable = null;
 	private BufferedImage networkImage = null;
-	private Map<String, View<CyNode>> nodeMap = null;
-	private Map<String, View<CyEdge>> edgeMap = null;
+	private Map<Long, View<CyNode>> nodeMap = null;
+	private Map<Long, View<CyEdge>> edgeMap = null;
 	private VisualStyle vizStyle = null;
 	private List<CyNode> nodeList = null;
 	private List<CyEdge> edgeList = null;
-	private List<String> nodeIdList = null;
-	private List<String> edgeIdList = null;
+	private List<Long> nodeIdList = null;
+	private List<Long> edgeIdList = null;
 	private int intercount = 0;
 	private Point3D centerPoint = null;
 	private TaskManager<?,?> taskManager;
@@ -109,28 +109,28 @@ public class CyFrame {
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(TaskManager.class);
-		nodePosMap = new HashMap<String, double[]>();
-		nodeColMap = new HashMap<String, Color>();
-		nodeFillColMap = new HashMap<String, Color>();
-		nodeLabelColMap = new HashMap<String, Color>();
-		nodeLabelFontSizeMap = new HashMap<String, Integer>();
-		nodeLabelTransMap = new HashMap<String, Integer>();
-		nodeSizeMap = new HashMap<String, double[]>();
-		nodeBorderWidthMap = new HashMap<String, Double>();
-		nodeBorderColorMap = new HashMap<String, Color>();
-		nodeBorderTransMap = new HashMap<String, Integer>();
-		edgeMap = new HashMap<String, View<CyEdge>>();
-		nodeMap = new HashMap<String, View<CyNode>>();
-		nodeOpacityMap = new HashMap<String, Integer>();
-		nodeFillOpacityMap = new HashMap<String, Integer>();
-		edgeOpacityMap = new HashMap<String, Integer>();
-		edgeStrokeOpacityMap = new HashMap<String, Integer>();
-		edgeColMap = new HashMap<String, Color>();
-		edgeStrokeColMap = new HashMap<String, Color>();
-		edgeLabelColMap = new HashMap<String, Color>();
-		edgeLabelFontSizeMap = new HashMap<String, Integer>();
-		edgeLabelTransMap = new HashMap<String, Integer>();
-		edgeWidthMap = new HashMap<String, Double>();
+		nodePosMap = new HashMap<Long, double[]>();
+		nodeColMap = new HashMap<Long, Color>();
+		nodeFillColMap = new HashMap<Long, Color>();
+		nodeLabelColMap = new HashMap<Long, Color>();
+		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
+		nodeLabelTransMap = new HashMap<Long, Integer>();
+		nodeSizeMap = new HashMap<Long, double[]>();
+		nodeBorderWidthMap = new HashMap<Long, Double>();
+		nodeBorderColorMap = new HashMap<Long, Color>();
+		nodeBorderTransMap = new HashMap<Long, Integer>();
+		edgeMap = new HashMap<Long, View<CyEdge>>();
+		nodeMap = new HashMap<Long, View<CyNode>>();
+		nodeOpacityMap = new HashMap<Long, Integer>();
+		nodeFillOpacityMap = new HashMap<Long, Integer>();
+		edgeOpacityMap = new HashMap<Long, Integer>();
+		edgeStrokeOpacityMap = new HashMap<Long, Integer>();
+		edgeColMap = new HashMap<Long, Color>();
+		edgeStrokeColMap = new HashMap<Long, Color>();
+		edgeLabelColMap = new HashMap<Long, Color>();
+		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
+		edgeLabelTransMap = new HashMap<Long, Integer>();
+		edgeWidthMap = new HashMap<Long, Double>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -140,20 +140,20 @@ public class CyFrame {
 									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
 									networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
 
-		nodeIdList = new ArrayList<String>();
-		edgeIdList = new ArrayList<String>();
+		nodeIdList = new ArrayList<Long>();
+		edgeIdList = new ArrayList<Long>();
 		
 		// Initialize our node view maps
 		for (View<CyEdge> ev: networkView.getEdgeViews()) {
 			if (ev.getModel() == null) continue;
-			String edgeid = edgeTable.getRow(ev.getModel().getSUID()).get(CyNetwork.NAME, String.class);
+			long edgeid = ev.getModel().getSUID();//edgeTable.getRow(ev.getModel().getSUID()).get(CyNetwork.NAME, String.class);
 			edgeMap.put(edgeid, ev);
 			edgeIdList.add(edgeid);
 		}
 
 		// Initialize our edge view maps
 		for (View<CyNode> nv: networkView.getNodeViews()) {
-			String nodeid = nodeTable.getRow(nv.getModel().getSUID()).get(CyNetwork.NAME, String.class);
+			long nodeid = nv.getModel().getSUID();//nodeTable.getRow(nv.getModel().getSUID()).get(CyNetwork.NAME, String.class);
 			nodeMap.put(nodeid, nv);
 			nodeIdList.add(nodeid);
 		}
@@ -188,7 +188,7 @@ public class CyFrame {
 		
 			View<CyNode> nodeView = networkView.getNodeView(node);
 			if(nodeView == null){ continue; }
-			String nodeName = nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+			long nodeName = node.getSUID();//nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 
 			//stores the x and y position of the node
 			double[] xy = new double[3];
@@ -251,7 +251,7 @@ public class CyFrame {
 			
 			View<CyEdge> edgeView = networkView.getEdgeView(edge);
 			if(edgeView == null){  continue; }
-			String edgeName = edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+			long edgeName = edge.getSUID();//edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 
 			//grab color and opacity
 			Color p = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_PAINT);
@@ -367,7 +367,7 @@ public class CyFrame {
 		Collection<CyEdge> removeEdges = new ArrayList<CyEdge>();
 		CyTable curEdgeTable = currentView.getModel().getDefaultEdgeTable();
 		for (CyEdge ev: currentView.getModel().getEdgeList()) {
-			if (!edgeMap.containsKey(curEdgeTable.getRow(ev.getSUID()).get(CyNetwork.NAME, String.class)))
+			if (!edgeMap.containsKey(ev.getSUID()/*curEdgeTable.getRow(ev.getSUID()).get(CyNetwork.NAME, String.class)*/))
 				removeEdges.add(ev);
 		}
 
@@ -377,7 +377,7 @@ public class CyFrame {
 		List<CyNode> removeNodes = new ArrayList<CyNode>();
 		CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
 		for (CyNode nv: currentView.getModel().getNodeList()) {
-			if (!nodeMap.containsKey(curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)))
+			if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/))
 				removeNodes.add(nv);
 		}
 
@@ -393,7 +393,7 @@ public class CyFrame {
 				nodeView = currentView.getNodeView(node);
 			//	Cytoscape.getVisualMappingManager().vizmapNode(nodeView, currentView);
 			}
-			String nodeName = curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 			
 			double[] xy = nodePosMap.get(nodeName);
 			Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
@@ -434,7 +434,7 @@ public class CyFrame {
 			//	addEdgeView(currentView, edgeMap.get(edge), edge);
 				edgeView = currentView.getEdgeView(edge);
 			}
-			String edgeName = curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
 			if ((p == null && pStroke == null) || edgeView == null) continue;
 			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
@@ -553,7 +553,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose position to retrieve
 	 * @return the node position as a double array with two values
 	 */
-	public double[] getNodePosition(String nodeID) {
+	public double[] getNodePosition(long nodeID) {
 		if (nodePosMap.containsKey(nodeID))
 			return nodePosMap.get(nodeID);
 		return null;
@@ -565,7 +565,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose position to retrieve
 	 * @param pos a 2 element double array with the x,y values for this node
 	 */
-	public void setNodePosition(String nodeID, double[] pos) {
+	public void setNodePosition(long nodeID, double[] pos) {
 		nodePosMap.put(nodeID, pos);
 	}
 
@@ -575,7 +575,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose color to retrieve
 	 * @return the color 
 	 */
-	public Color getNodeColor(String nodeID) {
+	public Color getNodeColor(long nodeID) {
 		if (nodeColMap.containsKey(nodeID))
 			return nodeColMap.get(nodeID);
 		return null;
@@ -587,7 +587,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose color to retrieve
 	 * @return the color 
 	 */
-	public Color getNodeFillColor(String nodeID) {
+	public Color getNodeFillColor(long nodeID) {
 		if (nodeFillColMap.containsKey(nodeID))
 			return nodeFillColMap.get(nodeID);
 		return null;
@@ -599,7 +599,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose color to retrieve
 	 * @param color the color for this node
 	 */
-	public void setNodeColor(String nodeID, Color color) {
+	public void setNodeColor(long nodeID, Color color) {
 		nodeColMap.put(nodeID, color);
 	}
 
@@ -609,7 +609,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose color to retrieve
 	 * @param color the color for this node
 	 */
-	public void setNodeFillColor(String nodeID, Color color) {
+	public void setNodeFillColor(long nodeID, Color color) {
 		nodeFillColMap.put(nodeID, color);
 	}
 
@@ -619,7 +619,7 @@ public class CyFrame {
 	 * @param edgeID the ID of the edge whose color to retrieve
 	 * @return the color 
 	 */
-	public Color getEdgeColor(String edgeID) {
+	public Color getEdgeColor(long edgeID) {
 		if (edgeColMap.containsKey(edgeID))
 			return edgeColMap.get(edgeID);
 		return null;
@@ -631,7 +631,7 @@ public class CyFrame {
 	 * @param edgeID the ID of the edge whose color to retrieve
 	 * @return the color 
 	 */
-	public Color getEdgeStrokeColor(String edgeID) {
+	public Color getEdgeStrokeColor(long edgeID) {
 		if (edgeStrokeColMap.containsKey(edgeID))
 			return edgeStrokeColMap.get(edgeID);
 		return null;
@@ -643,7 +643,7 @@ public class CyFrame {
 	 * @param edge the ID of the edge whose color to retrieve
 	 * @param color the color for this edge
 	 */
-	public void setEdgeColor(String edgeID, Color color) {
+	public void setEdgeColor(long edgeID, Color color) {
 		edgeColMap.put(edgeID, color);
 	}
 
@@ -653,7 +653,7 @@ public class CyFrame {
 	 * @param edge the ID of the edge whose color to retrieve
 	 * @param color the color for this edge
 	 */
-	public void setEdgeStrokeColor(String edgeID, Color color) {
+	public void setEdgeStrokeColor(long edgeID, Color color) {
 		edgeStrokeColMap.put(edgeID, color);
 	}
 
@@ -663,7 +663,7 @@ public class CyFrame {
 	 * @param edgeID the ID of the edge whose opacity to retrieve
 	 * @return the opacity 
 	 */
-	public Integer getEdgeOpacity(String edgeID) {
+	public Integer getEdgeOpacity(long edgeID) {
 		if (edgeOpacityMap.containsKey(edgeID))
 			return edgeOpacityMap.get(edgeID);
 		return new Integer(0);
@@ -675,7 +675,7 @@ public class CyFrame {
 	 * @param edgeID the ID of the edge whose opacity to retrieve
 	 * @return the opacity 
 	 */
-	public Integer getEdgeStrokeOpacity(String edgeID) {
+	public Integer getEdgeStrokeOpacity(long edgeID) {
 		if (edgeStrokeOpacityMap.containsKey(edgeID))
 			return edgeStrokeOpacityMap.get(edgeID);
 		return new Integer(0);
@@ -687,7 +687,7 @@ public class CyFrame {
 	 * @param edge the ID of the edge whose opacity to retrieve
 	 * @param opacity the opacity for this edge
 	 */
-	public void setEdgeOpacity(String edgeID, Integer opacity) {
+	public void setEdgeOpacity(long edgeID, Integer opacity) {
 		edgeOpacityMap.put(edgeID, opacity);
 	}
 
@@ -697,7 +697,7 @@ public class CyFrame {
 	 * @param edge the ID of the edge whose opacity to retrieve
 	 * @param opacity the opacity for this edge
 	 */
-	public void setEdgeStrokeOpacity(String edgeID, Integer opacity) {
+	public void setEdgeStrokeOpacity(long edgeID, Integer opacity) {
 		edgeStrokeOpacityMap.put(edgeID, opacity);
 	}
 
@@ -707,7 +707,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose opacity to retrieve
 	 * @return the opacity 
 	 */
-	public Integer getNodeOpacity(String nodeID) {
+	public Integer getNodeOpacity(long nodeID) {
 		if (nodeOpacityMap.containsKey(nodeID))
 			return nodeOpacityMap.get(nodeID);
 		return new Integer(0);
@@ -719,7 +719,7 @@ public class CyFrame {
 	 * @param nodeID the ID of the node whose opacity to retrieve
 	 * @return the opacity 
 	 */
-	public Integer getNodeFillOpacity(String nodeID) {
+	public Integer getNodeFillOpacity(long nodeID) {
 		if (nodeFillOpacityMap.containsKey(nodeID))
 			return nodeFillOpacityMap.get(nodeID);
 		return new Integer(0);
@@ -731,7 +731,7 @@ public class CyFrame {
 	 * @param node the ID of the node whose opacity to retrieve
 	 * @param opacity the opacity for this node
 	 */
-	public void setNodeOpacity(String nodeID, Integer opacity) {
+	public void setNodeOpacity(long nodeID, Integer opacity) {
 		nodeOpacityMap.put(nodeID, opacity);
 	}
 
@@ -741,7 +741,7 @@ public class CyFrame {
 	 * @param node the ID of the node whose opacity to retrieve
 	 * @param opacity the opacity for this node
 	 */
-	public void setNodeFillOpacity(String nodeID, Integer opacity) {
+	public void setNodeFillOpacity(long nodeID, Integer opacity) {
 		nodeFillOpacityMap.put(nodeID, opacity);
 	}
 
@@ -751,7 +751,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node size
 	 */
-	public double[] getNodeSize(String nodeID) {
+	public double[] getNodeSize(long nodeID) {
 		if (nodeSizeMap.containsKey(nodeID)) {
 			double[] size = nodeSizeMap.get(nodeID);
 			return size;
@@ -765,7 +765,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @param size
 	 */
-	public void setNodeSize(String nodeID, double[] size){
+	public void setNodeSize(long nodeID, double[] size){
 		nodeSizeMap.put(nodeID, size);
 	}
 	
@@ -774,7 +774,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return width of node border
 	 */
-	public double getNodeBorderWidth(String nodeID){
+	public double getNodeBorderWidth(long nodeID){
 		if (nodeBorderWidthMap.containsKey(nodeID))
 			return nodeBorderWidthMap.get(nodeID);
 		return 0.0f;
@@ -785,7 +785,7 @@ public class CyFrame {
 	  * @param nodeID
 	  * @param width
 	  */
-	public void setNodeBorderWidth(String nodeID, double width){
+	public void setNodeBorderWidth(long nodeID, double width){
 		nodeBorderWidthMap.put(nodeID, width);
 	}
 
@@ -794,7 +794,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node border color
 	 */
-	public Color getNodeBorderColor(String nodeID) {
+	public Color getNodeBorderColor(long nodeID) {
 		if (nodeBorderColorMap.containsKey(nodeID))
 			return nodeBorderColorMap.get(nodeID);
 		return null;
@@ -805,7 +805,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @param color node border color
 	 */
-	public void setNodeBorderColor(String nodeID, Color color) {
+	public void setNodeBorderColor(long nodeID, Color color) {
 		nodeBorderColorMap.put(nodeID, color);
 	}
 
@@ -814,7 +814,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node border transparency
 	 */
-	public Integer getNodeBorderTrans(String nodeID) {
+	public Integer getNodeBorderTrans(long nodeID) {
 		if (nodeBorderTransMap.containsKey(nodeID))
 			return nodeBorderTransMap.get(nodeID);
 		return null;
@@ -825,7 +825,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @param trans node border transparency
 	 */
-	public void setNodeBorderTrans(String nodeID, Integer trans) {
+	public void setNodeBorderTrans(long nodeID, Integer trans) {
 		nodeBorderTransMap.put(nodeID, trans);
 	}
 
@@ -834,7 +834,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node label font size
 	 */
-	public Integer getNodeLabelFontSize(String nodeID) {
+	public Integer getNodeLabelFontSize(long nodeID) {
 		if (nodeLabelFontSizeMap.containsKey(nodeID))
 			return nodeLabelFontSizeMap.get(nodeID);
 		return null;
@@ -845,7 +845,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @param size node label font size
 	 */
-	public void setNodeLabelFontSize(String nodeID, Integer size) {
+	public void setNodeLabelFontSize(long nodeID, Integer size) {
 		nodeLabelFontSizeMap.put(nodeID, size);
 	}
 
@@ -854,7 +854,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node label transparency
 	 */
-	public Integer getNodeLabelTrans(String nodeID) {
+	public Integer getNodeLabelTrans(long nodeID) {
 		if (nodeLabelTransMap.containsKey(nodeID))
 			return nodeLabelTransMap.get(nodeID);
 		return null;
@@ -865,7 +865,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @param trans node label transparency
 	 */
-	public void setNodeLabelTrans(String nodeID, Integer trans) {
+	public void setNodeLabelTrans(long nodeID, Integer trans) {
 		nodeLabelTransMap.put(nodeID, trans);
 	}
 
@@ -874,7 +874,7 @@ public class CyFrame {
 	 * @param nodeID
 	 * @return node label color
 	 */
-	public Color getNodeLabelColor(String nodeID) {
+	public Color getNodeLabelColor(long nodeID) {
 		if (nodeLabelColMap.containsKey(nodeID))
 			return nodeLabelColMap.get(nodeID);
 		return null;
@@ -885,7 +885,7 @@ public class CyFrame {
 	  * @param nodeID
 	  * @param color
 	  */
-	public void setNodeLabelColor(String nodeID, Color color){
+	public void setNodeLabelColor(long nodeID, Color color){
 		nodeLabelColMap.put(nodeID, color);
 	}
 	
@@ -894,7 +894,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @return the edge width 
 	 */
-	public double getEdgeWidth(String edgeID){
+	public double getEdgeWidth(long edgeID){
 		if (edgeWidthMap.containsKey(edgeID))
 			return edgeWidthMap.get(edgeID);
 		return 0.0f;
@@ -905,7 +905,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @param width
 	 */
-	public void setEdgeWidth(String edgeID, double width){
+	public void setEdgeWidth(long edgeID, double width){
 		edgeWidthMap.put(edgeID, width);
 	}
 
@@ -914,7 +914,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @return edge label color
 	 */
-	public Color getEdgeLabelColor(String edgeID) {
+	public Color getEdgeLabelColor(long edgeID) {
 		if (edgeLabelColMap.containsKey(edgeID))
 			return edgeLabelColMap.get(edgeID);
 		return null;
@@ -925,7 +925,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @return edge label size
 	 */
-	public Integer getEdgeLabelFontSize(String edgeID) {
+	public Integer getEdgeLabelFontSize(long edgeID) {
 		if (edgeLabelFontSizeMap.containsKey(edgeID))
 			return edgeLabelFontSizeMap.get(edgeID);
 		return null;
@@ -936,7 +936,7 @@ public class CyFrame {
 	 * @param edgeID
 	 * @return edge transparency
 	 */
-	public Integer getEdgeLabelTrans(String edgeID) {
+	public Integer getEdgeLabelTrans(long edgeID) {
 		if (edgeLabelTransMap.containsKey(edgeID))
 			return edgeLabelTransMap.get(edgeID);
 		return null;
@@ -947,7 +947,7 @@ public class CyFrame {
 	  * @param edgeID
 	  * @param color
 	  */
-	public void setEdgeLabelColor(String edgeID, Color color){
+	public void setEdgeLabelColor(long edgeID, Color color){
 		edgeLabelColMap.put(edgeID, color);
 	}
 
@@ -956,7 +956,7 @@ public class CyFrame {
 	  * @param edgeID
 	  * @param size font size
 	  */
-	public void setEdgeLabelFontSize(String edgeID, Integer size){
+	public void setEdgeLabelFontSize(long edgeID, Integer size){
 		edgeLabelFontSizeMap.put(edgeID, size);
 	}
 
@@ -965,7 +965,7 @@ public class CyFrame {
 	  * @param edgeID
 	  * @param trans transparency
 	  */
-	public void setEdgeLabelTrans(String edgeID, Integer trans){
+	public void setEdgeLabelTrans(long edgeID, Integer trans){
 		edgeLabelTransMap.put(edgeID, trans);
 	}
 
@@ -1010,7 +1010,7 @@ public class CyFrame {
 	 *
 	 * @return the list of node views
 	 */
-	public List<String> getNodeIdList() {
+	public List<Long> getNodeIdList() {
 		return nodeIdList;
 	}
 
@@ -1019,7 +1019,7 @@ public class CyFrame {
 	 *
 	 * @return the list of edge views
 	 */
-	public List<String> getEdgeIdList() {
+	public List<Long> getEdgeIdList() {
 		return edgeIdList;
 	}
 
@@ -1028,7 +1028,7 @@ public class CyFrame {
 	 *
 	 * @param nodeIdList the list of node views
 	 */
-	public void setNodeIdList(List<String>nodeIdList) {
+	public void setNodeIdList(List<Long>nodeIdList) {
 		this.nodeIdList = nodeIdList;
 	}
 
@@ -1037,7 +1037,7 @@ public class CyFrame {
 	 *
 	 * @param edgeIdList the list of edges
 	 */
-	public void setEdgeIdList(List<String>edgeIdList) {
+	public void setEdgeIdList(List<Long>edgeIdList) {
 		this.edgeIdList = edgeIdList;
 	}
 
