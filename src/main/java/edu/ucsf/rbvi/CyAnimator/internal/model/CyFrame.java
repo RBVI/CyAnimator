@@ -404,29 +404,58 @@ public class CyFrame {
 			// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
 			//if(xy == null || nodeView == null){ continue; }
 			
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Y_LOCATION))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_Y_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Z_LOCATION))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_Z_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
 			
 			double[] size = nodeSizeMap.get(nodeName);
+			
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_HEIGHT))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_HEIGHT);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_WIDTH))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_WIDTH);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
 			
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_WIDTH))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_WIDTH);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_PAINT))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_PAINT);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
 
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_PAINT))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_PAINT);
 			if (p != null)
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_FILL_COLOR);
 			if (pFill != null)
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
 
 			Color labelColor = nodeLabelColMap.get(nodeName);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
 										new Color(labelColor.getRed(), 
 										labelColor.getGreen(), labelColor.getBlue()));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_TRANSPARENCY))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_TRANSPARENCY);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_SIZE))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
 		}
 
@@ -441,31 +470,55 @@ public class CyFrame {
 			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
 			if ((p == null && pStroke == null) || edgeView == null) continue;
 			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
 			if (p != null)
 				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
 			if (pStroke != null)
 				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
 			Color labelColor = edgeLabelColMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
 										new Color(labelColor.getRed(), 
 										labelColor.getGreen(), labelColor.getBlue()));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TRANSPARENCY))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
 			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
 					labelTrans = edgeLabelTransMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
 		}
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
 		//networkView.getComponent().
 	//	dview = (DGraphView)currentView;
 		
 		//InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(networkView);
 		
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
 
 		//dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
