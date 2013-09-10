@@ -217,7 +217,8 @@ public class CyFrame {
 			nodeOpacityMap.put(nodeName, trans);
 
 			//grab color and opacity
-			Color nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
+			Color nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
+		/*	Color nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
 			if (nodeView.isSet(BasicVisualLexicon.NODE_FILL_COLOR)) {
 				nodeFillColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR);
 				if (nodeFillColor == null) {
@@ -226,7 +227,7 @@ public class CyFrame {
 						nodeFillColor = (Color)BasicVisualLexicon.NODE_FILL_COLOR.getDefault();
 					}
 				}
-			}
+			} */
 			Integer transFill = nodeView.getVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY);
 			//store in respective hashmap
 			nodeFillColMap.put(nodeName, nodeFillColor);
@@ -259,7 +260,8 @@ public class CyFrame {
 			//store in respective hashmap
 			edgeColMap.put(edgeName, p);
 			edgeOpacityMap.put(edgeName, trans);
-			Double edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
+			double edgeWidth = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH);
+		/*	Double edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
 			if (edgeView.isSet(BasicVisualLexicon.EDGE_WIDTH)) {
 				edgeWidth = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_WIDTH);
 				if (edgeWidth == null) {
@@ -268,11 +270,12 @@ public class CyFrame {
 						edgeWidth = BasicVisualLexicon.EDGE_WIDTH.getDefault();
 					}
 				}
-			}
+			} */
 			edgeWidthMap.put(edgeName, edgeWidth);
 
 			//grab color and opacity
-			Color pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
+			Color pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+		/*	Color pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
 			if (edgeView.isSet(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
 				pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
 				if (pStroke == null) {
@@ -281,7 +284,7 @@ public class CyFrame {
 						pStroke = (Color)BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT.getDefault();
 					}
 				}
-			}
+			} */
 			Integer transStroke = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY);
 			//store in respective hashmap
 			edgeStrokeColMap.put(edgeName, pStroke);
