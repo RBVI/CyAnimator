@@ -41,6 +41,8 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
@@ -53,7 +55,7 @@ import org.cytoscape.service.util.CyServiceRegistrar;
 
 
 public class CyAnimatorDialog extends JDialog 
-                              implements ActionListener, java.beans.PropertyChangeListener, FocusListener {
+                              implements ActionListener, java.beans.PropertyChangeListener, FocusListener, WindowListener {
 
 	
 	/**
@@ -108,7 +110,7 @@ public class CyAnimatorDialog extends JDialog
 		framePanel = new JPanel();
 		
 		dragnDrop = new DragAndDropManager();
-		
+		addWindowListener(this);
 		
 		initialize();
 	}
@@ -693,6 +695,40 @@ public class CyAnimatorDialog extends JDialog
 		//	logger.error("Couldn't find file: " + path);
 			return null;
 		}
+	}
+
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void windowClosing(WindowEvent e) {
+		frameManager.stop();
+	}
+
+	public void windowClosed(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	
