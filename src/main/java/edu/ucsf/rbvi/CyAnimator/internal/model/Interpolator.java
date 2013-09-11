@@ -1091,24 +1091,24 @@ public class Interpolator {
 		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
 		                             int start, int stop, CyFrame[] cyFrameArray){
 			
-			int framenum = (stop-start) - 1;
+			int framenum = stop-start;
 			
-			double[] zoomValues = new double[framenum+2];
-			zoomValues[0] = 0;
-			zoomValues[1] = frameOne.getZoom();
-			zoomValues[framenum+1] = frameTwo.getZoom();
+			double[] zoomValues = new double[framenum+1];
+		//	zoomValues[0] = 0;
+			zoomValues[0] = frameOne.getZoom();
+			zoomValues[framenum] = frameTwo.getZoom();
 			double zoomInc = Math.abs(frameOne.getZoom() - frameTwo.getZoom())/framenum;
 			
-			for(int k=1; k<framenum+1; k++){
+			for(int k=1; k<framenum; k++){
 				
 				
 				if(frameOne.getZoom() < frameTwo.getZoom()){
-					zoomValues[k+1] = zoomValues[k] + zoomInc;
+					zoomValues[k] = zoomValues[k-1] + zoomInc;
 				}else{
-					zoomValues[k+1] = zoomValues[k] - zoomInc;
+					zoomValues[k] = zoomValues[k-1] - zoomInc;
 				}
 				
-				cyFrameArray[start+k].setZoom(zoomValues[k+1]);
+				cyFrameArray[start+k].setZoom(zoomValues[k]);
 			}
 			return cyFrameArray;
 		}
@@ -1167,7 +1167,7 @@ public class Interpolator {
 		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
                 int start, int stop, CyFrame[] cyFrameArray){
 			
-			int framenum = (stop-start) - 1;
+			int framenum = stop-start;
 			
 			double xone = frameOne.getCenterPoint().getX();
 			double yone = frameOne.getCenterPoint().getY();
@@ -1178,14 +1178,14 @@ public class Interpolator {
 			double ztwo = frameTwo.getCenterPoint().getZ();
 			
 			double incrementLength = (xtwo - xone)/framenum;
-			double[] xArray = new double[framenum+2];
-			xArray[1] = xone;
+			double[] xArray = new double[framenum+1];
+			xArray[0] = xone;
 
-			for(int k=1; k<framenum+1; k++){
+			for(int k=1; k<framenum; k++){
 
 				Point3D xy = new Point3D(0, 0, 0);
 				
-				xArray[k+1] = xArray[k] + incrementLength;
+				xArray[k] = xArray[k-1] + incrementLength;
 				//xy.setLocation(xArray[k], arg1)[0] = xArray[k];
 
 				//Do the position interpolation
