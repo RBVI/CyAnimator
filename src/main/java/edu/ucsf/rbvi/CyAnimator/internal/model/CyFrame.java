@@ -41,6 +41,7 @@ import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
@@ -332,7 +333,7 @@ public class CyFrame {
 							
 						}
 						
-						public void allFinished() {
+						public void allFinished(FinishStatus arg0) {
 							BufferedImage image = null, scaledImage = null;
 							try {
 								image = ImageIO.read(temporaryImageFile);
@@ -1133,7 +1134,7 @@ public class CyFrame {
 							// TODO Auto-generated method stub
 						}
 						
-						public void allFinished() {
+						public void allFinished(FinishStatus arg0) {
 							// TODO Auto-generated method stub
 							finished.setValue(true);
 						}
