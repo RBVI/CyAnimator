@@ -233,27 +233,27 @@ public class Interpolator {
 				colorTwo = new Color(colorOne.getRed(), colorOne.getGreen(), colorOne.getBlue(), 0);
 		}
 
-		int red1 = colorOne.getRed(); 
-		int green1 = colorOne.getGreen(); 
-		int blue1 = colorOne.getBlue();
-		int alpha1 = colorOne.getAlpha();
+		float red1 = colorOne.getRed(); 
+		float green1 = colorOne.getGreen(); 
+		float blue1 = colorOne.getBlue();
+		float alpha1 = colorOne.getAlpha();
 
-		int red2 = colorTwo.getRed();
-		int green2 = colorTwo.getGreen();
-		int blue2 = colorTwo.getBlue();
-		int alpha2 = colorTwo.getAlpha();
+		float red2 = colorTwo.getRed();
+		float green2 = colorTwo.getGreen();
+		float blue2 = colorTwo.getBlue();
+		float alpha2 = colorTwo.getAlpha();
 
 		//Set up the increment lengths for each RGB values
-		int rIncLen = Math.round((Math.abs(red1 - red2))/framenum);
-		int gIncLen = Math.round((Math.abs(green1 - green2))/framenum);
-		int bIncLen = Math.round((Math.abs(blue1 - blue2))/framenum);
-		int aIncLen = Math.round((Math.abs(alpha1 - alpha2))/framenum);
+		float rIncLen = (Math.abs(red1 - red2))/(framenum+1);
+		float gIncLen = (Math.abs(green1 - green2))/(framenum+1);
+		float bIncLen = (Math.abs(blue1 - blue2))/(framenum+1);
+		float aIncLen = (Math.abs(alpha1 - alpha2))/(framenum+1);
 
 		//arrays which will hold the RGB values at each increment, these arrays are parallel to the Color[]
-		int[] rArray = new int[framenum+2];
-		int[] gArray = new int[framenum+2];
-		int[] bArray = new int[framenum+2];
-		int[] aArray = new int[framenum+2];
+		float[] rArray = new float[framenum+2];
+		float[] gArray = new float[framenum+2];
+		float[] bArray = new float[framenum+2];
+		float[] aArray = new float[framenum+2];
 
 		rArray[0] = 0;
 		gArray[0] = 0;
@@ -310,9 +310,9 @@ public class Interpolator {
 			
 			//create the new color and put it in the Color[]
 			if (includeAlpha)
-				paints[k] = new Color(rArray[k+1], gArray[k+1], bArray[k+1], aArray[k+1]);	
+				paints[k] = new Color((int) rArray[k+1], (int) gArray[k+1], (int) bArray[k+1], (int) aArray[k+1]);	
 			else
-				paints[k] = new Color(rArray[k+1], gArray[k+1], bArray[k+1]);	
+				paints[k] = new Color((int) rArray[k+1], (int) gArray[k+1], (int) bArray[k+1]);	
 		}
 
 		return paints;
@@ -571,7 +571,7 @@ public class Interpolator {
 		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
 				int start, int stop, CyFrame[] cyFrameArray){
 
-			int framenum = (stop-start) - 1;	
+			int framenum = stop-start;
 
 			for(long nodeid: idList){
 
@@ -597,7 +597,7 @@ public class Interpolator {
 				
 				
 				if (sizeOne[0] == sizeTwo[0] && sizeOne[1] == sizeTwo[1]) {
-					for(int k=1; k<framenum+1; k++){
+					for(int k=1; k<framenum; k++){
 						cyFrameArray[start+k].setNodeSize(nodeid, sizeOne);
 					}
 					continue;
@@ -605,12 +605,12 @@ public class Interpolator {
 
 				double sizeIncXlength = (sizeTwo[0] - sizeOne[0])/framenum;
 				double sizeIncYlength = (sizeTwo[1] - sizeOne[1])/framenum;
-				double[] sizeXArray = new double[framenum+2];
-				double[] sizeYArray = new double[framenum+2];
+				double[] sizeXArray = new double[framenum+1];
+				double[] sizeYArray = new double[framenum+1];
 				sizeXArray[1] = sizeOne[0] + sizeIncXlength;
 				sizeYArray[1] = sizeOne[1] + sizeIncYlength;
 					
-				for(int k=1; k<framenum+1; k++){
+				for(int k=1; k<framenum; k++){
 					sizeXArray[k+1] = sizeXArray[k] + sizeIncXlength;
 					sizeYArray[k+1] = sizeYArray[k] + sizeIncYlength;
 					double[] temp = {sizeXArray[k], sizeYArray[k]};
@@ -636,7 +636,7 @@ public class Interpolator {
 		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
 				int start, int stop, CyFrame[] cyFrameArray){
 
-			int framenum = (stop-start) - 1;	
+			int framenum = stop-start;	
 
 			for(long nodeid: idList){
 
@@ -650,17 +650,17 @@ public class Interpolator {
 				
 				
 				if (widthOne == widthTwo) {
-					for(int k=1; k<framenum+1; k++){
+					for(int k=1; k<framenum; k++){
 						cyFrameArray[start+k].setNodeBorderWidth(nodeid, widthOne);
 					}
 					continue;
 				}
 
 				double widthInclength = (widthTwo - widthOne)/framenum;
-				double[] widthArray = new double[framenum+2];
+				double[] widthArray = new double[framenum+1];
 				widthArray[1] = widthOne + widthInclength;
 					
-				for(int k=1; k<framenum+1; k++){
+				for(int k=1; k<framenum; k++){
 					widthArray[k+1] = widthArray[k] + widthInclength;
 					cyFrameArray[start+k].setNodeBorderWidth(nodeid, widthArray[k]);
 				}	
@@ -763,7 +763,7 @@ public class Interpolator {
 							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
 						}	
 					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) framenum), sizeIncrease = sizeInc;
+						double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
 	
 						for(int k=1; k<framenum+1; k++){
 							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne + (int) sizeIncrease);
@@ -779,7 +779,7 @@ public class Interpolator {
 							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne);
 						}	
 					} else {
-						double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
+						double sizeInc = ((double) transTwo - (double) transOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
 	
 						for(int k=1; k<framenum+1; k++){
 							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne + (int) sizeIncrease);
