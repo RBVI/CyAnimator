@@ -348,7 +348,7 @@ public class Interpolator {
 		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
 		                             int start, int stop, CyFrame[] cyFrameArray){
 
-			int framenum = (stop-start) - 1;
+			int framenum = stop-start;
 
 			for(long nodeid: idList){
 				//Get the node positions and set up the position interpolation
@@ -364,17 +364,17 @@ public class Interpolator {
 					else
 						xy = xyOne;
 
-					for(int k=1; k<framenum+1; k++) {
+					for(int k=1; k<framenum; k++) {
 						cyFrameArray[start+k].setNodePosition(nodeid, xy);
 					}
 					continue;
 				}
 				
 				double incrementLength = (xyTwo[0] - xyOne[0])/framenum;
-				double[] xArray = new double[framenum+2];
+				double[] xArray = new double[framenum+1];
 				xArray[1] = xyOne[0] + incrementLength;
 
-				for(int k=1; k<framenum+1; k++){
+				for(int k=1; k<framenum; k++){
 
 					double[] xy = new double[3];
 					xy[0] = 0;
