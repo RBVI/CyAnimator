@@ -542,13 +542,13 @@ public class Interpolator {
 						cyFrameArray[start+k].setNodeFillOpacity(nodeid, transFillOne);
 					}
 				} else {
-					int transIncLength = (transFillTwo - transFillOne)/framenum;
-					int[] transArray = new int[framenum+2];
+					float transIncLength = ((float)(transFillTwo - transFillOne))/((float)framenum);
+					float[] transArray = new float[framenum+2];
 					transArray[1] = transFillOne + transIncLength;
 					
 					for(int k=1; k<framenum+1; k++){
 						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setNodeFillOpacity(nodeid, transArray[k]);
+						cyFrameArray[start+k].setNodeFillOpacity(nodeid, (int)transArray[k]);
 					}
 				}
 			}
@@ -897,46 +897,48 @@ public class Interpolator {
 			for(long edgeid: idList){
 				
 				//Get the node transparencies and set up the transparency interpolation
-				Integer transOne = frameOne.getEdgeOpacity(edgeid);
-				Integer transTwo = frameTwo.getEdgeOpacity(edgeid);
+				Double transOne;
+				Double transTwo;
 				
-				if (transOne == null) transOne = new Integer(0);
-				if (transTwo == null) transTwo = new Integer(0);
+				if (frameOne.getEdgeOpacity(edgeid) == null) transOne = new Double(0);
+				else transOne = new Double(frameOne.getEdgeOpacity(edgeid));
+				if (frameTwo.getEdgeOpacity(edgeid) == null) transTwo = new Double(0);
+				else transTwo = new Double(frameTwo.getEdgeOpacity(edgeid));
 
 				if (transOne.intValue() == transTwo.intValue()) {
 					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeOpacity(edgeid, transOne);
+						cyFrameArray[start+k].setEdgeOpacity(edgeid, transOne.intValue());
 					}
 				} else {
-					int transIncLength = (transTwo - transOne)/framenum;
-					int[] transArray = new int[framenum+2];
+					double transIncLength = ((double)(transTwo - transOne))/((double)(framenum + 1));
+					double[] transArray = new double[framenum+2];
 					transArray[1] = transOne + transIncLength;
 					
 					for(int k=1; k<framenum+1; k++){
 						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setEdgeOpacity(edgeid, transArray[k]);
+						cyFrameArray[start+k].setEdgeOpacity(edgeid, (int)transArray[k]);
 					}
 				}
 				
 				//Get the node transparencies and set up the transparency interpolation
-				Integer transStrokeOne = frameOne.getEdgeStrokeOpacity(edgeid);
-				Integer transStrokeTwo = frameTwo.getEdgeStrokeOpacity(edgeid);
+				Double transStrokeOne = new Double(frameOne.getEdgeStrokeOpacity(edgeid));
+				Double transStrokeTwo = new Double(frameTwo.getEdgeStrokeOpacity(edgeid));
 				
-				if (transStrokeOne == null) transStrokeOne = new Integer(0);
-				if (transStrokeTwo == null) transStrokeTwo = new Integer(0);
+				if (transStrokeOne == null) transStrokeOne = new Double(0);
+				if (transStrokeTwo == null) transStrokeTwo = new Double(0);
 
 				if (transStrokeOne.intValue() == transStrokeTwo.intValue()) {
 					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, transStrokeOne);
+						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, transStrokeOne.intValue());
 					}
 				} else {
-					int transIncLength = (transStrokeTwo - transStrokeOne)/framenum;
-					int[] transArray = new int[framenum+2];
+					double transIncLength = ((double)(transStrokeTwo - transStrokeOne))/((double)(framenum + 1));
+					double[] transArray = new double[framenum+2];
 					transArray[1] = transStrokeOne + transIncLength;
 					
 					for(int k=1; k<framenum+1; k++){
 						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, transArray[k]);
+						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, (int)transArray[k]);
 					}
 				}
 				
@@ -982,7 +984,7 @@ public class Interpolator {
 					continue;
 				}
 
-				double widthInclength = (widthTwo - widthOne)/framenum;
+				double widthInclength = (widthTwo - widthOne)/(framenum + 1);
 				double[] widthArray = new double[framenum+2];
 				widthArray[1] = widthOne + widthInclength;
 					
@@ -1037,7 +1039,7 @@ public class Interpolator {
 							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne);
 						}	
 					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne)/ ((double) framenum), sizeIncrease = sizeInc;
+						double sizeInc = ((double) sizeTwo - (double) sizeOne)/ ((double) framenum + 1), sizeIncrease = sizeInc;
 	
 						for(int k=1; k<framenum+1; k++){
 							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
@@ -1053,7 +1055,7 @@ public class Interpolator {
 							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne);
 						}	
 					} else {
-						int transInc = (transTwo - transOne)/ framenum, transIncrease = transInc;
+						int transInc = (transTwo - transOne)/ (framenum + 1), transIncrease = transInc;
 	
 						for(int k=1; k<framenum+1; k++){
 							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne + transIncrease);

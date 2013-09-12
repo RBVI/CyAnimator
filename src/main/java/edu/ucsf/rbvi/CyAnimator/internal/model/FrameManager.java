@@ -143,17 +143,6 @@ public class FrameManager {
 				if(frameIndex == frames.length){ frameIndex = 0;}
 				
 				frames[frameIndex].display();
-				System.out.println("k: " + frameIndex);
-			/*	for (long nodeID: frames[frameIndex].getNodeIdList()) {
-					System.out.println("nodeID: " + nodeID);
-					System.out.println("node color: " + frames[frameIndex].getNodeFillColor(nodeID));
-				} */
-				for (long edgeID: frames[frameIndex].getEdgeIdList()) {
-					System.out.println("edgeID: " + edgeID);
-					System.out.println("edge color: " + frames[frameIndex].getEdgeStrokeColor(edgeID));
-					System.out.println("edge width: " + frames[frameIndex].getEdgeWidth(edgeID));
-					System.out.println("edge opacity: " + frames[frameIndex].getEdgeStrokeOpacity(edgeID));
-				}
 				frameIndex++;
 			}
 		};
