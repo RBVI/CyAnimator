@@ -70,7 +70,8 @@ public class WriteTask extends AbstractTask {
 			}
 			monitor.setProgress((i*100)/this.frameManager.frames.length);
 		}
-                VideoCreator vc = new VideoCreator(directory, directory);
+                VideoCreator vc = new VideoCreator(directory, directory, 20);
+                vc.CreateVideo();
 
 		return;
 	}

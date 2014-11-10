@@ -9,11 +9,6 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
  *
  * @author vijay13
  */
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
@@ -26,30 +21,27 @@ import com.xuggle.xuggler.ICodec;
 import java.text.DecimalFormat;
 
 public class VideoCreator {
-
-    private static final double FRAME_RATE = 20;
-
-    private static final int SECONDS_TO_RUN_FOR = 20;
-
-    private static String outputFilename = "/home/vijay13/mydesktop.mp4";
-
-    private static Dimension screenBounds;
+    private static final int IMAGE_WIDTH = 880, IMAGE_HEIGHT = 440;
     
-    public VideoCreator(String inputImgDirPath, String outputVideoPath){
-        CreateVideo( inputImgDirPath, outputVideoPath);
+    private double FRAME_RATE = 20;
+    
+    private String inputImgDirPath = "";
+
+    private String outputFilename = "";
+    
+    public VideoCreator(String inputImgDirPath, String outputVideoPath, double frameRate){
+        this.inputImgDirPath = inputImgDirPath;
+        this.outputFilename = outputVideoPath + "/video.mp4";
+        this.FRAME_RATE = frameRate;
     }
 
-    public static void CreateVideo(String inputImgDirPath, String outputVideoPath) {
-        outputFilename = outputVideoPath + "/video.mp4";
+    public void CreateVideo() {
   // let's make a IMediaWriter to write the file.
         final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
-        screenBounds = Toolkit.getDefaultToolkit().getScreenSize();
-
   // We tell it we're going to add one video stream, with id 0,
   // at position 0, and that it will have a fixed frame rate of FRAME_RATE.
-        writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4,
-                screenBounds.width / 2, screenBounds.height / 2);
+        writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, IMAGE_WIDTH, IMAGE_HEIGHT);
 
         long startTime = System.nanoTime();
         
@@ -113,26 +105,6 @@ public class VideoCreator {
         }
 
         return image;
-
-    }
-
-    private static BufferedImage getDesktopScreenshot() {
-
-        try {
-
-            Robot robot = new Robot();
-
-            Rectangle captureSize = new Rectangle(screenBounds);
-
-            return robot.createScreenCapture(captureSize);
-
-        } catch (AWTException e) {
-
-            e.printStackTrace();
-
-            return null;
-
-        }
 
     }
 
