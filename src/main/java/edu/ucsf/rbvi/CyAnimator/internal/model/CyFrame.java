@@ -168,8 +168,6 @@ public class CyFrame {
 
 		// Get our initial edgeList
 		edgeList = currentNetwork.getEdgeList();
-		
-		//VideoCreator vc = new VideoCreator();
 	}
 	
 	/*

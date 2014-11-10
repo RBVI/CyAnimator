@@ -23,23 +23,24 @@ import java.io.*;
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
+import java.text.DecimalFormat;
 
 public class VideoCreator {
 
-    private static final double FRAME_RATE = 50;
+    private static final double FRAME_RATE = 20;
 
     private static final int SECONDS_TO_RUN_FOR = 20;
 
-    private static final String outputFilename = "/home/vijay13/mydesktop.mp4";
+    private static String outputFilename = "/home/vijay13/mydesktop.mp4";
 
     private static Dimension screenBounds;
     
-    public VideoCreator(){
-        CreateVideo();
+    public VideoCreator(String inputImgDirPath, String outputVideoPath){
+        CreateVideo( inputImgDirPath, outputVideoPath);
     }
 
-    public static void CreateVideo() {
-
+    public static void CreateVideo(String inputImgDirPath, String outputVideoPath) {
+        outputFilename = outputVideoPath + "/video.mp4";
   // let's make a IMediaWriter to write the file.
         final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
@@ -51,15 +52,20 @@ public class VideoCreator {
                 screenBounds.width / 2, screenBounds.height / 2);
 
         long startTime = System.nanoTime();
+        
+        int filesCount = new File(inputImgDirPath).list().length;
+        DecimalFormat frame = new DecimalFormat("#000");
+        
+        for (int index = 0; index < filesCount - 1; index++) {
 
-        for (int index = 0; index < SECONDS_TO_RUN_FOR * FRAME_RATE; index++) {
-
-// take the screen shot
+// read image
             BufferedImage screen = null;
             try {
-                screen = ImageIO.read(new File("/home/vijay13/Pictures/0.jpg"));
+                System.out.println(index);
+                screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
             } catch (IOException e) {
                 System.out.println("Could not read image");
+                continue;
             }
 
 // convert to the right image type
