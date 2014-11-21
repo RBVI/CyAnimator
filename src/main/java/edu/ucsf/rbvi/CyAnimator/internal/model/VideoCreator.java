@@ -53,7 +53,6 @@ public class VideoCreator {
 // read image
             BufferedImage screen = null;
             try {
-                System.out.println(index);
                 screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
             } catch (IOException e) {
                 System.out.println("Could not read image");

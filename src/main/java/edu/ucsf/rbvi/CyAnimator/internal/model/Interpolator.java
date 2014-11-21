@@ -26,6 +26,8 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.Color;
 import java.util.*;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNode;
 
 public class Interpolator {
 	
@@ -70,7 +72,7 @@ public class Interpolator {
 	 */
 	public CyFrame[] makeFrames(List<CyFrame> frameList) {
 
-		if(frameList.size() == 0){ return null; }
+		if(frameList.isEmpty()){ return null; }
 		
 		//initialize the framecount to the number of key frames
 		int framecount = frameList.size();
@@ -79,7 +81,7 @@ public class Interpolator {
 		for(int i=0; i<frameList.size()-1; i++){ 
 			
 			//each frame contains the number of frames which will be interpolated after it which is the interCount
-			framecount = framecount + frameList.get(i).getInterCount() - 1; 
+			framecount = framecount + frameList.get(i).getInterCount() - 1;
 		}
 		
 		//create the main CyFrame array which will then be run through all of the interpolators
@@ -111,13 +113,22 @@ public class Interpolator {
 			
 			//set the first frame to the the first key frame
 			cyFrameArray[start] = frameList.get(i);
-			List<Long> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
-			List<Long> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
-
+			List<CyNode> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
+			List<CyEdge> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
+                                                
+			List<Long> nodeIdList = nodeIdUnionize(frameList.get(i), frameList.get(i+1));
+			List<Long> edgeIdList = edgeIdUnionize(frameList.get(i), frameList.get(i+1));
+                    
 			//reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
-				cyFrameArray[k].setNodeIdList(nodeList);
-				cyFrameArray[k].setEdgeIdList(edgeList);
+				cyFrameArray[k].setNodeList(nodeList);
+				cyFrameArray[k].setEdgeList(edgeList);
+			}
+                        
+                        //reset the nodeLists once the unionizer has updated them
+			for (int k = start+1; k < end; k++) {
+				cyFrameArray[k].setNodeIdList(nodeIdList);
+				cyFrameArray[k].setEdgeIdList(edgeIdList);
 			}
 
 			/*
@@ -128,17 +139,17 @@ public class Interpolator {
 			 * interpolation lists.
 			 */
 			for(FrameInterpolator interp: nodeInterpolators){
-				cyFrameArray = interp.interpolate(nodeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(nodeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
 
 			for(FrameInterpolator interp: edgeInterpolators){
-				cyFrameArray = interp.interpolate(edgeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(edgeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
 
 			for(FrameInterpolator interp: networkInterpolators){
-				cyFrameArray = interp.interpolate(nodeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(nodeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
 			start = end;
@@ -160,7 +171,64 @@ public class Interpolator {
 	 * @param frameTwo is the second of two frames to be unionized
 	 * @return the unionized list of NodeViews
 	 */
-	public List<Long> nodeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+	public List<CyNode> nodeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<CyNode> list1 = frameOne.getNodeList();
+		List<CyNode> list2 = frameTwo.getNodeList();
+		Map<CyNode,CyNode> bigList = new HashMap<CyNode,CyNode>();	
+		
+		for (CyNode node: list1) {
+			bigList.put(node, node);
+		}
+
+		for (CyNode node: list2) {
+			bigList.put(node, node);
+		}
+
+		return new ArrayList<CyNode>(bigList.keySet());
+	}
+	
+	
+	/**
+	 * Takes two CyFrames and returns the union of the EdgeView lists that are contained
+	 * within each frame.  This is to ensure that when edges are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose edge list will be unionized
+	 * @param frameTwo is the second frame whose edge list will be unionized
+	 * @return the unionized list of EdgeViews
+	 * 
+	 */
+	public List<CyEdge> edgeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<CyEdge> list1 = frameOne.getEdgeList();
+		List<CyEdge> list2 = frameTwo.getEdgeList();
+		Map<CyEdge,CyEdge> bigList = new HashMap<CyEdge,CyEdge>();	
+
+		for (CyEdge edge: list1) {
+			bigList.put(edge, edge);
+		}
+
+		for (CyEdge edge: list2) {
+			bigList.put(edge, edge);
+		}
+		
+		return new ArrayList<CyEdge>(bigList.keySet());
+		
+	}
+        
+        /**
+	 * Takes two CyFrames and returns a list of NodeViews which is the union of the list of 
+	 * NodeViews that are in each of the two frames.  This is done to accomodate the adding/deleting
+	 * of nodes between frames in animation as the union provides a complete set of nodes when
+	 * moving across frames.
+	 * 
+	 * @param frameOne is the first of two frames to be unionized
+	 * @param frameTwo is the second of two frames to be unionized
+	 * @return the unionized list of NodeViews
+	 */
+	public List<Long> nodeIdUnionize(CyFrame frameOne, CyFrame frameTwo){
 		
 		List<Long> list1 = frameOne.getNodeIdList();
 		List<Long> list2 = frameTwo.getNodeIdList();
@@ -189,7 +257,7 @@ public class Interpolator {
 	 * @return the unionized list of EdgeViews
 	 * 
 	 */
-	public List<Long> edgeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+	public List<Long> edgeIdUnionize(CyFrame frameOne, CyFrame frameTwo){
 		
 		List<Long> list1 = frameOne.getEdgeIdList();
 		List<Long> list2 = frameTwo.getEdgeIdList();
@@ -206,7 +274,6 @@ public class Interpolator {
 		return new ArrayList<Long>(bigList.keySet());
 		
 	}
-
 	
 	/**
 	 * This method performs a generic color interpolation and is used by many of the interpolators
@@ -1033,36 +1100,42 @@ public class Interpolator {
 				}
 				Integer sizeOne = frameOne.getEdgeLabelFontSize(edgeid);
 				Integer sizeTwo = frameTwo.getEdgeLabelFontSize(edgeid);
-				if(sizeOne != null || sizeTwo != null) {
-					if (sizeOne == sizeTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne);
-						}	
-					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne)/ ((double) framenum + 1), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
+				
+                                if ( sizeOne == null ) sizeOne = 0;
+                                if ( sizeTwo == null ) sizeTwo = 0;
+                                
+				if ( sizeOne.equals(sizeTwo) ) {
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setEdgeLabelFontSize(edgeid, sizeOne);
+                                    }
+                                } else {
+                                    double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) framenum + 1), sizeIncrease = sizeInc;
+
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
+                                        sizeIncrease += sizeInc;
+                                    }
+                                }
+				
 				Integer transOne = frameOne.getEdgeLabelTrans(edgeid);
 				Integer transTwo = frameTwo.getEdgeLabelTrans(edgeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne);
-						}	
-					} else {
-						int transInc = (transTwo - transOne)/ (framenum + 1), transIncrease = transInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne + transIncrease);
-							transIncrease += transInc;
-						}	
-					}
-				}
+                                
+                                if ( transOne == null) transOne = 0;
+                                if ( transTwo == null) transTwo = 0;
+                                
+				if ( transOne.equals(transTwo) ) {
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setEdgeLabelTrans(edgeid, transOne);
+                                    }
+                                } else {
+                                    int transInc = (transTwo - transOne) / (framenum + 1), transIncrease = transInc;
+
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setEdgeLabelTrans(edgeid, transOne + transIncrease);
+                                        transIncrease += transInc;
+                                    }
+                                }
+				
 			}	
 			return cyFrameArray;
 		}
