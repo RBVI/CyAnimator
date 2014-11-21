@@ -770,20 +770,24 @@ public class Interpolator {
 				}
 				Integer transOne = frameOne.getNodeBorderTrans(nodeid);
 				Integer transTwo = frameTwo.getNodeBorderTrans(nodeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne);
-						}	
-					} else {
-						double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
+                                
+                                if ( transOne == null) transOne = 0;
+                                if ( transTwo == null) transTwo = 0;
+                                
+				
+				if (transOne.equals(transTwo)) {
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setNodeBorderTrans(nodeid, transOne);
+                                    }
+                                } else {
+                                    double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
+
+                                    for (int k = 1; k < framenum + 1; k++) {
+                                        cyFrameArray[start + k].setNodeBorderTrans(nodeid, transOne + (int) sizeIncrease);
+                                        sizeIncrease += sizeInc;
+                                    }
+                                }
+				
 			}	
 			return cyFrameArray;
 		}
@@ -824,36 +828,44 @@ public class Interpolator {
 				}
 				Integer sizeOne = frameOne.getNodeLabelFontSize(nodeid);
 				Integer sizeTwo = frameTwo.getNodeLabelFontSize(nodeid);
-				if(sizeOne != null || sizeTwo != null) {
-					if (sizeOne == sizeTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
-						}	
-					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
+                                
+                                if ( sizeOne == null) sizeOne = 0;
+                                if ( sizeTwo == null) sizeTwo = 0;
+                                
+				
+                                if (sizeOne.equals(sizeTwo)) {
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
+                                        }	
+                                } else {
+                                        double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
+
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne + (int) sizeIncrease);
+                                                sizeIncrease += sizeInc;
+                                        }	
+                                }
+				
 				Integer transOne = frameOne.getNodeLabelTrans(nodeid);
 				Integer transTwo = frameTwo.getNodeLabelTrans(nodeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne);
-						}	
-					} else {
-						double sizeInc = ((double) transTwo - (double) transOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
+                                
+                                if ( transOne == null) transOne = 0;
+                                if ( transTwo == null) transTwo = 0;
+                                
+				
+                                if (transOne.equals(transTwo)) {
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne);
+                                        }	
+                                } else {
+                                        double sizeInc = ((double) transTwo - (double) transOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
+
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne + (int) sizeIncrease);
+                                                sizeIncrease += sizeInc;
+                                        }	
+                                }
+				
 			}	
 			return cyFrameArray;
 		}
@@ -990,9 +1002,6 @@ public class Interpolator {
 				//Get the node transparencies and set up the transparency interpolation
 				Double transStrokeOne = new Double(frameOne.getEdgeStrokeOpacity(edgeid));
 				Double transStrokeTwo = new Double(frameTwo.getEdgeStrokeOpacity(edgeid));
-				
-				if (transStrokeOne == null) transStrokeOne = new Double(0);
-				if (transStrokeTwo == null) transStrokeTwo = new Double(0);
 
 				if (transStrokeOne.intValue() == transStrokeTwo.intValue()) {
 					for(int k=1; k<framenum+1; k++){
@@ -1038,11 +1047,6 @@ public class Interpolator {
 				//get the edge widths of the edge from each of the two frames
 				double widthOne = frameOne.getEdgeWidth(edgeid);
 				double widthTwo = frameTwo.getEdgeWidth(edgeid);
-				
-				
-				//if (widthOne == null) sizeOne = new Integer(1);
-				//if (widthTwo == null) sizeTwo = new Integer(1);
-				
 				
 				if (widthOne == widthTwo) {
 					for(int k=1; k<framenum+1; k++){
