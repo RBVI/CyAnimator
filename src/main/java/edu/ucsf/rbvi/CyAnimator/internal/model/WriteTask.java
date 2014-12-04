@@ -17,12 +17,14 @@ public class WriteTask extends AbstractTask {
 	boolean canceled = false;
 	String title;
 	String directory;
+        int videoType;
 
-	public WriteTask(FrameManager frameManager, String title, String directory) {
+	public WriteTask(FrameManager frameManager, String title, String directory, int videoType) {
 		super();
 		this.frameManager = frameManager;
 		this.title = title;
 		this.directory = directory;
+                this.videoType = videoType;
 	}
 
 	public String getTitle() {
@@ -70,11 +72,14 @@ public class WriteTask extends AbstractTask {
 			}
 			monitor.setProgress((i*100)/this.frameManager.frames.length);
 		}
-                //VideoCreator vc = new VideoCreator(directory, directory, 20);
-                //vc.CreateVideo();
                 
-                GifSequenceWriter wr = new GifSequenceWriter();
-                wr.createGIF(directory, directory, 50);
+                if(videoType == 0){
+                    GifSequenceWriter wr = new GifSequenceWriter();
+                    wr.createGIF(directory, directory, 50);
+                }else{
+                    VideoCreator vc = new VideoCreator(directory, directory, 20);
+                    vc.CreateVideo();
+                }
                 
 		return;
 	}

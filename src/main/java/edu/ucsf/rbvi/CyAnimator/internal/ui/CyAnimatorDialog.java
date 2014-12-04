@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JComboBox;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
@@ -69,6 +70,7 @@ public class CyAnimatorDialog extends JDialog
 	private JButton forwardButton;
 	private JButton backwardButton;
 	private JButton recordButton;
+        private JComboBox<String> videoTypeCB;
 	
 	private JMenuItem menuItem;
 	private JPanel mainPanel;
@@ -165,6 +167,11 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
 		
+                String[] choices = { "GIF","MP4"};
+                videoTypeCB = new JComboBox<String>(choices);
+                videoTypeCB.setVisible(true);
+                videoTypeCB.setSelectedIndex(0);
+		videoTypeCB.setToolTipText("Choose Video Type");
 		
 		speedSlider = new JSlider(1,60);
 		
@@ -180,6 +187,7 @@ public class CyAnimatorDialog extends JDialog
 		controlPanel.add(stopButton);
 		controlPanel.add(backwardButton);
 		controlPanel.add(forwardButton);
+                controlPanel.add(videoTypeCB);
 		controlPanel.add(recordButton);
 		controlPanel.add(speedSlider);
 		
@@ -251,7 +259,7 @@ public class CyAnimatorDialog extends JDialog
 				String filePath = file.getPath();
 				// System.out.println(filePath+" "+file.getName());
 				try{
-					frameManager.recordAnimation(filePath);
+					frameManager.recordAnimation(filePath, videoTypeCB.getSelectedIndex());
 				}catch (Exception excp) {
 				//	logger.error("Record of animation failed",excp);
 				}

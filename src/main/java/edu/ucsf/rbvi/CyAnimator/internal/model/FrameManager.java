@@ -172,8 +172,8 @@ public class FrameManager {
 	 * can be easily compressed into a standard movie format.
 	 * 
 	 */
-	public void recordAnimation(String directory) throws IOException {
-		WriteTask task = new WriteTask(this, "Writing output files", directory);
+	public void recordAnimation(String directory, int videoType) throws IOException {
+		WriteTask task = new WriteTask(this, "Writing output files", directory, videoType);
 		taskManager.execute(new TaskIterator(task));
 	}
 	
