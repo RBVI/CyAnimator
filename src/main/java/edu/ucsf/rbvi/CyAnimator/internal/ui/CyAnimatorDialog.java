@@ -167,7 +167,7 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
 		
-                String[] choices = { "GIF","MP4"};
+                String[] choices = { "Frames" , "GIF", "MP4"};
                 videoTypeCB = new JComboBox<String>(choices);
                 videoTypeCB.setVisible(true);
                 videoTypeCB.setSelectedIndex(0);

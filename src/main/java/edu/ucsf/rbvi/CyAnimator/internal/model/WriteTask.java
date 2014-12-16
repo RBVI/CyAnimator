@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.TaskMonitor.Level;
+import org.apache.commons.io.FileUtils;
 
 public class WriteTask extends AbstractTask {
 	/**
@@ -36,14 +37,19 @@ public class WriteTask extends AbstractTask {
 		//gets the directory from which cytoscape is running
 		String curDir = System.getProperty("user.dir");
 		curDir = directory;
+
+                if(videoType != 0){
+                    curDir += "/.CyAnimator";
+                }
+
 		//assigns the output directory, for now it is by default cytoscape/outputImgs
 		File file = new File(curDir); //+"/outputImgs");
-	
+
 		//make the directory
 		if(!file.exists()){
 			file.mkdir();
 		}
-	
+
 		monitor.showMessage(Level.INFO, "Writing frames");
 		monitor.setProgress(0.0);;
 
@@ -73,12 +79,14 @@ public class WriteTask extends AbstractTask {
 			monitor.setProgress((i*100)/this.frameManager.frames.length);
 		}
                 
-                if(videoType == 0){
+                if(videoType == 1){
                     GifSequenceWriter wr = new GifSequenceWriter();
-                    wr.createGIF(directory, directory, 50);
-                }else{
-                    VideoCreator vc = new VideoCreator(directory, directory, 20);
+                    wr.createGIF(curDir, directory, 50);
+                    FileUtils.deleteDirectory(file);
+                }else if ( videoType == 2 ){
+                    VideoCreator vc = new VideoCreator(curDir, directory, 20);
                     vc.CreateVideo();
+                    FileUtils.deleteDirectory(file);
                 }
                 
 		return;
