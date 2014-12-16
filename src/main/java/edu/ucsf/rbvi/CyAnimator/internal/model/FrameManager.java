@@ -58,10 +58,9 @@ public class FrameManager {
 	 * @throws IOException throws exception if cannot export image.
 	 */
 	public CyFrame captureCurrentFrame() throws IOException{
-		
 	//	CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
 		CyFrame frame = new CyFrame(bundleContext);
-		
+
 	/*	CyApplicationManager appManager = (CyApplicationManager) getService(CyApplicationManager.class);
 		CyNetworkView networkView = appManager.getCurrentNetworkView(); */
 		

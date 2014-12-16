@@ -811,6 +811,14 @@ public class Interpolator {
 	
 			for(long nodeid: idList)
 			{
+                                String labelOne = frameOne.getNodeLabel(nodeid);
+                                String labelTwo = frameTwo.getNodeLabel(nodeid);
+                                if (labelTwo != null){
+                                    for(int k=1; k<framenum+1; k++){
+                                        cyFrameArray[start+k].setNodeLabel(nodeid, labelTwo);
+					}
+                                }
+
 				Color colorOne = frameOne.getNodeLabelColor(nodeid);
 				Color colorTwo = frameTwo.getNodeLabelColor(nodeid);
 				if(colorOne != null || colorTwo != null) {

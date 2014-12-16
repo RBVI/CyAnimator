@@ -62,6 +62,7 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeBorderColorMap;
 	private HashMap<Long, Integer> nodeBorderTransMap;
 	private HashMap<Long, double[]> nodeSizeMap;
+        private HashMap<Long, String> nodeLabel;
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
@@ -113,6 +114,7 @@ public class CyFrame {
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
+                nodeLabel = new HashMap<Long, String>();
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
@@ -233,6 +235,8 @@ public class CyFrame {
 			nodeFillOpacityMap.put(nodeName, transFill);
 
 			// Grab the label information
+                        String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
+                        nodeLabel.put(nodeName, label);
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
 			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
@@ -385,14 +389,15 @@ public class CyFrame {
 
 		currentView.getModel().removeNodes(removeNodes);
 
-
 		for(CyNode node: nodeList)
 		{
-		
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
+                                CyNode artNode = currentView.getModel().addNode();
+                                currentView.updateView();
+                                nodeView = currentView.getNodeView(artNode);
 			//	addNodeView(currentView, nodeMap.get(node), node);
-				nodeView = currentView.getNodeView(node);
+			//	nodeView = currentView.getNodeView(node);
 			//	Cytoscape.getVisualMappingManager().vizmapNode(nodeView, currentView);
 			}
 			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
@@ -441,7 +446,10 @@ public class CyFrame {
 			if (pFill != null)
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
 
-			Color labelColor = nodeLabelColMap.get(nodeName);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL))
+                            nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
+                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabel.get(nodeName));
+                        Color labelColor = nodeLabelColMap.get(nodeName);
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
@@ -922,6 +930,26 @@ public class CyFrame {
 	 */
 	public void setNodeLabelTrans(long nodeID, Integer trans) {
 		nodeLabelTransMap.put(nodeID, trans);
+	}
+
+        /**
+	 *
+	 * @param nodeID
+	 * @return node label
+	 */
+	public String getNodeLabel(long nodeID) {
+		if (nodeLabel.containsKey(nodeID))
+			return nodeLabel.get(nodeID);
+		return null;
+	}
+
+        /**
+          *
+	  * @param nodeID
+	  * @param label
+	  */
+	public void setNodeLabel(long nodeID, String label){
+		nodeLabel.put(nodeID, label);
 	}
 
 	/**
