@@ -142,6 +142,7 @@ public class FrameManager {
 				if(frameIndex == frames.length){ frameIndex = 0;}
 				
 				frames[frameIndex].display();
+                                frames[frameIndex].clearDisplay();
 				frameIndex++;
 			}
 		};
@@ -215,6 +216,7 @@ public class FrameManager {
 		else{ frameIndex++; }
 		
 		frames[frameIndex].display();
+                frames[frameIndex].clearDisplay();
 	}
 	
 	/**
@@ -229,6 +231,7 @@ public class FrameManager {
 		else{ frameIndex--; }
 		
 		frames[frameIndex].display();
+                frames[frameIndex].clearDisplay();
 	}
 	
 	/**

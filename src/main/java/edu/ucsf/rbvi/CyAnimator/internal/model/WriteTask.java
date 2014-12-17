@@ -79,6 +79,10 @@ public class WriteTask extends AbstractTask {
 			monitor.setProgress((i*100)/this.frameManager.frames.length);
 		}
                 
+                for (CyFrame frame : this.frameManager.frames) {
+                    frame.clearDisplay();
+                }
+
                 if(videoType == 1){
                     GifSequenceWriter wr = new GifSequenceWriter();
                     wr.createGIF(curDir, directory, 50);
@@ -88,7 +92,5 @@ public class WriteTask extends AbstractTask {
                     vc.CreateVideo();
                     FileUtils.deleteDirectory(file);
                 }
-                
-		return;
 	}
 }

@@ -66,6 +66,8 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
+        private HashMap<CyNode, CyNode> record;
+        private HashMap<CyEdge, CyEdge> recordEdge;
 
 	private HashMap<Long, Integer> edgeOpacityMap;
 	private HashMap<Long, Integer> edgeStrokeOpacityMap;
@@ -122,6 +124,8 @@ public class CyFrame {
 		nodeBorderWidthMap = new HashMap<Long, Double>();
 		nodeBorderColorMap = new HashMap<Long, Color>();
 		nodeBorderTransMap = new HashMap<Long, Integer>();
+                record = new HashMap<CyNode, CyNode>();
+                recordEdge = new HashMap<CyEdge, CyEdge>();
 		edgeMap = new HashMap<Long, View<CyEdge>>();
 		nodeMap = new HashMap<Long, View<CyNode>>();
 		nodeOpacityMap = new HashMap<Long, Integer>();
@@ -412,8 +416,11 @@ public class CyFrame {
 		{
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
-                                System.out.println("Node not found in view: " + node.getSUID());
-                                continue;
+                               // Add temporary node to network for viewing the node which is removed from current network
+                                CyNode artNode = currentView.getModel().addNode();
+                                record.put(node,artNode);
+                                currentView.updateView();
+                                nodeView = currentView.getNodeView(artNode);
 			}
 
 			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
@@ -488,8 +495,22 @@ public class CyFrame {
 		for(CyEdge edge: getEdgeList())
 		{
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
-			if (edgeView == null)
-                            continue;
+			if (edgeView == null){
+                            // Add temporary edge to network for viewing the edge which is removed from current network
+                            CyEdge artEdge = null;
+                            if(record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())){
+                                artEdge = currentView.getModel().addEdge( record.get(edge.getSource()), edge.getTarget(), true);
+                            }else if( nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
+                                artEdge = currentView.getModel().addEdge( edge.getSource(), record.get(edge.getTarget()), true);
+                            }else if( record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
+                                artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
+                            }else{
+                                continue;
+                            }
+                            currentView.updateView();
+                            edgeView = currentView.getEdgeView(artEdge);
+                            recordEdge.put(edge,artEdge);
+                        }
 
 			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
@@ -555,6 +576,34 @@ public class CyFrame {
 		//ifc.setBounds(arg0, arg1, arg2, arg3)
 		currentView.updateView();
 	}
+
+        /**
+	 * Removes temporarily added nodes and edges from network.
+	 *
+	 *
+	 */
+        public void clearDisplay(){
+                Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
+                Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
+                for (CyEdge e: recordEdge.values() ){
+                    removeAddedEdges.add(e);
+                    removeAddedEdgesKeys.add(e.getSUID());
+                }
+
+                appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
+                appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
+
+                Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
+                Collection<Long> removeAddedKeys = new ArrayList<Long>();
+                for (CyNode n: record.values() ){
+                    removeAddedNodes.add(n);
+                    removeAddedKeys.add(n.getSUID());
+                }
+
+                appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
+                appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
+                appManager.getCurrentNetworkView().updateView();
+        }
 
 	/**
 	 * Return the frame ID for this frame
