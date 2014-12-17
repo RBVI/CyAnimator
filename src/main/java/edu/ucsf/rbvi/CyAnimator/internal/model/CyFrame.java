@@ -377,29 +377,45 @@ public class CyFrame {
 				removeEdges.add(ev);
 		}
 
-		currentView.getModel().removeEdges(removeEdges);
+		//currentView.getModel().removeEdges(removeEdges);
+                for (CyEdge edge: removeEdges){
+                    View<CyEdge> edgeView = currentView.getEdgeView(edge);
+                    if ( edgeView == null)
+                        continue;
+                    if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
+			edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+                    edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
+                    currentView.updateView();
+                }
 
 		// Initialize our edge view maps
 		List<CyNode> removeNodes = new ArrayList<CyNode>();
 		CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
 		for (CyNode nv: currentView.getModel().getNodeList()) {
-			if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/))
-				removeNodes.add(nv);
+			if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/)){
+                            removeNodes.add(nv);
+                        }
 		}
 
-		currentView.getModel().removeNodes(removeNodes);
+		//currentView.getModel().removeNodes(removeNodes);
+                for (CyNode node: removeNodes){
+                    View<CyNode> nodeView = currentView.getNodeView(node);
+                    if ( nodeView == null)
+                        continue;
+                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
+                        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
+                    currentView.updateView();
+                }
 
 		for(CyNode node: nodeList)
 		{
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
-                                CyNode artNode = currentView.getModel().addNode();
-                                currentView.updateView();
-                                nodeView = currentView.getNodeView(artNode);
-			//	addNodeView(currentView, nodeMap.get(node), node);
-			//	nodeView = currentView.getNodeView(node);
-			//	Cytoscape.getVisualMappingManager().vizmapNode(nodeView, currentView);
+                                System.out.println("Node not found in view: " + node.getSUID());
+                                continue;
 			}
+
 			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 			
 			double[] xy = nodePosMap.get(nodeName);
@@ -408,6 +424,9 @@ public class CyFrame {
 			// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
 			//if(xy == null || nodeView == null){ continue; }
 			
+                        if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
+                            nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
@@ -469,14 +488,18 @@ public class CyFrame {
 		for(CyEdge edge: getEdgeList())
 		{
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
-			if (edgeView == null) {
-			//	addEdgeView(currentView, edgeMap.get(edge), edge);
-				edgeView = currentView.getEdgeView(edge);
-			}
+			if (edgeView == null)
+                            continue;
+
 			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
-			if ((p == null && pStroke == null) || edgeView == null) continue;
+			if (p == null && pStroke == null) 
+                            continue;
 			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
+
+                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
+                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
 			if (p != null)
