@@ -23,7 +23,6 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JComboBox;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
@@ -70,7 +69,6 @@ public class CyAnimatorDialog extends JDialog
 	private JButton forwardButton;
 	private JButton backwardButton;
 	private JButton recordButton;
-        private JComboBox<String> videoTypeCB;
 	
 	private JMenuItem menuItem;
 	private JPanel mainPanel;
@@ -166,43 +164,33 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.addActionListener(this);
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
-		
-                String[] choices = { "Frames" , "GIF", "MP4"};
-                videoTypeCB = new JComboBox<String>(choices);
-                videoTypeCB.setVisible(true);
-                videoTypeCB.setSelectedIndex(0);
-		videoTypeCB.setToolTipText("Choose Video Type");
-		
+
 		speedSlider = new JSlider(1,60);
-		
+
 		speedSlider.addChangeListener(new SliderListener());
-		
+
 		JPanel controlPanel = new JPanel();
 		BoxLayout box = new BoxLayout(controlPanel, BoxLayout.X_AXIS);
 		controlPanel.setLayout(box);
-		
+
 		controlPanel.add(captureButton);
 		controlPanel.add(playButton);
 		controlPanel.add(pauseButton);
 		controlPanel.add(stopButton);
 		controlPanel.add(backwardButton);
 		controlPanel.add(forwardButton);
-                controlPanel.add(videoTypeCB);
 		controlPanel.add(recordButton);
 		controlPanel.add(speedSlider);
-		
-		
+
 		mainPanel.add(controlPanel);
-		
+
 		updateThumbnails(); 
 		mainPanel.add(framePane);
-		
+
 		this.setSize(new Dimension(500,220));
 		this.setLocation(900, 100);
-		
+
 		setContentPane(mainPanel);
-		
-		
 	}
 
 	
@@ -255,11 +243,26 @@ public class CyAnimatorDialog extends JDialog
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
 			int returnVal = fc.showSaveDialog(new JPanel());
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
+                                String[] choices = { "Frames" , "GIF", "MP4"};
+                                String choice = (String) JOptionPane.showInputDialog(this,
+                                                "Choose output type",
+                                                "Output Options",
+                                                JOptionPane.QUESTION_MESSAGE,
+                                                null,
+                                                choices,
+                                                choices[1]);
+                                if (choice == null) return;
+                                int index = 0;
+                                for (String s: choices){
+                                    if(s.equals(choice))
+                                        break;
+                                    else
+                                        index++;
+                                }
 				File file = fc.getSelectedFile();
 				String filePath = file.getPath();
-				// System.out.println(filePath+" "+file.getName());
 				try{
-					frameManager.recordAnimation(filePath, videoTypeCB.getSelectedIndex());
+					frameManager.recordAnimation(filePath, index);
 				}catch (Exception excp) {
 				//	logger.error("Record of animation failed",excp);
 				}
