@@ -56,6 +56,7 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeWidth());
 		edgeInterpolators.add(new interpolateEdgeLabel());
 
+                networkInterpolators.add(new interpolateNetworkTitle());
 		networkInterpolators.add(new interpolateNetworkZoom());
 		networkInterpolators.add(new interpolateNetworkColor());
 		networkInterpolators.add(new interpolateNetworkCenter());
@@ -1187,6 +1188,40 @@ public class Interpolator {
 		}
 	}
 
+	class interpolateNetworkTitle implements FrameInterpolator {
+
+		public interpolateNetworkTitle(){
+
+		}
+
+		/**
+		 * Performs the interpolation.
+		 *
+		 * @param idList is not used in this case
+		 * @param frameOne is the frame to be interpolated from
+		 * @param frameTwo is the frame to be interpolated to
+		 * @param start is the starting position of the frame in the CyFrame array
+		 * @param end is the ending positiong of the interpolation in the CyFrame array
+		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
+		 * @return the array of CyFrames filled with interpolated node position data
+		 */
+		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo,
+		                             int start, int stop, CyFrame[] cyFrameArray){
+
+			int framenum = (stop-start) - 1;
+
+			String titleOne = frameOne.getTitle();
+			String titleTwo = frameTwo.getTitle();
+
+			for(int k=1; k<framenum/2; k++){
+				cyFrameArray[start+k].setTitle(titleOne);
+			}
+                        for(int k=framenum/2; k<framenum+1; k++){
+				cyFrameArray[start+k].setTitle(titleTwo);
+			}
+			return cyFrameArray;
+		}
+	}
 	
 	/**
 	 * Linearly interpolates the network zoom.

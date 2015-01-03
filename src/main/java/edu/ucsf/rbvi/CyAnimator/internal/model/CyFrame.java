@@ -79,7 +79,8 @@ public class CyFrame {
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
 	
-	private Paint backgroundPaint = null;
+	private String title = null;
+        private Paint backgroundPaint = null;
 	private double zoom = 0;
 	
 	private double xalign;
@@ -183,6 +184,7 @@ public class CyFrame {
 	 * CyNetworkView and stores them in this frame.
 	 */
 	public void populate() {
+                title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
 		backgroundPaint = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		zoom = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
 		xalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
@@ -558,6 +560,9 @@ public class CyFrame {
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
 		}
+                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
 		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT))
 			currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
@@ -651,6 +656,24 @@ public class CyFrame {
 	 */
 	public void setInterCount(int intercount) {
 		this.intercount = intercount;
+	}
+
+        /**
+	 * Return the title of network
+	 *
+	 * @return title
+	 */
+	public String getTitle() {
+		return title;
+	}
+
+	/**
+	 * Set the title of network.
+	 *
+	 * @param title set the title value
+	 */
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	/**
