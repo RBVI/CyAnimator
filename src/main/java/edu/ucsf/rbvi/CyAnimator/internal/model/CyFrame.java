@@ -74,6 +74,7 @@ public class CyFrame {
 	private HashMap<Long, Color> edgeColMap;
 	private HashMap<Long, Color> edgeStrokeColMap;
 	private HashMap<Long, Double> edgeWidthMap;
+        private HashMap<Long, String> edgeLabel;
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
@@ -134,6 +135,7 @@ public class CyFrame {
 		edgeStrokeOpacityMap = new HashMap<Long, Integer>();
 		edgeColMap = new HashMap<Long, Color>();
 		edgeStrokeColMap = new HashMap<Long, Color>();
+                edgeLabel = new HashMap<Long, String>();
 		edgeLabelColMap = new HashMap<Long, Color>();
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
@@ -298,6 +300,8 @@ public class CyFrame {
 			edgeStrokeOpacityMap.put(edgeName, transStroke);
 
 			// Grab the label information
+                        String label = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL);
+                        edgeLabel.put(edgeName, label);
 			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
 			edgeLabelColMap.put(edgeName, labelColor);
 			Integer labelFontSize = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE),
@@ -533,6 +537,9 @@ public class CyFrame {
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
+                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
 			Color labelColor = edgeLabelColMap.get(edgeName);
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
@@ -1062,6 +1069,26 @@ public class CyFrame {
 	 */
 	public void setEdgeWidth(long edgeID, double width){
 		edgeWidthMap.put(edgeID, width);
+	}
+
+        /**
+	 *
+	 * @param edgeID
+	 * @return the edge label
+	 */
+	public String getEdgeLabel(long edgeID){
+		if (edgeLabel.containsKey(edgeID))
+			return edgeLabel.get(edgeID);
+		return null;
+	}
+
+	/**
+	 *
+	 * @param edgeID
+	 * @param label
+	 */
+	public void setEdgeLabel(long edgeID, String label){
+		edgeLabel.put(edgeID, label);
 	}
 
 	/**
