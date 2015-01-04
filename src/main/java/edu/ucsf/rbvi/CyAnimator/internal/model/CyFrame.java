@@ -39,6 +39,7 @@ import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.values.ArrowShape;
 import org.cytoscape.view.presentation.property.values.NodeShape;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
@@ -48,13 +49,12 @@ import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.util.ListSingleSelection;
-import org.osgi.framework.ServiceReference;
 
 public class CyFrame {
 	
 	private String frameid = "";
-	private static String PNG = "png";
-        private HashMap<Long, NodeShape> nodeShape;
+	private static final String PNG = "png";
+        private HashMap<Long, NodeShape> nodeShapeMap;
 	private HashMap<Long, double[]> nodePosMap;
 	private HashMap<Long, Color> nodeColMap;
 	private HashMap<Long, Integer> nodeOpacityMap;
@@ -64,7 +64,7 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeBorderColorMap;
 	private HashMap<Long, Integer> nodeBorderTransMap;
 	private HashMap<Long, double[]> nodeSizeMap;
-        private HashMap<Long, String> nodeLabel;
+        private HashMap<Long, String> nodeLabelMap;
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
@@ -80,6 +80,8 @@ public class CyFrame {
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
+        private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
+        private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
 	
 	private String title = null;
         private Paint backgroundPaint = null;
@@ -117,11 +119,11 @@ public class CyFrame {
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(TaskManager.class);
-                nodeShape = new HashMap<Long, NodeShape>();
+                nodeShapeMap = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
-                nodeLabel = new HashMap<Long, String>();
+                nodeLabelMap = new HashMap<Long, String>();
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
@@ -144,6 +146,8 @@ public class CyFrame {
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
 		edgeWidthMap = new HashMap<Long, Double>();
+                edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
+                edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -204,7 +208,7 @@ public class CyFrame {
 
                         // stores node shape type
                         NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
-                        nodeShape.put(nodeName, shape);
+                        nodeShapeMap.put(nodeName, shape);
 
 			//stores the x and y position of the node
 			double[] xy = new double[3];
@@ -251,7 +255,7 @@ public class CyFrame {
 
 			// Grab the label information
                         String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
-                        nodeLabel.put(nodeName, label);
+                        nodeLabelMap.put(nodeName, label);
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
 			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
@@ -317,6 +321,13 @@ public class CyFrame {
 					labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeLabelFontSizeMap.put(edgeName, labelFontSize);
 			edgeLabelTransMap.put(edgeName, labelTransMap);
+                        
+                        // Grab the shape information
+                        ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+                        edgeSourceArrowShapeMap.put(edgeName, source);
+                        ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+                        edgeTargetArrowShapeMap.put(edgeName, target);
+                        System.out.println("ArrowShapes: " + source.getDisplayName() + " " + target.getDisplayName());
 		}
 	}
 	
@@ -449,7 +460,7 @@ public class CyFrame {
                         nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
                         if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE))
                             nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShape.get(nodeName));
+                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
@@ -490,7 +501,7 @@ public class CyFrame {
 
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL))
                             nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabel.get(nodeName));
+                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabelMap.get(nodeName));
                         Color labelColor = nodeLabelColMap.get(nodeName);
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
@@ -569,6 +580,12 @@ public class CyFrame {
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
+                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
+                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
 		}
                 if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE))
 			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
@@ -729,8 +746,8 @@ public class CyFrame {
 	 * @return the node shape property
 	 */
 	public NodeShape getNodeShape(long nodeID) {
-		if (nodeShape.containsKey(nodeID))
-			return nodeShape.get(nodeID);
+		if (nodeShapeMap.containsKey(nodeID))
+			return nodeShapeMap.get(nodeID);
 		return null;
 	}
 
@@ -741,7 +758,7 @@ public class CyFrame {
 	 * @param shape a NodeShape property for this node
 	 */
 	public void setNodeShape(long nodeID, NodeShape shape) {
-		nodeShape.put(nodeID, shape);
+		nodeShapeMap.put(nodeID, shape);
 	}
 
 	/**
@@ -1072,8 +1089,8 @@ public class CyFrame {
 	 * @return node label
 	 */
 	public String getNodeLabel(long nodeID) {
-		if (nodeLabel.containsKey(nodeID))
-			return nodeLabel.get(nodeID);
+		if (nodeLabelMap.containsKey(nodeID))
+			return nodeLabelMap.get(nodeID);
 		return null;
 	}
 
@@ -1083,7 +1100,7 @@ public class CyFrame {
 	  * @param label
 	  */
 	public void setNodeLabel(long nodeID, String label){
-		nodeLabel.put(nodeID, label);
+		nodeLabelMap.put(nodeID, label);
 	}
 
 	/**
@@ -1204,6 +1221,46 @@ public class CyFrame {
 	  */
 	public void setEdgeLabelTrans(long edgeID, Integer trans){
 		edgeLabelTransMap.put(edgeID, trans);
+	}
+
+        /**
+	 *
+	 * @param edgeID
+	 * @return edge source arrow shape
+	 */
+	public ArrowShape getEdgeSourceArrowShape(long edgeID) {
+		if (edgeSourceArrowShapeMap.containsKey(edgeID))
+			return edgeSourceArrowShapeMap.get(edgeID);
+		return null;
+	}
+
+	/**
+	  *
+	  * @param edgeID
+	  * @param shape arrow shape
+	  */
+	public void setEdgeSourceArrowShape(long edgeID, ArrowShape shape){
+		edgeSourceArrowShapeMap.put(edgeID, shape);
+	}
+
+        /**
+	 *
+	 * @param edgeID
+	 * @return edge target arrow shape
+	 */
+	public ArrowShape getEdgeTargetArrowShape(long edgeID) {
+		if (edgeTargetArrowShapeMap.containsKey(edgeID))
+			return edgeTargetArrowShapeMap.get(edgeID);
+		return null;
+	}
+
+	/**
+	  *
+	  * @param edgeID
+	  * @param shape arrow shape
+	  */
+	public void setEdgeTargetArrowShape(long edgeID, ArrowShape shape){
+		edgeTargetArrowShapeMap.put(edgeID, shape);
 	}
 
 	/**

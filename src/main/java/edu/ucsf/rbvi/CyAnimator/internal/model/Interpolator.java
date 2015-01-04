@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.presentation.property.values.ArrowShape;
 import org.cytoscape.view.presentation.property.values.NodeShape;
 
 public class Interpolator {
@@ -57,6 +58,7 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeOpacity());
 		edgeInterpolators.add(new interpolateEdgeWidth());
 		edgeInterpolators.add(new interpolateEdgeLabel());
+                edgeInterpolators.add(new interpolateEdgeArrowShape());
 
                 networkInterpolators.add(new interpolateNetworkTitle());
 		networkInterpolators.add(new interpolateNetworkZoom());
@@ -1244,6 +1246,62 @@ public class Interpolator {
                                 }
 
 			}	
+			return cyFrameArray;
+		}
+	}
+        
+        /**
+	 * 
+	 * Direct interpolates the edge arrow shape.
+	 *
+	 */
+	class interpolateEdgeArrowShape implements FrameInterpolator {
+
+		public interpolateEdgeArrowShape(){
+
+		}
+
+		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
+				int start, int stop, CyFrame[] cyFrameArray){
+			
+			int framenum = (stop-start) - 1;	
+		
+			for(long edgeid: idList){
+				// set source arrow shapes
+                                ArrowShape sourceOne = frameOne.getEdgeSourceArrowShape(edgeid);
+                                ArrowShape sourceTwo = frameTwo.getEdgeSourceArrowShape(edgeid);
+
+                                if (sourceOne == null)
+                                    sourceOne = sourceTwo;
+                                else if(sourceTwo == null)
+                                    sourceTwo = sourceOne;
+                                
+				// no checks implemented as there is no finite interpolation                                
+				for(int k=1; k<framenum/2; k++){
+					cyFrameArray[start+k].setEdgeSourceArrowShape(edgeid, sourceOne);
+				}
+                                for(int k=framenum/2; k<framenum+1; k++){
+					cyFrameArray[start+k].setEdgeSourceArrowShape(edgeid, sourceTwo);
+				}
+                                System.out.println("Being interplolated: " + sourceOne.getDisplayName() + " with " + sourceTwo.getDisplayName());
+
+                                // similarly for target
+                                ArrowShape targetOne = frameOne.getEdgeTargetArrowShape(edgeid);
+                                ArrowShape targetTwo = frameTwo.getEdgeTargetArrowShape(edgeid);
+                             
+                                if (targetOne == null)
+                                    targetOne = targetTwo;
+                                else if (targetTwo == null)
+                                    targetTwo = targetOne;
+                                
+				for(int k=1; k<framenum/2; k++){
+					cyFrameArray[start+k].setEdgeTargetArrowShape(edgeid, targetOne);
+				}
+                                for(int k=framenum/2; k<framenum+1; k++){
+					cyFrameArray[start+k].setEdgeTargetArrowShape(edgeid, targetTwo);
+				}
+                                System.out.println("Being interplolated target: " + targetOne.getDisplayName() + " with " + targetTwo.getDisplayName());
+			}
 			return cyFrameArray;
 		}
 	}
