@@ -40,6 +40,7 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.values.ArrowShape;
+import org.cytoscape.view.presentation.property.values.LineType;
 import org.cytoscape.view.presentation.property.values.NodeShape;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
@@ -82,6 +83,7 @@ public class CyFrame {
 	private HashMap<Long, Integer> edgeLabelTransMap;
         private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
         private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
+        private HashMap<Long, LineType> edgeLineTypeMap;
 	
 	private String title = null;
         private Paint backgroundPaint = null;
@@ -148,6 +150,7 @@ public class CyFrame {
 		edgeWidthMap = new HashMap<Long, Double>();
                 edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
                 edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
+                edgeLineTypeMap = new HashMap<Long, LineType>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -327,7 +330,9 @@ public class CyFrame {
                         edgeSourceArrowShapeMap.put(edgeName, source);
                         ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
                         edgeTargetArrowShapeMap.put(edgeName, target);
-                        System.out.println("ArrowShapes: " + source.getDisplayName() + " " + target.getDisplayName());
+                        LineType line = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE);
+                        edgeLineTypeMap.put(edgeName, line);
+                        System.out.println("ArrowShapes: " + source.getDisplayName() + " " + target.getDisplayName() + " ,Line type: " + line.getDisplayName());
 		}
 	}
 	
@@ -586,6 +591,9 @@ public class CyFrame {
                         if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
+                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
 		}
                 if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE))
 			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
@@ -1261,6 +1269,26 @@ public class CyFrame {
 	  */
 	public void setEdgeTargetArrowShape(long edgeID, ArrowShape shape){
 		edgeTargetArrowShapeMap.put(edgeID, shape);
+	}
+        
+        /**
+	 *
+	 * @param edgeID
+	 * @return edge line type
+	 */
+	public LineType getEdgeLineType(long edgeID) {
+		if (edgeLineTypeMap.containsKey(edgeID))
+			return edgeLineTypeMap.get(edgeID);
+		return null;
+	}
+
+	/**
+	  *
+	  * @param edgeID
+	  * @param line line type
+	  */
+	public void setEdgeLineType(long edgeID, LineType line){
+		edgeLineTypeMap.put(edgeID, line);
 	}
 
 	/**

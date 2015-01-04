@@ -29,6 +29,7 @@ import java.util.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.view.presentation.property.values.ArrowShape;
+import org.cytoscape.view.presentation.property.values.LineType;
 import org.cytoscape.view.presentation.property.values.NodeShape;
 
 public class Interpolator {
@@ -1271,11 +1272,6 @@ public class Interpolator {
                                 ArrowShape sourceOne = frameOne.getEdgeSourceArrowShape(edgeid);
                                 ArrowShape sourceTwo = frameTwo.getEdgeSourceArrowShape(edgeid);
 
-                                if (sourceOne == null)
-                                    sourceOne = sourceTwo;
-                                else if(sourceTwo == null)
-                                    sourceTwo = sourceOne;
-                                
 				// no checks implemented as there is no finite interpolation                                
 				for(int k=1; k<framenum/2; k++){
 					cyFrameArray[start+k].setEdgeSourceArrowShape(edgeid, sourceOne);
@@ -1288,12 +1284,7 @@ public class Interpolator {
                                 // similarly for target
                                 ArrowShape targetOne = frameOne.getEdgeTargetArrowShape(edgeid);
                                 ArrowShape targetTwo = frameTwo.getEdgeTargetArrowShape(edgeid);
-                             
-                                if (targetOne == null)
-                                    targetOne = targetTwo;
-                                else if (targetTwo == null)
-                                    targetTwo = targetOne;
-                                
+    
 				for(int k=1; k<framenum/2; k++){
 					cyFrameArray[start+k].setEdgeTargetArrowShape(edgeid, targetOne);
 				}
@@ -1301,6 +1292,17 @@ public class Interpolator {
 					cyFrameArray[start+k].setEdgeTargetArrowShape(edgeid, targetTwo);
 				}
                                 System.out.println("Being interplolated target: " + targetOne.getDisplayName() + " with " + targetTwo.getDisplayName());
+                                
+                                // interpolate linetype directly
+                                LineType lineOne = frameOne.getEdgeLineType(edgeid);
+                                LineType lineTwo = frameTwo.getEdgeLineType(edgeid);
+
+                                for(int k=1; k<framenum/2; k++){
+					cyFrameArray[start+k].setEdgeLineType(edgeid, lineOne);
+				}
+                                for(int k=framenum/2; k<framenum+1; k++){
+					cyFrameArray[start+k].setEdgeLineType(edgeid, lineTwo);
+				}
 			}
 			return cyFrameArray;
 		}
