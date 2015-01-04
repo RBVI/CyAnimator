@@ -18,6 +18,7 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
 import java.util.*;
 import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.image.*;
 import java.awt.Paint;
 import java.io.File;
@@ -69,6 +70,7 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
+        private HashMap<Long, Font> nodeLabelFontMap;
         private HashMap<CyNode, CyNode> record;
         private HashMap<CyEdge, CyEdge> recordEdge;
 
@@ -81,6 +83,7 @@ public class CyFrame {
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
+        private HashMap<Long, Font> edgeLabelFontMap;
         private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
         private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
         private HashMap<Long, LineType> edgeLineTypeMap;
@@ -129,6 +132,7 @@ public class CyFrame {
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
+                nodeLabelFontMap = new HashMap<Long, Font>();
 		nodeSizeMap = new HashMap<Long, double[]>();
 		nodeBorderWidthMap = new HashMap<Long, Double>();
 		nodeBorderColorMap = new HashMap<Long, Color>();
@@ -147,6 +151,7 @@ public class CyFrame {
 		edgeLabelColMap = new HashMap<Long, Color>();
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
+                edgeLabelFontMap = new HashMap<Long, Font>();
 		edgeWidthMap = new HashMap<Long, Double>();
                 edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
                 edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
@@ -265,6 +270,8 @@ public class CyFrame {
 			nodeLabelFontSizeMap.put(nodeName, labelFontSize);
 			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeLabelTransMap.put(nodeName, labelTrans);
+                        Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+                        nodeLabelFontMap.put(nodeName, font);
 
 			centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
 											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
@@ -324,6 +331,8 @@ public class CyFrame {
 					labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeLabelFontSizeMap.put(edgeName, labelFontSize);
 			edgeLabelTransMap.put(edgeName, labelTransMap);
+                        Font font = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+                        edgeLabelFontMap.put(edgeName, font);
                         
                         // Grab the shape information
                         ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
@@ -522,6 +531,9 @@ public class CyFrame {
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
 		}
 
 		for(CyEdge edge: getEdgeList())
@@ -582,6 +594,9 @@ public class CyFrame {
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_FACE))
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE, edgeLabelFontMap.get(edgeName));
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
@@ -1070,6 +1085,26 @@ public class CyFrame {
 	public void setNodeLabelFontSize(long nodeID, Integer size) {
 		nodeLabelFontSizeMap.put(nodeID, size);
 	}
+        
+        /**
+	 * 
+	 * @param nodeID
+	 * @return font label font 
+	 */
+	public Font getNodeLabelFont(long nodeID) {
+		if (nodeLabelFontMap.containsKey(nodeID))
+			return nodeLabelFontMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param font node label font
+	 */
+	public void setNodeLabelFont(long nodeID, Font font) {
+		nodeLabelFontMap.put(nodeID, font);
+	}
 
 	/**
 	 * 
@@ -1182,15 +1217,24 @@ public class CyFrame {
 		return null;
 	}
 
-	/**
+        /**
 	 *
 	 * @param edgeID
-	 * @return edge label size
+	 * @return font label font
 	 */
-	public Integer getEdgeLabelFontSize(long edgeID) {
-		if (edgeLabelFontSizeMap.containsKey(edgeID))
-			return edgeLabelFontSizeMap.get(edgeID);
+	public Font getEdgeLabelFont(long edgeID) {
+		if (edgeLabelFontMap.containsKey(edgeID))
+			return edgeLabelFontMap.get(edgeID);
 		return null;
+	}
+
+        /**
+	  * 
+	  * @param edgeID
+	  * @param font label font
+	  */
+	public void setEdgeLabelFont(long edgeID, Font font){
+		edgeLabelFontMap.put(edgeID, font);
 	}
 
 	/**
@@ -1211,6 +1255,17 @@ public class CyFrame {
 	  */
 	public void setEdgeLabelColor(long edgeID, Color color){
 		edgeLabelColMap.put(edgeID, color);
+	}
+
+        /**
+	 *
+	 * @param edgeID
+	 * @return edge label size
+	 */
+	public Integer getEdgeLabelFontSize(long edgeID) {
+		if (edgeLabelFontSizeMap.containsKey(edgeID))
+			return edgeLabelFontSizeMap.get(edgeID);
+		return null;
 	}
 
 	/**

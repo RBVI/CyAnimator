@@ -25,6 +25,7 @@
 package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
@@ -936,8 +937,7 @@ public class Interpolator {
                                 
                                 if ( sizeOne == null) sizeOne = 0;
                                 if ( sizeTwo == null) sizeTwo = 0;
-                                
-				
+
                                 if (sizeOne.equals(sizeTwo)) {
                                         for(int k=1; k<framenum+1; k++){
                                                 cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
@@ -951,6 +951,15 @@ public class Interpolator {
                                         }	
                                 }
 
+                                Font fontOne = frameOne.getNodeLabelFont(nodeid);
+				Font fontTwo = frameTwo.getNodeLabelFont(nodeid);
+
+                                for(int k=1; k<framenum/2; k++){
+                                        cyFrameArray[start+k].setNodeLabelFont(nodeid, fontOne);
+                                }
+                                for(int k=framenum/2; k<framenum+1; k++){
+                                        cyFrameArray[start+k].setNodeLabelFont(nodeid, fontTwo);
+                                }
 			}	
 			return cyFrameArray;
 		}
@@ -1244,6 +1253,17 @@ public class Interpolator {
                                         cyFrameArray[start + k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
                                         sizeIncrease += sizeInc;
                                     }
+                                }
+
+                                // updating fonts in frames
+                                Font fontOne = frameOne.getEdgeLabelFont(edgeid);
+				Font fontTwo = frameTwo.getEdgeLabelFont(edgeid);
+
+                                for (int k = 1; k < framenum/2; k++) {
+                                    cyFrameArray[start + k].setEdgeLabelFont(edgeid, fontOne);
+                                }
+                                for (int k = framenum/2; k < framenum + 1; k++) {
+                                    cyFrameArray[start + k].setEdgeLabelFont(edgeid, fontTwo);
                                 }
 
 			}	
