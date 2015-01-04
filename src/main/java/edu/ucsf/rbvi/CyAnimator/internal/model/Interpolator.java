@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.presentation.property.values.NodeShape;
 
 public class Interpolator {
 	
@@ -43,6 +44,7 @@ public class Interpolator {
 	public Interpolator(){
 		
 		//add any desired interpolators to their respective interpolator lists
+                nodeInterpolators.add(new interpolateNodeShape());
 		nodeInterpolators.add(new interpolateNodePosition());
 		nodeInterpolators.add(new interpolateNodeColor());
 		nodeInterpolators.add(new interpolateNodeBorderColor());
@@ -386,6 +388,64 @@ public class Interpolator {
 		return paints;
 	}
 
+        /**
+	 * Interpolate the shape.
+	 * 
+	 */
+	class interpolateNodeShape implements FrameInterpolator {
+
+		public interpolateNodeShape(){
+			
+		}
+
+		/**
+		 * Performs the interpolation.
+		 *  
+		 * @param idList is in this case a list of NodeViews
+		 * @param frameOne is the frame to be interpolated from
+		 * @param frameTwo is the frame to be interpolated to
+		 * @param start is the starting position of the frame in the CyFrame array
+		 * @param end is the ending positiong of the interpolation in the CyFrame array
+		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
+		 * @return the array of CyFrames filled with interpolated node position data
+		 */
+		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
+		                             int start, int stop, CyFrame[] cyFrameArray){
+
+			
+			int framenum = (stop-start) - 1;
+			
+			for(long nodeid: idList){
+				
+				NodeShape shapeOne = frameOne.getNodeShape(nodeid);
+				NodeShape shapeTwo = frameTwo.getNodeShape(nodeid);
+				
+                                // Handle missing (or appearing) nodes
+                                if (shapeOne == null) 
+                                        shapeOne = shapeTwo;
+                                else if (shapeTwo == null)
+                                        shapeTwo = shapeOne;
+
+                                if (shapeOne == shapeOne) {
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeShape(nodeid, shapeTwo);
+                                        }	
+                                } else {
+                                        // Find way to interpolate shapes
+
+                                        for(int k=1; k<framenum/2; k++){
+                                                    cyFrameArray[start+k].setNodeShape(nodeid, shapeOne);
+                                        }
+                                        for(int k=framenum/2; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeShape(nodeid, shapeTwo);
+                                        }
+                                }
+			}
+			return cyFrameArray;
+		}
+		
+	}
+
 	/**
 	 * Interpolates the node position, using the standard linear interpolation formula described
 	 * at http://en.wikipedia.org/wiki/Linear_interpolation. It essentially just finds the absolute
@@ -395,7 +455,7 @@ public class Interpolator {
 	 * is done on the x values, which are then plugged into the interpolation formula to generate a y-value.
 	 * 
 	 */
-	
+
 	class interpolateNodePosition implements FrameInterpolator {
 		
 		public interpolateNodePosition(){

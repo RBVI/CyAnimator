@@ -39,6 +39,7 @@ import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.values.NodeShape;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.FinishStatus;
@@ -53,6 +54,7 @@ public class CyFrame {
 	
 	private String frameid = "";
 	private static String PNG = "png";
+        private HashMap<Long, NodeShape> nodeShape;
 	private HashMap<Long, double[]> nodePosMap;
 	private HashMap<Long, Color> nodeColMap;
 	private HashMap<Long, Integer> nodeOpacityMap;
@@ -115,6 +117,7 @@ public class CyFrame {
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(TaskManager.class);
+                nodeShape = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
@@ -198,6 +201,10 @@ public class CyFrame {
 			View<CyNode> nodeView = networkView.getNodeView(node);
 			if(nodeView == null){ continue; }
 			long nodeName = node.getSUID();//nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+
+                        // stores node shape type
+                        NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
+                        nodeShape.put(nodeName, shape);
 
 			//stores the x and y position of the node
 			double[] xy = new double[3];
@@ -440,6 +447,9 @@ public class CyFrame {
                         if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
                             nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
                         nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
+                        if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE))
+                            nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
+                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShape.get(nodeName));
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
@@ -710,6 +720,28 @@ public class CyFrame {
 	 */
 	public void setBackgroundPaint(Paint bg) {
 		backgroundPaint = bg;
+	}
+
+        /**
+	 * Get the node shape
+	 *
+	 * @param nodeID the ID of the node whose shape is to retrieve
+	 * @return the node shape property
+	 */
+	public NodeShape getNodeShape(long nodeID) {
+		if (nodeShape.containsKey(nodeID))
+			return nodeShape.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * Set the node shape for a node in this frame
+	 *
+	 * @param nodeID the ID of the node whose shape is to set
+	 * @param shape a NodeShape property for this node
+	 */
+	public void setNodeShape(long nodeID, NodeShape shape) {
+		nodeShape.put(nodeID, shape);
 	}
 
 	/**
