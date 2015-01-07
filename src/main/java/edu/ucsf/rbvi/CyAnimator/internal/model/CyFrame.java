@@ -47,16 +47,18 @@ import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
+import org.cytoscape.work.SynchronousTaskManager;
 import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.TunableSetter;
+import org.cytoscape.work.util.BoundedDouble;
 import org.cytoscape.work.util.ListSingleSelection;
 
 public class CyFrame {
 	
 	private String frameid = "";
 	private static final String PNG = "png";
-        private HashMap<Long, NodeShape> nodeShapeMap;
+  private HashMap<Long, NodeShape> nodeShapeMap;
 	private HashMap<Long, double[]> nodePosMap;
 	private HashMap<Long, Color> nodeColMap;
 	private HashMap<Long, Integer> nodeOpacityMap;
@@ -66,30 +68,30 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeBorderColorMap;
 	private HashMap<Long, Integer> nodeBorderTransMap;
 	private HashMap<Long, double[]> nodeSizeMap;
-        private HashMap<Long, String> nodeLabelMap;
+  private HashMap<Long, String> nodeLabelMap;
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
-        private HashMap<Long, Font> nodeLabelFontMap;
-        private HashMap<CyNode, CyNode> record;
-        private HashMap<CyEdge, CyEdge> recordEdge;
+  private HashMap<Long, Font> nodeLabelFontMap;
+  private HashMap<CyNode, CyNode> record;
+  private HashMap<CyEdge, CyEdge> recordEdge;
 
 	private HashMap<Long, Integer> edgeOpacityMap;
 	private HashMap<Long, Integer> edgeStrokeOpacityMap;
 	private HashMap<Long, Color> edgeColMap;
 	private HashMap<Long, Color> edgeStrokeColMap;
 	private HashMap<Long, Double> edgeWidthMap;
-        private HashMap<Long, String> edgeLabel;
+  private HashMap<Long, String> edgeLabel;
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
-        private HashMap<Long, Font> edgeLabelFontMap;
-        private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
-        private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
-        private HashMap<Long, LineType> edgeLineTypeMap;
+  private HashMap<Long, Font> edgeLabelFontMap;
+  private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
+  private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
+  private HashMap<Long, LineType> edgeLineTypeMap;
 	
 	private String title = null;
-        private Paint backgroundPaint = null;
+  private Paint backgroundPaint = null;
 	private double zoom = 0;
 	
 	private double xalign;
@@ -110,7 +112,7 @@ public class CyFrame {
 	private List<Long> edgeIdList = null;
 	private int intercount = 0;
 	private Point3D centerPoint = null;
-	private TaskManager<?,?> taskManager;
+	private SynchronousTaskManager<?> taskManager;
 
 	private static int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
 //	private DGraphView dview = null; 
@@ -123,22 +125,22 @@ public class CyFrame {
 	public CyFrame(CyServiceRegistrar bc){
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
-		taskManager = bundleContext.getService(TaskManager.class);
-                nodeShapeMap = new HashMap<Long, NodeShape>();
+		taskManager = bundleContext.getService(SynchronousTaskManager.class);
+    nodeShapeMap = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
-                nodeLabelMap = new HashMap<Long, String>();
+    nodeLabelMap = new HashMap<Long, String>();
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
-                nodeLabelFontMap = new HashMap<Long, Font>();
+    nodeLabelFontMap = new HashMap<Long, Font>();
 		nodeSizeMap = new HashMap<Long, double[]>();
 		nodeBorderWidthMap = new HashMap<Long, Double>();
 		nodeBorderColorMap = new HashMap<Long, Color>();
 		nodeBorderTransMap = new HashMap<Long, Integer>();
-                record = new HashMap<CyNode, CyNode>();
-                recordEdge = new HashMap<CyEdge, CyEdge>();
+    record = new HashMap<CyNode, CyNode>();
+    recordEdge = new HashMap<CyEdge, CyEdge>();
 		edgeMap = new HashMap<Long, View<CyEdge>>();
 		nodeMap = new HashMap<Long, View<CyNode>>();
 		nodeOpacityMap = new HashMap<Long, Integer>();
@@ -147,15 +149,15 @@ public class CyFrame {
 		edgeStrokeOpacityMap = new HashMap<Long, Integer>();
 		edgeColMap = new HashMap<Long, Color>();
 		edgeStrokeColMap = new HashMap<Long, Color>();
-                edgeLabel = new HashMap<Long, String>();
+    edgeLabel = new HashMap<Long, String>();
 		edgeLabelColMap = new HashMap<Long, Color>();
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
-                edgeLabelFontMap = new HashMap<Long, Font>();
+    edgeLabelFontMap = new HashMap<Long, Font>();
 		edgeWidthMap = new HashMap<Long, Double>();
-                edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
-                edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
-                edgeLineTypeMap = new HashMap<Long, LineType>();
+    edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
+    edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
+    edgeLineTypeMap = new HashMap<Long, LineType>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -199,7 +201,7 @@ public class CyFrame {
 	 * CyNetworkView and stores them in this frame.
 	 */
 	public void populate() {
-                title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
+    title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
 		backgroundPaint = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		zoom = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
 		xalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
@@ -214,9 +216,9 @@ public class CyFrame {
 			if(nodeView == null){ continue; }
 			long nodeName = node.getSUID();//nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 
-                        // stores node shape type
-                        NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
-                        nodeShapeMap.put(nodeName, shape);
+      // stores node shape type
+      NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
+      nodeShapeMap.put(nodeName, shape);
 
 			//stores the x and y position of the node
 			double[] xy = new double[3];
@@ -262,20 +264,20 @@ public class CyFrame {
 			nodeFillOpacityMap.put(nodeName, transFill);
 
 			// Grab the label information
-                        String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
-                        nodeLabelMap.put(nodeName, label);
+      String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
+      nodeLabelMap.put(nodeName, label);
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
 			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
 			nodeLabelFontSizeMap.put(nodeName, labelFontSize);
 			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeLabelTransMap.put(nodeName, labelTrans);
-                        Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
-                        nodeLabelFontMap.put(nodeName, font);
+      Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+      nodeLabelFontMap.put(nodeName, font);
 
 			centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
-											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
-											networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
+			networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
+			networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
 			
 		}
 
@@ -327,21 +329,21 @@ public class CyFrame {
                         edgeLabel.put(edgeName, label);
 			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
 			edgeLabelColMap.put(edgeName, labelColor);
-			Integer labelFontSize = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE),
-					labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
+			Integer labelFontSize = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
+			Integer labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeLabelFontSizeMap.put(edgeName, labelFontSize);
 			edgeLabelTransMap.put(edgeName, labelTransMap);
-                        Font font = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
-                        edgeLabelFontMap.put(edgeName, font);
+      Font font = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+      edgeLabelFontMap.put(edgeName, font);
                         
-                        // Grab the shape information
-                        ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
-                        edgeSourceArrowShapeMap.put(edgeName, source);
-                        ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
-                        edgeTargetArrowShapeMap.put(edgeName, target);
-                        LineType line = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE);
-                        edgeLineTypeMap.put(edgeName, line);
-                        System.out.println("ArrowShapes: " + source.getDisplayName() + " " + target.getDisplayName() + " ,Line type: " + line.getDisplayName());
+      // Grab the shape information
+      ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+      edgeSourceArrowShapeMap.put(edgeName, source);
+      ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+      edgeTargetArrowShapeMap.put(edgeName, target);
+      LineType line = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE);
+      edgeLineTypeMap.put(edgeName, line);
+      // System.out.println("ArrowShapes: " + source.getDisplayName() + " " + target.getDisplayName() + " ,Line type: " + line.getDisplayName());
 		}
 	}
 	
@@ -420,45 +422,45 @@ public class CyFrame {
 		}
 
 		//currentView.getModel().removeEdges(removeEdges);
-                for (CyEdge edge: removeEdges){
-                    View<CyEdge> edgeView = currentView.getEdgeView(edge);
-                    if ( edgeView == null)
-                        continue;
-                    if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
-			edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
-                    edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
-                    currentView.updateView();
-                }
+    for (CyEdge edge: removeEdges){
+      View<CyEdge> edgeView = currentView.getEdgeView(edge);
+      if ( edgeView == null)
+        continue;
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
+			  edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+      edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
+      currentView.updateView();
+    }
 
 		// Initialize our edge view maps
 		List<CyNode> removeNodes = new ArrayList<CyNode>();
 		CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
 		for (CyNode nv: currentView.getModel().getNodeList()) {
 			if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/)){
-                            removeNodes.add(nv);
-                        }
+        removeNodes.add(nv);
+      }
 		}
 
 		//currentView.getModel().removeNodes(removeNodes);
-                for (CyNode node: removeNodes){
-                    View<CyNode> nodeView = currentView.getNodeView(node);
-                    if ( nodeView == null)
-                        continue;
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
-                    currentView.updateView();
-                }
+    for (CyNode node: removeNodes){
+      View<CyNode> nodeView = currentView.getNodeView(node);
+      if ( nodeView == null)
+        continue;
+      if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
+        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+      nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
+      currentView.updateView();
+    }
 
 		for(CyNode node: nodeList)
 		{
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
-                               // Add temporary node to network for viewing the node which is removed from current network
-                                CyNode artNode = currentView.getModel().addNode();
-                                record.put(node,artNode);
-                                currentView.updateView();
-                                nodeView = currentView.getNodeView(artNode);
+       // Add temporary node to network for viewing the node which is removed from current network
+       CyNode artNode = currentView.getModel().addNode();
+       record.put(node,artNode);
+       currentView.updateView();
+       nodeView = currentView.getNodeView(artNode);
 			}
 
 			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
@@ -468,13 +470,13 @@ public class CyFrame {
 			Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
 			// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
 			//if(xy == null || nodeView == null){ continue; }
-			
-                        if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
-                            nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
-                        if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE))
-                            nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
+
+      if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE))
+        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+      nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
+      if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE))
+        nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
+      nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
@@ -540,31 +542,31 @@ public class CyFrame {
 		{
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
 			if (edgeView == null){
-                            // Add temporary edge to network for viewing the edge which is removed from current network
-                            CyEdge artEdge = null;
-                            if(record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())){
-                                artEdge = currentView.getModel().addEdge( record.get(edge.getSource()), edge.getTarget(), true);
-                            }else if( nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
-                                artEdge = currentView.getModel().addEdge( edge.getSource(), record.get(edge.getTarget()), true);
-                            }else if( record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
-                                artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
-                            }else{
-                                continue;
-                            }
-                            currentView.updateView();
-                            edgeView = currentView.getEdgeView(artEdge);
-                            recordEdge.put(edge,artEdge);
-                        }
+        // Add temporary edge to network for viewing the edge which is removed from current network
+        CyEdge artEdge = null;
+        if(record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())){
+          artEdge = currentView.getModel().addEdge( record.get(edge.getSource()), edge.getTarget(), true);
+        }else if( nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
+          artEdge = currentView.getModel().addEdge( edge.getSource(), record.get(edge.getTarget()), true);
+        }else if( record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())){
+          artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
+        }else{
+          continue;
+        }
+        currentView.updateView();
+        edgeView = currentView.getEdgeView(artEdge);
+        recordEdge.put(edge,artEdge);
+      }
 
 			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
 			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
 			if (p == null && pStroke == null) 
-                            continue;
+        continue;
 			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
 
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE))
+        edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+      edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
 			if (p != null)
@@ -577,7 +579,7 @@ public class CyFrame {
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL))
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
 			Color labelColor = edgeLabelColMap.get(edgeName);
@@ -600,17 +602,17 @@ public class CyFrame {
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE))
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE))
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE))
+      if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE))
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
 		}
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE))
+    if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE))
 			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
 		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT))
@@ -639,33 +641,33 @@ public class CyFrame {
 		currentView.updateView();
 	}
 
-        /**
+  /**
 	 * Removes temporarily added nodes and edges from network.
 	 *
 	 *
 	 */
-        public void clearDisplay(){
-                Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
-                Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
-                for (CyEdge e: recordEdge.values() ){
-                    removeAddedEdges.add(e);
-                    removeAddedEdgesKeys.add(e.getSUID());
-                }
+   public void clearDisplay(){
+     Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
+     Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
+     for (CyEdge e: recordEdge.values() ){
+       removeAddedEdges.add(e);
+       removeAddedEdgesKeys.add(e.getSUID());
+     }
 
-                appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
-                appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
+     appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
+     appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
 
-                Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
-                Collection<Long> removeAddedKeys = new ArrayList<Long>();
-                for (CyNode n: record.values() ){
-                    removeAddedNodes.add(n);
-                    removeAddedKeys.add(n.getSUID());
-                }
+     Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
+     Collection<Long> removeAddedKeys = new ArrayList<Long>();
+     for (CyNode n: record.values() ){
+       removeAddedNodes.add(n);
+       removeAddedKeys.add(n.getSUID());
+     }
 
-                appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
-                appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
-                appManager.getCurrentNetworkView().updateView();
-        }
+     appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
+     appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
+     appManager.getCurrentNetworkView().updateView();
+   }
 
 	/**
 	 * Return the frame ID for this frame
@@ -1438,7 +1440,6 @@ public class CyFrame {
 		
 		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
-			TunableSetter tunableSetter = (TunableSetter) bundleContext.getService(TunableSetter.class);
 			Map<String, Object> tunables = new HashMap<String, Object>();
 			List<String> fileTypeList = new ArrayList<String>();
 			fileTypeList.add(PNG);
@@ -1446,19 +1447,10 @@ public class CyFrame {
 			fileType.setSelectedValue(PNG);
 			tunables.put("options", fileType);
 			tunables.put("OutputFile", new File(fileName));
-			taskManager.execute(tunableSetter.createTaskIterator(
-					exportImageTaskFactory.createTaskIterator(view), tunables),
-					new TaskObserver() {
-						
-						public void taskFinished(ObservableTask arg0) {
-							// TODO Auto-generated method stub
-						}
-						
-						public void allFinished(FinishStatus arg0) {
-							// TODO Auto-generated method stub
-							finished.setValue(true);
-						}
-					});
+			tunables.put("Zoom", new BoundedDouble(0.0,500.0,500.0,true,false));
+			taskManager.setExecutionContext(tunables);
+			taskManager.execute(exportImageTaskFactory.createTaskIterator(view));
+			finished.setValue(true);
 		}
 	}
 
