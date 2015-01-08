@@ -48,7 +48,6 @@ import org.cytoscape.view.vizmap.VisualStyle;
 import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.SynchronousTaskManager;
-import org.cytoscape.work.TaskManager;
 import org.cytoscape.work.TaskObserver;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.util.BoundedDouble;
@@ -94,6 +93,9 @@ public class CyFrame {
 	private String title = null;
         private Paint backgroundPaint = null;
 	private double zoom = 0;
+        private double size = 0;
+        private double width = 0;
+        private double height = 0;
 	
 	private double xalign;
 	private double yalign;
@@ -206,6 +208,9 @@ public class CyFrame {
     title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
 		backgroundPaint = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		zoom = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
+                size = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SIZE);
+                width = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
+                height = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
 		xalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
 		yalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
 		
@@ -628,6 +633,15 @@ public class CyFrame {
 		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR))
 			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
 		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
+                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SIZE))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SIZE);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SIZE, size);
+                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_WIDTH))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_WIDTH);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
+                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_HEIGHT))
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_HEIGHT);
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
 		//networkView.getComponent().
 	//	dview = (DGraphView)currentView;
 		
@@ -769,6 +783,54 @@ public class CyFrame {
 	 */
 	public void setBackgroundPaint(Paint bg) {
 		backgroundPaint = bg;
+	}
+        
+        /**
+	 * @return the network size
+	 */
+	public Double getNetworkSize() {
+		return size;
+	}
+
+	/**
+	 * Set the network size.
+	 *
+	 * @param size set the network size
+	 */
+	public void setNetworkSize(Double size) {
+		this.size = size;
+	}
+        
+        /**
+	 * @return the network width
+	 */
+	public Double getNetworkWidth() {
+		return width;
+	}
+
+	/**
+	 * Set the network width.
+	 *
+	 * @param width set the network width
+	 */
+	public void setNetworkWidth(Double width) {
+		this.width = width;
+	}
+        
+        /**
+	 * @return the network height
+	 */
+	public Double getNetworkHeight() {
+		return height;
+	}
+
+	/**
+	 * Set the network height.
+	 *
+	 * @param height set the network height
+	 */
+	public void setNetworkHeight(Double height) {
+		this.height = height;
 	}
 
         /**

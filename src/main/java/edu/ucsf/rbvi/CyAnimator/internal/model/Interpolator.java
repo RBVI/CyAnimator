@@ -1421,6 +1421,52 @@ public class Interpolator {
 				
 				cyFrameArray[start+k].setZoom(zoomValues[k]);
 			}
+                        
+                        double sizeOne = frameOne.getNetworkSize();
+                        double sizeTwo = frameTwo.getNetworkSize();
+                        
+                        if( sizeOne == sizeTwo){
+                            for(int k=1; k<framenum; k++)
+                                cyFrameArray[start+k].setNetworkSize(sizeTwo);
+                        }else{
+                            double sizeInc = (sizeTwo - sizeOne) / framenum, sizeIncrease = sizeInc;
+
+                            for(int k=1; k<framenum; k++){
+                                    cyFrameArray[start+k].setNetworkSize(sizeOne + sizeIncrease);
+                                    sizeIncrease += sizeInc;
+                            }
+                        }
+                        
+                        double widthOne = frameOne.getNetworkWidth();
+                        double widthTwo = frameTwo.getNetworkWidth();
+                        
+                        if( widthOne == widthTwo){
+                            for(int k=1; k<framenum; k++)
+                                cyFrameArray[start+k].setNetworkWidth(widthTwo);
+                        }else{
+                            double sizeInc = (widthTwo - widthOne) / framenum, sizeIncrease = sizeInc;
+
+                            for(int k=1; k<framenum; k++){
+                                    cyFrameArray[start+k].setNetworkWidth(widthOne + sizeIncrease);
+                                    sizeIncrease += sizeInc;
+                            }
+                        }
+                        
+                        double heightOne = frameOne.getNetworkHeight();
+                        double heightTwo = frameTwo.getNetworkHeight();
+                        
+                        if( heightOne == heightTwo){
+                            for(int k=1; k<framenum; k++)
+                                cyFrameArray[start+k].setNetworkHeight(heightTwo);
+                        }else{
+                            double sizeInc = (heightTwo - heightOne) / framenum, sizeIncrease = sizeInc;
+
+                            for(int k=1; k<framenum; k++){
+                                    cyFrameArray[start+k].setNetworkHeight(heightOne + sizeIncrease);
+                                    sizeIncrease += sizeInc;
+                            }
+                        }
+                        
 			return cyFrameArray;
 		}
 	}
