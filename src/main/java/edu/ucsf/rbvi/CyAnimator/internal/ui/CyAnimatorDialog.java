@@ -49,6 +49,8 @@ import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 
 import org.cytoscape.service.util.CyServiceRegistrar;
 
@@ -244,25 +246,31 @@ public class CyAnimatorDialog extends JDialog
 			int returnVal = fc.showSaveDialog(new JPanel());
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
                                 String[] choices = { "Frames" , "GIF", "MP4"};
-                                String choice = (String) JOptionPane.showInputDialog(this,
-                                                "Choose output type",
+                                String[] resolutions = { "100", "200", "300", "400", "500"};
+                                
+                                JComboBox choicesList = new JComboBox(choices);
+                                JComboBox resolutionsList = new JComboBox(resolutions);
+                                choicesList.setSelectedIndex(1);
+                                resolutionsList.setSelectedIndex(0);
+                                
+                                JPanel optionsPanel = new JPanel();
+                                optionsPanel.add(new JLabel("Video Type: "));
+                                optionsPanel.add(choicesList);
+                                optionsPanel.add(new JLabel("Resolution: "));
+                                optionsPanel.add(resolutionsList);
+                                
+                                int result = JOptionPane.showConfirmDialog(this,
+                                                optionsPanel,
                                                 "Output Options",
-                                                JOptionPane.QUESTION_MESSAGE,
-                                                null,
-                                                choices,
-                                                choices[1]);
-                                if (choice == null) return;
-                                int index = 0;
-                                for (String s: choices){
-                                    if(s.equals(choice))
-                                        break;
-                                    else
-                                        index++;
-                                }
+                                                JOptionPane.OK_CANCEL_OPTION);
+                                if (result != JOptionPane.OK_OPTION) return;
+                                int choice = choicesList.getSelectedIndex();
+                                int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
+                                
 				File file = fc.getSelectedFile();
 				String filePath = file.getPath();
 				try{
-					frameManager.recordAnimation(filePath, index);
+					frameManager.recordAnimation(filePath, choice, resolution);
 				}catch (Exception excp) {
 				//	logger.error("Record of animation failed",excp);
 				}

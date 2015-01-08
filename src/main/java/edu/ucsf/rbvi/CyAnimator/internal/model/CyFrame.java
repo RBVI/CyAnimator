@@ -58,7 +58,7 @@ public class CyFrame {
 	
 	private String frameid = "";
 	private static final String PNG = "png";
-  private HashMap<Long, NodeShape> nodeShapeMap;
+        private HashMap<Long, NodeShape> nodeShapeMap;
 	private HashMap<Long, double[]> nodePosMap;
 	private HashMap<Long, Color> nodeColMap;
 	private HashMap<Long, Integer> nodeOpacityMap;
@@ -68,30 +68,31 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeBorderColorMap;
 	private HashMap<Long, Integer> nodeBorderTransMap;
 	private HashMap<Long, double[]> nodeSizeMap;
-  private HashMap<Long, String> nodeLabelMap;
+        private HashMap<Long, String> nodeLabelMap;
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
-  private HashMap<Long, Font> nodeLabelFontMap;
-  private HashMap<CyNode, CyNode> record;
-  private HashMap<CyEdge, CyEdge> recordEdge;
+        private HashMap<Long, Font> nodeLabelFontMap;
+        private HashMap<Long, Double> nodeLabelWidthMap;
+        private HashMap<CyNode, CyNode> record;
+        private HashMap<CyEdge, CyEdge> recordEdge;
 
 	private HashMap<Long, Integer> edgeOpacityMap;
 	private HashMap<Long, Integer> edgeStrokeOpacityMap;
 	private HashMap<Long, Color> edgeColMap;
 	private HashMap<Long, Color> edgeStrokeColMap;
 	private HashMap<Long, Double> edgeWidthMap;
-  private HashMap<Long, String> edgeLabel;
+        private HashMap<Long, String> edgeLabel;
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
-  private HashMap<Long, Font> edgeLabelFontMap;
-  private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
-  private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
-  private HashMap<Long, LineType> edgeLineTypeMap;
+        private HashMap<Long, Font> edgeLabelFontMap;
+        private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
+        private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
+        private HashMap<Long, LineType> edgeLineTypeMap;
 	
 	private String title = null;
-  private Paint backgroundPaint = null;
+        private Paint backgroundPaint = null;
 	private double zoom = 0;
 	
 	private double xalign;
@@ -126,21 +127,22 @@ public class CyFrame {
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
-    nodeShapeMap = new HashMap<Long, NodeShape>();
+                nodeShapeMap = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
-    nodeLabelMap = new HashMap<Long, String>();
+                nodeLabelMap = new HashMap<Long, String>();
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
-    nodeLabelFontMap = new HashMap<Long, Font>();
+                nodeLabelFontMap = new HashMap<Long, Font>();
+                nodeLabelWidthMap = new HashMap<Long, Double>();
 		nodeSizeMap = new HashMap<Long, double[]>();
 		nodeBorderWidthMap = new HashMap<Long, Double>();
 		nodeBorderColorMap = new HashMap<Long, Color>();
 		nodeBorderTransMap = new HashMap<Long, Integer>();
-    record = new HashMap<CyNode, CyNode>();
-    recordEdge = new HashMap<CyEdge, CyEdge>();
+                record = new HashMap<CyNode, CyNode>();
+                recordEdge = new HashMap<CyEdge, CyEdge>();
 		edgeMap = new HashMap<Long, View<CyEdge>>();
 		nodeMap = new HashMap<Long, View<CyNode>>();
 		nodeOpacityMap = new HashMap<Long, Integer>();
@@ -149,15 +151,15 @@ public class CyFrame {
 		edgeStrokeOpacityMap = new HashMap<Long, Integer>();
 		edgeColMap = new HashMap<Long, Color>();
 		edgeStrokeColMap = new HashMap<Long, Color>();
-    edgeLabel = new HashMap<Long, String>();
+                edgeLabel = new HashMap<Long, String>();
 		edgeLabelColMap = new HashMap<Long, Color>();
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
-    edgeLabelFontMap = new HashMap<Long, Font>();
+                edgeLabelFontMap = new HashMap<Long, Font>();
 		edgeWidthMap = new HashMap<Long, Double>();
-    edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
-    edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
-    edgeLineTypeMap = new HashMap<Long, LineType>();
+                edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
+                edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
+                edgeLineTypeMap = new HashMap<Long, LineType>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -264,16 +266,18 @@ public class CyFrame {
 			nodeFillOpacityMap.put(nodeName, transFill);
 
 			// Grab the label information
-      String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
-      nodeLabelMap.put(nodeName, label);
+                        String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
+                        nodeLabelMap.put(nodeName, label);
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
 			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
 			nodeLabelFontSizeMap.put(nodeName, labelFontSize);
 			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeLabelTransMap.put(nodeName, labelTrans);
-      Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
-      nodeLabelFontMap.put(nodeName, font);
+                        Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+                        nodeLabelFontMap.put(nodeName, font);
+                        Double labelWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH);
+                        nodeLabelWidthMap.put(nodeName, labelWidth);
 
 			centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
 			networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
@@ -536,6 +540,9 @@ public class CyFrame {
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE))
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
+                        if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_WIDTH))
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_WIDTH);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH, nodeLabelWidthMap.get(nodeName));
 		}
 
 		for(CyEdge edge: getEdgeList())
@@ -1108,6 +1115,26 @@ public class CyFrame {
 		nodeLabelFontMap.put(nodeID, font);
 	}
 
+        /**
+	 * 
+	 * @param nodeID
+	 * @return font label width
+	 */
+	public Double getNodeLabelWidth(long nodeID) {
+		if (nodeLabelWidthMap.containsKey(nodeID))
+			return nodeLabelWidthMap.get(nodeID);
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeID
+	 * @param width node label width
+	 */
+	public void setNodeLabelWidth(long nodeID, Double width) {
+		nodeLabelWidthMap.put(nodeID, width);
+	}
+        
 	/**
 	 * 
 	 * @param nodeID
@@ -1434,7 +1461,7 @@ public class CyFrame {
  	 *
  	 * @param fileName the file to write the image to
  	 */
-	public void writeImage(String fileName, final BooleanWrapper finished) throws IOException {
+	public void writeImage(String fileName, final int videoResolution,final BooleanWrapper finished) throws IOException {
 		display();
 		CyNetworkView view = appManager.getCurrentNetworkView();
 		
@@ -1447,7 +1474,7 @@ public class CyFrame {
 			fileType.setSelectedValue(PNG);
 			tunables.put("options", fileType);
 			tunables.put("OutputFile", new File(fileName));
-			tunables.put("Zoom", new BoundedDouble(0.0,500.0,500.0,true,false));
+			tunables.put("Zoom", new BoundedDouble(0.0, (double) videoResolution, (double) videoResolution,true,false));
 			taskManager.setExecutionContext(tunables);
 			taskManager.execute(exportImageTaskFactory.createTaskIterator(view));
 			finished.setValue(true);

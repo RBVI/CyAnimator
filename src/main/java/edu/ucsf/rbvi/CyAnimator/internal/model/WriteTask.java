@@ -19,13 +19,15 @@ public class WriteTask extends AbstractTask {
 	String title;
 	String directory;
         int videoType;
+        int videoResolution;
 
-	public WriteTask(FrameManager frameManager, String title, String directory, int videoType) {
+	public WriteTask(FrameManager frameManager, String title, String directory, int videoType, int videoResolution) {
 		super();
 		this.frameManager = frameManager;
 		this.title = title;
 		this.directory = directory;
                 this.videoType = videoType;
+                this.videoResolution = videoResolution;
 	}
 
 	public String getTitle() {
@@ -63,7 +65,7 @@ public class WriteTask extends AbstractTask {
 		
 			try {
 				BooleanWrapper finished = new BooleanWrapper(false);
-				this.frameManager.frames[i].writeImage(name, finished);
+				this.frameManager.frames[i].writeImage(name, videoResolution,finished);
 				while (!finished.getValue())
 					try {
 						Thread.sleep(200);

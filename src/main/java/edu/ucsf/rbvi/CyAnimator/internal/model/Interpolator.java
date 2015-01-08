@@ -950,6 +950,25 @@ public class Interpolator {
                                                 sizeIncrease += sizeInc;
                                         }	
                                 }
+                                
+                                Double widthOne = frameOne.getNodeLabelWidth(nodeid);
+				Double widthTwo = frameTwo.getNodeLabelWidth(nodeid);
+                                
+                                if ( widthOne == null) widthOne = 0.0;
+                                if ( widthTwo == null) widthTwo = 0.0;
+
+                                if (widthOne.equals(widthTwo)) {
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelWidth(nodeid, widthTwo);
+                                        }	
+                                } else {
+                                        double sizeInc = (widthTwo - widthOne) / (framenum + 1), sizeIncrease = sizeInc;
+
+                                        for(int k=1; k<framenum+1; k++){
+                                                cyFrameArray[start+k].setNodeLabelWidth(nodeid, widthOne + sizeIncrease);
+                                                sizeIncrease += sizeInc;
+                                        }
+                                }
 
                                 Font fontOne = frameOne.getNodeLabelFont(nodeid);
 				Font fontTwo = frameTwo.getNodeLabelFont(nodeid);
@@ -1299,8 +1318,6 @@ public class Interpolator {
                                 for(int k=framenum/2; k<framenum+1; k++){
 					cyFrameArray[start+k].setEdgeSourceArrowShape(edgeid, sourceTwo);
 				}
-                                System.out.println("Being interplolated: " + sourceOne.getDisplayName() + " with " + sourceTwo.getDisplayName());
-
                                 // similarly for target
                                 ArrowShape targetOne = frameOne.getEdgeTargetArrowShape(edgeid);
                                 ArrowShape targetTwo = frameTwo.getEdgeTargetArrowShape(edgeid);
@@ -1311,8 +1328,6 @@ public class Interpolator {
                                 for(int k=framenum/2; k<framenum+1; k++){
 					cyFrameArray[start+k].setEdgeTargetArrowShape(edgeid, targetTwo);
 				}
-                                System.out.println("Being interplolated target: " + targetOne.getDisplayName() + " with " + targetTwo.getDisplayName());
-                                
                                 // interpolate linetype directly
                                 LineType lineOne = frameOne.getEdgeLineType(edgeid);
                                 LineType lineTwo = frameTwo.getEdgeLineType(edgeid);
