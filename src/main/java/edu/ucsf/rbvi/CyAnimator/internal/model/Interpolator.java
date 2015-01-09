@@ -41,7 +41,8 @@ public class Interpolator {
 	 * the animation.
 	 */
 	List<FrameInterpolator> nodeInterpolators = new ArrayList<FrameInterpolator>();
-	List<FrameInterpolator> edgeInterpolators = new ArrayList<FrameInterpolator>();
+	List<FrameInterpolator> edgeInterpolators = new ArrayList<FrameInterpolator>();	
+        List<FrameInterpolator> annotationInterpolators = new ArrayList<FrameInterpolator>();
 	List<FrameInterpolator> networkInterpolators = new ArrayList<FrameInterpolator>();
 	
 	public Interpolator(){
@@ -61,6 +62,8 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeWidth());
 		edgeInterpolators.add(new interpolateEdgeLabel());
                 edgeInterpolators.add(new interpolateEdgeArrowShape());
+                
+                annotationInterpolators.add(new interpolateAnnotations());
 
                 networkInterpolators.add(new interpolateNetworkTitle());
 		networkInterpolators.add(new interpolateNetworkZoom());
@@ -97,6 +100,7 @@ public class Interpolator {
 		//initialize the CyFrame array
 		for(int i=0; i<cyFrameArray.length; i++){
 			cyFrameArray[i] = new CyFrame(frameList.get(0).getBundleContext());
+                        cyFrameArray[i].populate();
 		}
 
 		int start = 0;
@@ -125,8 +129,9 @@ public class Interpolator {
                                                 
 			List<Long> nodeIdList = nodeIdUnionize(frameList.get(i), frameList.get(i+1));
 			List<Long> edgeIdList = edgeIdUnionize(frameList.get(i), frameList.get(i+1));
-                    
-			//reset the nodeLists once the unionizer has updated them
+                        List<Long> annotationIdList = annotationsIdUnionize(frameList.get(i), frameList.get(i+1));
+
+                        //reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
 				cyFrameArray[k].setNodeList(nodeList);
 				cyFrameArray[k].setEdgeList(edgeList);
@@ -155,10 +160,16 @@ public class Interpolator {
 				                                  start, end, cyFrameArray);
 			}
 
+                        for(FrameInterpolator interp: annotationInterpolators){
+				cyFrameArray = interp.interpolate(annotationIdList, frameList.get(i), frameList.get(i+1), 
+				                                  start, end, cyFrameArray);
+			}
+
 			for(FrameInterpolator interp: networkInterpolators){
 				cyFrameArray = interp.interpolate(nodeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
+
 			start = end;
 		}
 	   		
@@ -276,6 +287,35 @@ public class Interpolator {
 
 		for (Long edge: list2) {
 			bigList.put(edge, edge);
+		}
+		
+		return new ArrayList<Long>(bigList.keySet());
+		
+	}
+        
+        /**
+	 * Takes two CyFrames and returns the union of the annotations lists that are contained
+	 * within each frame.  This is to ensure that when annoations are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose annotations list will be unionized
+	 * @param frameTwo is the second frame whose annotations list will be unionized
+	 * @return the unionized list of annotations
+	 * 
+	 */
+	public List<Long> annotationsIdUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<Long> list1 = frameOne.getAnnotationIdList();
+		List<Long> list2 = frameTwo.getAnnotationIdList();
+		Map<Long,Long> bigList = new HashMap<Long,Long>();	
+
+		for (Long id: list1) {
+			bigList.put(id, id);
+		}
+
+		for (Long id: list2) {
+			bigList.put(id, id);
 		}
 		
 		return new ArrayList<Long>(bigList.keySet());
@@ -1340,6 +1380,49 @@ public class Interpolator {
 				}
 			}
 			return cyFrameArray;
+		}
+	}
+
+	class interpolateAnnotations implements FrameInterpolator {
+
+		public interpolateAnnotations(){
+
+		}
+
+		/**
+		 * Performs the interpolation.
+		 *
+		 * @param idList is the list of ids of annotation present in either frame
+		 * @param frameOne is the frame to be interpolated from
+		 * @param frameTwo is the frame to be interpolated to
+		 * @param start is the starting position of the frame in the CyFrame array
+		 * @param end is the ending positiong of the interpolation in the CyFrame array
+		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
+		 * @return the array of CyFrames filled with interpolated node position data
+		 */
+		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo,
+		                             int start, int stop, CyFrame[] cyFrameArray){
+
+			int framenum = (stop-start) - 1;
+
+                        for(long annotationId: idList){
+                            double visibilityOne = frameOne.getAnnotationVisibility((int) annotationId);
+                            double visibilityTwo = frameTwo.getAnnotationVisibility((int) annotationId);
+
+                            if( visibilityOne == visibilityTwo){
+                                for(int k=1; k<framenum + 1; k++){
+                                        cyFrameArray[start+k].setAnnotationVisibility((int) annotationId, visibilityTwo);
+                                }
+                            }else{
+                                double sizeInc = (visibilityTwo - visibilityOne) / (framenum + 1), sizeIncrease = sizeInc;
+
+                                for(int k=1; k<framenum + 1; k++){
+                                        cyFrameArray[start+k].setAnnotationVisibility((int) annotationId, (visibilityOne + sizeIncrease) );
+                                        sizeIncrease += sizeInc;
+                                }
+                            }
+                        }
+                            return cyFrameArray;
 		}
 	}
 
