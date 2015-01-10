@@ -104,6 +104,7 @@ public class CyFrame {
         private double width = 0;
         private double height = 0;
         
+        private List<Annotation> currAnnotationList;
         private List<Annotation> annotationList;
         private HashMap<Integer, Double> annotationVisibilityMap;
         private HashMap<Integer, Double> annotationZoomMap;
@@ -208,7 +209,8 @@ public class CyFrame {
 		}
                 
                 // Initialize our annotations list
-                if( annotationManager.getAnnotations(networkView) != null){
+                currAnnotationList = annotationManager.getAnnotations(networkView);
+                if(currAnnotationList != null){
                     for (Annotation ann: annotationManager.getAnnotations(networkView)){
                         annotationList.add(ann);
                         annotationIdList.add((long) ann.hashCode());
@@ -759,14 +761,33 @@ public class CyFrame {
 
                     //dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
                 //ifc.setBounds(arg0, arg1, arg2, arg3)
-
-                List<Annotation> currAnnotations = annotationManager.getAnnotations(networkView);
                 
                 // hide annotation which were not present earlier
-                if( currAnnotations != null){
-                    for (Annotation ann : currAnnotations) {
+                if( currAnnotationList != null){
+                    for (Annotation ann : currAnnotationList) {
                         if (!annotationList.contains(ann)) {
                             // make ann invisible here
+                            if(ann instanceof TextAnnotation){
+                                TextAnnotation ta = (TextAnnotation)ann;
+                                ta.setFontSize(0.0);
+                                continue;
+                            }else if( ann instanceof ShapeAnnotation){
+                                ShapeAnnotation sa = (ShapeAnnotation) ann;
+                                sa.setBorderWidth(0.0);
+                                continue;
+                            }else if( ann instanceof ImageAnnotation){
+                                ImageAnnotation ia = (ImageAnnotation) ann;
+                                ia.setImageOpacity(0.0f);
+                            }else if( ann instanceof BoundedTextAnnotation){
+                                BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+                                bta.setFontSize(0.0);
+                                continue;
+                            }else if( ann instanceof ArrowAnnotation){
+                                ArrowAnnotation aa = (ArrowAnnotation) ann;
+                                aa.setLineWidth(0.0);
+                                continue;
+                            }
+                            ann.setZoom(0.0);
                         }
                     }
                 }
