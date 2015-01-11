@@ -45,12 +45,16 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JTabbedPane;
 
 import org.cytoscape.service.util.CyServiceRegistrar;
 
@@ -71,9 +75,16 @@ public class CyAnimatorDialog extends JDialog
 	private JButton forwardButton;
 	private JButton backwardButton;
 	private JButton recordButton;
+        private JButton saveButton;
+        
+        private JComboBox choicesList;
+        private JComboBox resolutionsList;
+        private JComboBox frameCountList;
 	
 	private JMenuItem menuItem;
+        private JTabbedPane tabbedPane;
 	private JPanel mainPanel;
+        private JPanel settingPanel;
 	private JPopupMenu thumbnailMenu;
 	private JSlider speedSlider;
 	final JFileChooser fc = new JFileChooser();
@@ -121,7 +132,7 @@ public class CyAnimatorDialog extends JDialog
 	 * Create the control buttons, panels, and initialize the main JDialog.
 	 */
 	public void initialize(){
-		
+		tabbedPane = new JTabbedPane();
 		mainPanel = new JPanel();
 		mainPanel.addPropertyChangeListener(this);
 		
@@ -167,6 +178,11 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
 
+                saveButton = new JButton("Save");
+		saveButton.addActionListener(this);
+		saveButton.setActionCommand("save");
+		saveButton.setToolTipText("Save Settings");
+                
 		speedSlider = new JSlider(1,60);
 
 		speedSlider.addChangeListener(new SliderListener());
@@ -188,11 +204,43 @@ public class CyAnimatorDialog extends JDialog
 
 		updateThumbnails(); 
 		mainPanel.add(framePane);
+                                
+                String[] choices = { "Frames" , "GIF", "MP4"};
+                String[] resolutions = { "100", "200", "300", "400", "500"};
+                String[] frameCount = { "10", "20", "30", "40", "50"};
 
+                choicesList = new JComboBox(choices);
+                resolutionsList = new JComboBox(resolutions);
+                frameCountList = new JComboBox(frameCount);
+                choicesList.setSelectedIndex(1);
+                resolutionsList.setSelectedIndex(0);
+                frameCountList.setSelectedIndex(2);
+
+                settingPanel = new JPanel();
+                JPanel outputSettingPanel = new JPanel();
+                outputSettingPanel.setBorder(BorderFactory.createTitledBorder("Video Options"));
+                outputSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                outputSettingPanel.add(new JLabel("Video Type: "));
+                outputSettingPanel.add(choicesList);
+                
+                JPanel frameSettingPanel = new JPanel();
+                frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
+                frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                frameSettingPanel.add(new JLabel("Frame Per Second: "));
+                frameSettingPanel.add(frameCountList);
+                frameSettingPanel.add(new JLabel("Resolution: "));
+                frameSettingPanel.add(resolutionsList);
+                
+                settingPanel.setLayout( new GridLayout(3, 0));
+                settingPanel.add(outputSettingPanel);
+                settingPanel.add(frameSettingPanel);
+                settingPanel.add(saveButton);
 		this.setSize(new Dimension(500,220));
 		this.setLocation(900, 100);
 
-		setContentPane(mainPanel);
+                tabbedPane.addTab("Home",mainPanel);
+                tabbedPane.addTab("Settings", settingPanel);
+		setContentPane(tabbedPane);
 	}
 
 	
@@ -245,38 +293,23 @@ public class CyAnimatorDialog extends JDialog
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
 			int returnVal = fc.showSaveDialog(new JPanel());
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-                                String[] choices = { "Frames" , "GIF", "MP4"};
-                                String[] resolutions = { "100", "200", "300", "400", "500"};
-                                
-                                JComboBox choicesList = new JComboBox(choices);
-                                JComboBox resolutionsList = new JComboBox(resolutions);
-                                choicesList.setSelectedIndex(1);
-                                resolutionsList.setSelectedIndex(0);
-                                
-                                JPanel optionsPanel = new JPanel();
-                                optionsPanel.add(new JLabel("Video Type: "));
-                                optionsPanel.add(choicesList);
-                                optionsPanel.add(new JLabel("Resolution: "));
-                                optionsPanel.add(resolutionsList);
-                                
-                                int result = JOptionPane.showConfirmDialog(this,
-                                                optionsPanel,
-                                                "Output Options",
-                                                JOptionPane.OK_CANCEL_OPTION);
-                                if (result != JOptionPane.OK_OPTION) return;
-                                int choice = choicesList.getSelectedIndex();
-                                int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
-                                
+                            
 				File file = fc.getSelectedFile();
 				String filePath = file.getPath();
 				try{
-					frameManager.recordAnimation(filePath, choice, resolution);
+					frameManager.recordAnimation(filePath);
 				}catch (Exception excp) {
 				//	logger.error("Record of animation failed",excp);
 				}
 			}
 		}
-		
+                
+                if(command.equals("save")){                    
+                    int choice = choicesList.getSelectedIndex();
+                    int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
+                    int frameCount = (frameCountList.getSelectedIndex() + 1)*10;
+                    frameManager.updateSettings(frameCount, choice, resolution);
+                }
 		
 		//If event is fired from interpolation menu this matches the interpolation count.
 		Pattern interpolateCount = Pattern.compile("interpolate([0-9]+)_$");
