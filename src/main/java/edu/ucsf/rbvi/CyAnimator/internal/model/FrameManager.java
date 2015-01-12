@@ -36,7 +36,7 @@ public class FrameManager {
 	public Timer timer;
 	
 	//frames per second
-	private int fps = 30;
+	public int fps = 30;
 	private int videoType = 1;
         private int videoResolution = 100;
 	private CyServiceRegistrar bundleContext;

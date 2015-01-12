@@ -55,6 +55,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 
 import org.cytoscape.service.util.CyServiceRegistrar;
 
@@ -75,6 +76,7 @@ public class CyAnimatorDialog extends JDialog
 	private JButton forwardButton;
 	private JButton backwardButton;
 	private JButton recordButton;
+        private JButton browseButton;
         private JButton saveButton;
         
         private JComboBox choicesList;
@@ -85,6 +87,10 @@ public class CyAnimatorDialog extends JDialog
         private JTabbedPane tabbedPane;
 	private JPanel mainPanel;
         private JPanel settingPanel;
+        private JPanel frameSettingPanel;
+        private JPanel directorySettingPanel;
+        private JPanel outputSettingPanel;
+        private JTextField directoryText;
 	private JPopupMenu thumbnailMenu;
 	private JSlider speedSlider;
 	final JFileChooser fc = new JFileChooser();
@@ -100,6 +106,7 @@ public class CyAnimatorDialog extends JDialog
 	private CyServiceRegistrar bc;
 //	private CyLogger logger;
 	
+        private String filePath = "";
 	int thumbnailPopupIndex = 0;
 	ArrayList<CyFrame> frameList;
 	       
@@ -178,7 +185,14 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
 
+                browseButton = new JButton("Browse");
+                browseButton.setSize(new Dimension(100, 30));
+		browseButton.addActionListener(this);
+		browseButton.setActionCommand("browse");
+		browseButton.setToolTipText("Browse Directory to Save Video");
+                
                 saveButton = new JButton("Save");
+                saveButton.setSize(new Dimension(100, 30));
 		saveButton.addActionListener(this);
 		saveButton.setActionCommand("save");
 		saveButton.setToolTipText("Save Settings");
@@ -215,15 +229,39 @@ public class CyAnimatorDialog extends JDialog
                 choicesList.setSelectedIndex(1);
                 resolutionsList.setSelectedIndex(0);
                 frameCountList.setSelectedIndex(2);
+                
+                choicesList.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        saveButton.setEnabled(true);
+                    }
+                });
+                resolutionsList.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        saveButton.setEnabled(true);
+                    }
+                });
+                frameCountList.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        saveButton.setEnabled(true);
+                    }
+                });
 
                 settingPanel = new JPanel();
-                JPanel outputSettingPanel = new JPanel();
+                outputSettingPanel = new JPanel();
                 outputSettingPanel.setBorder(BorderFactory.createTitledBorder("Video Options"));
                 outputSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
                 outputSettingPanel.add(new JLabel("Video Type: "));
                 outputSettingPanel.add(choicesList);
                 
-                JPanel frameSettingPanel = new JPanel();
+                directorySettingPanel = new JPanel();
+                directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                directorySettingPanel.add(new JLabel("Video location: "));
+                directoryText = new JTextField(40);
+                directoryText.setText("");
+                directorySettingPanel.add(directoryText);
+                directorySettingPanel.add(browseButton);
+                
+                frameSettingPanel = new JPanel();
                 frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
                 frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
                 frameSettingPanel.add(new JLabel("Frame Per Second: "));
@@ -231,11 +269,16 @@ public class CyAnimatorDialog extends JDialog
                 frameSettingPanel.add(new JLabel("Resolution: "));
                 frameSettingPanel.add(resolutionsList);
                 
-                settingPanel.setLayout( new GridLayout(3, 0));
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+                buttonPanel.add(saveButton);
+                
+                settingPanel.setLayout(new GridLayout(4,1));
+                settingPanel.add(directorySettingPanel);
                 settingPanel.add(outputSettingPanel);
                 settingPanel.add(frameSettingPanel);
-                settingPanel.add(saveButton);
-		this.setSize(new Dimension(500,220));
+                settingPanel.add(buttonPanel);
+		this.setSize(new Dimension(700,300));
 		this.setLocation(900, 100);
 
                 tabbedPane.addTab("Home",mainPanel);
@@ -290,18 +333,31 @@ public class CyAnimatorDialog extends JDialog
 		
 		
 		if(command.equals("record")){
+                        if( ! new File(filePath).exists() ){
+                            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
+                            int returnVal = fc.showSaveDialog(new JPanel());
+                            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                                    File file = fc.getSelectedFile();
+                                    filePath = file.getPath();
+                                    directoryText.setText(filePath);
+                            }
+                        }
+                        try {
+                            frameManager.recordAnimation(filePath);
+                        } catch (Exception excp) {
+                            //	logger.error("Record of animation failed",excp);
+                        }
+		}
+                
+                if(command.equals("browse")){
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
 			int returnVal = fc.showSaveDialog(new JPanel());
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-                            
 				File file = fc.getSelectedFile();
-				String filePath = file.getPath();
-				try{
-					frameManager.recordAnimation(filePath);
-				}catch (Exception excp) {
-				//	logger.error("Record of animation failed",excp);
-				}
+				filePath = file.getPath();
+                                directoryText.setText(filePath);
 			}
+                        saveButton.setEnabled(true);
 		}
                 
                 if(command.equals("save")){                    
@@ -309,6 +365,7 @@ public class CyAnimatorDialog extends JDialog
                     int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
                     int frameCount = (frameCountList.getSelectedIndex() + 1)*10;
                     frameManager.updateSettings(frameCount, choice, resolution);
+                    saveButton.setEnabled(false);
                 }
 		
 		//If event is fired from interpolation menu this matches the interpolation count.

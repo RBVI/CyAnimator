@@ -87,10 +87,10 @@ public class WriteTask extends AbstractTask {
 
                 if(videoType == 1){
                     GifSequenceWriter wr = new GifSequenceWriter();
-                    wr.createGIF(curDir, directory, 50);
+                    wr.createGIF(curDir, directory, this.frameManager.fps);
                     FileUtils.deleteDirectory(file);
                 }else if ( videoType == 2 ){
-                    VideoCreator vc = new VideoCreator(curDir, directory, 20);
+                    VideoCreator vc = new VideoCreator(curDir, directory, this.frameManager.fps);
                     vc.CreateVideo();
                     FileUtils.deleteDirectory(file);
                 }
