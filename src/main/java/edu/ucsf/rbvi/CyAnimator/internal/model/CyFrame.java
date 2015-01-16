@@ -1097,7 +1097,7 @@ public class CyFrame {
 	public String getAnnotationText(int hashcode) {
             if(annotationTextMap.containsKey(hashcode))
 		return annotationTextMap.get(hashcode);
-            return null;
+            return "";
 	}
 
 	/**
