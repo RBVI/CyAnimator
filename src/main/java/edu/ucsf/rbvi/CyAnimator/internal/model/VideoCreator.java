@@ -21,7 +21,7 @@ import com.xuggle.xuggler.ICodec;
 import java.text.DecimalFormat;
 
 public class VideoCreator {
-    private static final int IMAGE_WIDTH = 880, IMAGE_HEIGHT = 440;
+    private int IMAGE_WIDTH = 880, IMAGE_HEIGHT = 440;
     
     private double FRAME_RATE = 20;
     
@@ -39,17 +39,32 @@ public class VideoCreator {
   // let's make a IMediaWriter to write the file.
         final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
-  // We tell it we're going to add one video stream, with id 0,
-  // at position 0, and that it will have a fixed frame rate of FRAME_RATE.
-        writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, IMAGE_WIDTH, IMAGE_HEIGHT);
-
         long startTime = System.nanoTime();
         
         int filesCount = new File(inputImgDirPath).list().length;
         DecimalFormat frame = new DecimalFormat("#000");
-        
+
+// get width and height of image for setting resolution of video - there can be better 
+// solution for getting these param
+
         for (int index = 0; index < filesCount - 1; index++) {
 
+            BufferedImage screen = null;
+            try {
+                screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
+                IMAGE_WIDTH = screen.getWidth();
+                IMAGE_HEIGHT = screen.getHeight();
+                break;
+            } catch (IOException e) {
+                continue;
+            }
+        }
+
+  // We tell it we're going to add one video stream, with id 0,
+  // at position 0, and that it will have a fixed frame rate of FRAME_RATE.
+        writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, IMAGE_WIDTH, IMAGE_HEIGHT);
+        
+        for (int index = 0; index < filesCount - 1; index++) {
 // read image
             BufferedImage screen = null;
             try {
