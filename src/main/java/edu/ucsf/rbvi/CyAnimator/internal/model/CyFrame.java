@@ -755,6 +755,17 @@ public class CyFrame {
                         }
                     }
                 }
+                
+                // show annotation which were removed later
+                if( annotationList != null){
+                    for (Annotation ann : annotationList) {
+                        if (!currAnnotationList.contains(ann)) {
+                            // make ann visible here
+                            System.out.print("making visible");
+                            annotationManager.addAnnotation(ann);
+                        }
+                    }
+                }
 
                 for(Annotation ann: annotationList){
                     ann.setZoom( annotationZoomMap.get(ann.hashCode()) );
