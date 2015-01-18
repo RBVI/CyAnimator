@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.image.*;
 import java.awt.Paint;
+import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -106,6 +107,7 @@ public class CyFrame {
         
         private List<Annotation> currAnnotationList;
         private List<Annotation> annotationList;
+        private HashMap<Integer, Point> annotationPosMap;
         private HashMap<Integer, Color> annotationFillColorMap;
         private HashMap<Integer, Color> annotationBorderColorMap;
         private HashMap<Integer, Color> annotationTextColorMap;
@@ -183,6 +185,7 @@ public class CyFrame {
                 edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
                 edgeLineTypeMap = new HashMap<Long, LineType>();
                 annotationList = new ArrayList<Annotation>();
+                annotationPosMap = new HashMap<Integer, Point>();
                 annotationZoomMap = new HashMap<Integer, Double>();
                 annotationFillColorMap = new HashMap<Integer, Color>();
                 annotationBorderColorMap = new HashMap<Integer, Color>();
@@ -363,6 +366,9 @@ public class CyFrame {
 		}
 
                 for(Annotation ann: annotationList){
+                    Double x = new Double(ann.getArgMap().get("x"));
+                    Double y = new Double(ann.getArgMap().get("y"));
+                    annotationPosMap.put( ann.hashCode(), new Point( x.intValue(), y.intValue() ) );
                     annotationZoomMap.put(ann.hashCode(), ann.getSpecificZoom());
                     if(ann instanceof TextAnnotation){
                         TextAnnotation ta = (TextAnnotation) ann;
@@ -762,13 +768,13 @@ public class CyFrame {
                         if (!currAnnotationList.contains(ann)) {
                             // make ann visible here
                             System.out.print("making visible");
-                            annotationManager.addAnnotation(ann);
                         }
                     }
                 }
 
                 for(Annotation ann: annotationList){
-                    ann.setZoom( annotationZoomMap.get(ann.hashCode()) );
+                    ann.moveAnnotation( annotationPosMap.get( ann.hashCode() ));
+                    ann.setZoom( annotationZoomMap.get( ann.hashCode()) );
                     // make ann visible here
                     if(ann instanceof TextAnnotation){
                         TextAnnotation ta = (TextAnnotation)ann;
@@ -971,6 +977,27 @@ public class CyFrame {
 	 */
 	public void setNetworkHeight(Double height) {
 		this.height = height;
+	}
+        
+        /**
+	 * Return the position of annotation.
+	 * 
+         * @param hashcode of annotation whose position is to be returned 
+	 * @return Point
+	 */
+	public Point getAnnotationPos(int hashcode) {
+            if(annotationPosMap.containsKey(hashcode))
+		return annotationPosMap.get(hashcode);
+            return null;
+	}
+
+	/**
+	 * Set the position annotation.
+	 * @param hascode of annotation whose position is to be set
+	 * @param zoom set the position
+	 */
+	public void setAnnotationPos(int hashcode, Point pt) {
+		annotationPosMap.put(hashcode, pt);
 	}
         
         /**

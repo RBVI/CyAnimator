@@ -7,6 +7,7 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import static edu.ucsf.rbvi.CyAnimator.internal.model.Interpolator.interpolateColor;
 import java.awt.Color;
+import java.awt.Point;
 import java.util.List;
 
 /**
@@ -15,6 +16,76 @@ import java.util.List;
  */
 public class AnnotationInterpolator {
     
+}
+
+class interpolateAnnotationsPosition implements FrameInterpolator {
+
+        public interpolateAnnotationsPosition(){
+
+        }
+
+        /**
+         * Performs the interpolation.
+         *
+         * @param idList is the list of ids of annotation present in either frame
+         * @param frameOne is the frame to be interpolated from
+         * @param frameTwo is the frame to be interpolated to
+         * @param start is the starting position of the frame in the CyFrame array
+         * @param end is the ending positiong of the interpolation in the CyFrame array
+         * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
+         * @return the array of CyFrames filled with interpolated node position data
+         */
+        public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo,
+                                     int start, int stop, CyFrame[] cyFrameArray){
+
+                int framenum = stop - start;
+
+                for (long annotationId : idList) {
+                    //Get the annotation positions and set up the position interpolation
+                    Point ptOne = frameOne.getAnnotationPos((int) annotationId);
+                    Point ptTwo = frameTwo.getAnnotationPos((int) annotationId);
+                    if (ptOne == null && ptTwo == null) {
+                        continue;
+                    }
+
+                    // Handle missing (or appearing) annotation
+                    if (ptOne == null || ptTwo == null) {
+                        if (ptOne == null) {
+                            ptOne = ptTwo;
+                        } else {
+                            ptTwo = ptOne;
+                        }
+
+                        for (int k = 1; k < framenum; k++) {
+                            cyFrameArray[start + k].setAnnotationPos((int) annotationId, ptTwo);
+                        }
+                        continue;
+                    }
+
+                    double incrementLength = (ptTwo.x - ptOne.x) / framenum;
+                    int[] xArray = new int[framenum + 1];
+                    xArray[1] = (int) (ptOne.x + incrementLength);
+
+                    for (int k = 1; k < framenum; k++) {
+
+                        Point p = new Point(0,0);
+
+                        xArray[k + 1] = (int) (xArray[k] + incrementLength);
+                        p.x = xArray[k];
+
+                        //Do the position interpolation
+                        if ((ptTwo.x - ptOne.x) == 0) {
+                            p.y = ptOne.y;
+                        } else {
+                            p.y = ptOne.y + ((xArray[k] - ptOne.x) * ((ptTwo.y - ptOne.y) / (ptTwo.x - ptOne.x)));
+                        }
+
+                        cyFrameArray[start + k].setAnnotationPos((int) annotationId, p);
+                    }
+
+                }
+                return cyFrameArray;
+        }
 }
 
 class interpolateAnnotationsSize implements FrameInterpolator {

@@ -59,6 +59,7 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeLabel());
                 edgeInterpolators.add(new interpolateEdgeArrowShape());
                 
+                annotationInterpolators.add(new interpolateAnnotationsPosition());
                 annotationInterpolators.add(new interpolateAnnotationsSize());
                 annotationInterpolators.add(new interpolateAnnotationsColor());
                 annotationInterpolators.add(new interpolateAnnotationsText());
@@ -67,8 +68,6 @@ public class Interpolator {
 		networkInterpolators.add(new interpolateNetworkZoom());
 		networkInterpolators.add(new interpolateNetworkColor());
 		networkInterpolators.add(new interpolateNetworkCenter());
-	
-		
 	}
 
 	/**
