@@ -44,6 +44,7 @@ class interpolateAnnotationsPosition implements FrameInterpolator {
                     //Get the annotation positions and set up the position interpolation
                     Point ptOne = frameOne.getAnnotationPos((int) annotationId);
                     Point ptTwo = frameTwo.getAnnotationPos((int) annotationId);
+										// System.out.println("ptOne = "+ptOne+", ptTwo = "+ptTwo);
                     if (ptOne == null && ptTwo == null) {
                         continue;
                     }
@@ -62,25 +63,16 @@ class interpolateAnnotationsPosition implements FrameInterpolator {
                         continue;
                     }
 
-                    double incrementLength = (ptTwo.x - ptOne.x) / framenum;
-                    int[] xArray = new int[framenum + 1];
-                    xArray[1] = (int) (ptOne.x + incrementLength);
-
+                    double xIncrement = (ptTwo.getX() - ptOne.getX()) / (double)framenum;
+                    double yIncrement = (ptTwo.getY() - ptOne.getY()) / (double)framenum;
+										// System.out.println("xIncrement = "+xIncrement+", yIncrement = "+yIncrement);
                     for (int k = 1; k < framenum; k++) {
-
-                        Point p = new Point(0,0);
-
-                        xArray[k + 1] = (int) (xArray[k] + incrementLength);
-                        p.x = xArray[k];
+                        Point p = new Point();
+												p.setLocation(ptOne.getX() + xIncrement*(double)k,
+																			ptOne.getY() + yIncrement*(double)k);
 
                         //Do the position interpolation
-                        if ((ptTwo.x - ptOne.x) == 0) {
-                            p.y = ptOne.y;
-                        } else {
-                            p.y = ptOne.y + ((xArray[k] - ptOne.x) * ((ptTwo.y - ptOne.y) / (ptTwo.x - ptOne.x)));
-                        }
-                        //System.out.println("pos: " + ptOne.x + " "+ ptOne.y +" new " + p.x +" " + p.y);
-
+                        // System.out.println("Frame: "+(start+k)+" pos: " + ptOne.getX() + " "+ ptOne.getY() +" new " + p.getX() +" " + p.getY());
                         cyFrameArray[start + k].setAnnotationPos((int) annotationId, p);
                     }
 

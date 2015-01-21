@@ -116,6 +116,7 @@ public class CyFrame {
         private HashMap<Integer, Double> annotationFontSizeMap;
         private HashMap<Integer, Double> annotationBorderWidthMap;
         private HashMap<Integer, String> annotationTextMap;
+        private HashMap<Integer, String> annotationShapeMap;
 	
 	private double xalign;
 	private double yalign;
@@ -196,6 +197,7 @@ public class CyFrame {
                 annotationFontSizeMap = new HashMap<Integer, Double>();
                 annotationBorderWidthMap = new HashMap<Integer, Double>();
                 annotationTextMap = new HashMap<Integer, String>();
+                annotationShapeMap = new HashMap<Integer, String>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -371,24 +373,15 @@ public class CyFrame {
                 for(Annotation ann: annotationList){
                     Double x = new Double(ann.getArgMap().get("x"));
                     Double y = new Double(ann.getArgMap().get("y"));
+		    // System.out.println("ArgMap for annotation "+ann+"="+ann.getArgMap());
                     annotationPosMap.put( ann.hashCode(), new Point( x.intValue(), y.intValue() ) );
                     annotationZoomMap.put(ann.hashCode(), ann.getSpecificZoom());
                     if(ann instanceof TextAnnotation){
                         TextAnnotation ta = (TextAnnotation) ann;
+												// System.out.println("Getting font size: "+ta.getFontSize()+" specific zoom = "+ta.getSpecificZoom());
                         annotationTextColorMap.put(ta.hashCode(), ta.getTextColor());
                         annotationFontSizeMap.put(ta.hashCode(), ta.getFontSize());
                         annotationTextMap.put(ta.hashCode(), ta.getText());
-                    }else if( ann instanceof ShapeAnnotation){
-                        ShapeAnnotation sa = (ShapeAnnotation) ann;
-                        annotationFillColorMap.put(sa.hashCode(), (Color) sa.getFillColor());
-                        annotationBorderColorMap.put(sa.hashCode(), (Color) sa.getBorderColor());
-                        annotationBorderWidthMap.put(sa.hashCode(), sa.getBorderWidth());
-                        annotationTextMap.put( sa.hashCode(), sa.getShapeType());
-                    }else if( ann instanceof ImageAnnotation){
-                        ImageAnnotation ia = (ImageAnnotation) ann;
-                        annotationBorderColorMap.put(ia.hashCode(), (Color) ia.getBorderColor());
-                        annotationBorderWidthMap.put(ia.hashCode(), ia.getBorderWidth());
-                        annotationTextMap.put( ia.hashCode(), ia.getShapeType());
                     }else if( ann instanceof BoundedTextAnnotation){
                         BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
                         annotationFillColorMap.put(bta.hashCode(), (Color) bta.getFillColor());
@@ -397,6 +390,18 @@ public class CyFrame {
                         annotationFontSizeMap.put(bta.hashCode(), bta.getFontSize());
                         annotationBorderWidthMap.put(bta.hashCode(), bta.getBorderWidth());
                         annotationTextMap.put(bta.hashCode(), bta.getText());
+                        annotationShapeMap.put(bta.hashCode(), bta.getShapeType());
+                    }else if( ann instanceof ImageAnnotation){
+                        ImageAnnotation ia = (ImageAnnotation) ann;
+                        annotationBorderColorMap.put(ia.hashCode(), (Color) ia.getBorderColor());
+                        annotationBorderWidthMap.put(ia.hashCode(), ia.getBorderWidth());
+                        annotationShapeMap.put( ia.hashCode(), ia.getShapeType());
+                    }else if( ann instanceof ShapeAnnotation){
+                        ShapeAnnotation sa = (ShapeAnnotation) ann;
+                        annotationFillColorMap.put(sa.hashCode(), (Color) sa.getFillColor());
+                        annotationBorderColorMap.put(sa.hashCode(), (Color) sa.getBorderColor());
+                        annotationBorderWidthMap.put(sa.hashCode(), sa.getBorderWidth());
+                        annotationShapeMap.put( sa.hashCode(), sa.getShapeType());
                     }else if( ann instanceof ArrowAnnotation){
                         ArrowAnnotation aa = (ArrowAnnotation) ann;
                         annotationBorderColorMap.put(aa.hashCode(), (Color) aa.getLineColor());
@@ -814,6 +819,7 @@ public class CyFrame {
                     for (Annotation ann : annotationList) {
                         if (!currAnnotationList.contains(ann)) {
                             // make ann visible here
+														// System.out.println("Adding annotation: "+ann);
                             Annotation newAnn = annotationFactory.createAnnotation(ann.getClass(), currentView, ann.getArgMap());
                             annotationManager.addAnnotation(newAnn);
                         }
@@ -822,24 +828,15 @@ public class CyFrame {
 
                 for(Annotation ann: annotationList){
                     ann.moveAnnotation( annotationPosMap.get( ann.hashCode() ));
+										// System.out.println("Setting zoom to: "+annotationZoomMap.get(ann.hashCode()));
                     ann.setZoom( annotationZoomMap.get( ann.hashCode()) );
                     // make ann visible here
                     if(ann instanceof TextAnnotation){
                         TextAnnotation ta = (TextAnnotation)ann;
                         ta.setTextColor( annotationTextColorMap.get(ta.hashCode()));
+												// System.out.println("Setting font size to: "+annotationFontSizeMap.get(ta.hashCode()));
                         ta.setFontSize( annotationFontSizeMap.get(ta.hashCode()));
                         ta.setText( annotationTextMap.get(ta.hashCode()));
-                    }else if( ann instanceof ShapeAnnotation){
-                        ShapeAnnotation sa = (ShapeAnnotation) ann;
-                        sa.setFillColor( annotationFillColorMap.get(sa.hashCode()));
-                        sa.setBorderColor( annotationBorderColorMap.get(sa.hashCode()));
-                        sa.setBorderWidth( annotationBorderWidthMap.get(sa.hashCode()));
-                        sa.setShapeType( annotationTextMap.get(sa.hashCode()));
-                    }else if( ann instanceof ImageAnnotation){
-                        ImageAnnotation ia = (ImageAnnotation) ann;
-                        ia.setBorderColor( annotationBorderColorMap.get(ia.hashCode()));
-                        ia.setBorderWidth( annotationBorderWidthMap.get(ia.hashCode()));
-                        ia.setShapeType( annotationTextMap.get(ia.hashCode()));
                     }else if( ann instanceof BoundedTextAnnotation){
                         BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
                         bta.setFillColor( annotationFillColorMap.get(bta.hashCode()));
@@ -848,6 +845,18 @@ public class CyFrame {
                         bta.setFontSize( annotationFontSizeMap.get(bta.hashCode()));
                         bta.setBorderWidth( annotationBorderWidthMap.get(bta.hashCode()));
                         bta.setText( annotationTextMap.get(bta.hashCode()));
+                        bta.setShapeType( annotationShapeMap.get(bta.hashCode()));
+                    }else if( ann instanceof ImageAnnotation){
+                        ImageAnnotation ia = (ImageAnnotation) ann;
+                        ia.setBorderColor( annotationBorderColorMap.get(ia.hashCode()));
+                        ia.setBorderWidth( annotationBorderWidthMap.get(ia.hashCode()));
+                        ia.setShapeType( annotationShapeMap.get(ia.hashCode()));
+                    }else if( ann instanceof ShapeAnnotation){
+                        ShapeAnnotation sa = (ShapeAnnotation) ann;
+                        sa.setFillColor( annotationFillColorMap.get(sa.hashCode()));
+                        sa.setBorderColor( annotationBorderColorMap.get(sa.hashCode()));
+                        sa.setBorderWidth( annotationBorderWidthMap.get(sa.hashCode()));
+                        sa.setShapeType( annotationShapeMap.get(sa.hashCode()));
                     }else if( ann instanceof ArrowAnnotation){
                         ArrowAnnotation aa = (ArrowAnnotation) ann;
                         aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
@@ -1047,6 +1056,7 @@ public class CyFrame {
 	 * @param zoom set the position
 	 */
 	public void setAnnotationPos(int hashcode, Point pt) {
+		// System.out.println("Setting annotation position to: "+pt);
 		annotationPosMap.put(hashcode, pt);
 	}
         
