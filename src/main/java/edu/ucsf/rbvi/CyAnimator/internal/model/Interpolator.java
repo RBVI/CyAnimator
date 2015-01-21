@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.*;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.view.presentation.annotations.Annotation;
 
 public class Interpolator {
 	
@@ -123,6 +124,7 @@ public class Interpolator {
 			cyFrameArray[start] = frameList.get(i);
 			List<CyNode> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
 			List<CyEdge> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
+                        List<Annotation> annotationList = annotationUnionize(frameList.get(i), frameList.get(i+1));
                                                 
 			List<Long> nodeIdList = nodeIdUnionize(frameList.get(i), frameList.get(i+1));
 			List<Long> edgeIdList = edgeIdUnionize(frameList.get(i), frameList.get(i+1));
@@ -132,6 +134,7 @@ public class Interpolator {
 			for (int k = start+1; k < end; k++) {
 				cyFrameArray[k].setNodeList(nodeList);
 				cyFrameArray[k].setEdgeList(edgeList);
+                                cyFrameArray[k].setAnnotationList(annotationList);
 			}
                         
                         //reset the nodeLists once the unionizer has updated them
@@ -230,6 +233,35 @@ public class Interpolator {
 		}
 		
 		return new ArrayList<CyEdge>(bigList.keySet());
+		
+	}
+        
+        /**
+	 * Takes two CyFrames and returns the union of the Annotation lists that are contained
+	 * within each frame.  This is to ensure that when annotations are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose annotation list will be unionized
+	 * @param frameTwo is the second frame whose annotation list will be unionized
+	 * @return the unionized list of Annotations
+	 * 
+	 */
+	public List<Annotation> annotationUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<Annotation> list1 = frameOne.getAnnotationList();
+		List<Annotation> list2 = frameTwo.getAnnotationList();
+		Map<Annotation,Annotation> bigList = new HashMap<Annotation,Annotation>();	
+
+		for (Annotation ann: list1) {
+			bigList.put(ann, ann);
+		}
+
+		for (Annotation ann: list2) {
+			bigList.put(ann, ann);
+		}
+		
+		return new ArrayList<Annotation>(bigList.keySet());
 		
 	}
         

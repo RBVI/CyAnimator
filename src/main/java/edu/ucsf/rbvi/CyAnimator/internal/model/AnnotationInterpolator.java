@@ -79,6 +79,7 @@ class interpolateAnnotationsPosition implements FrameInterpolator {
                         } else {
                             p.y = ptOne.y + ((xArray[k] - ptOne.x) * ((ptTwo.y - ptOne.y) / (ptTwo.x - ptOne.x)));
                         }
+                        //System.out.println("pos: " + ptOne.x + " "+ ptOne.y +" new " + p.x +" " + p.y);
 
                         cyFrameArray[start + k].setAnnotationPos((int) annotationId, p);
                     }

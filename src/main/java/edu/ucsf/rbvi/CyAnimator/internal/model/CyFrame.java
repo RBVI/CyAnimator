@@ -41,6 +41,7 @@ import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.annotations.Annotation;
+import org.cytoscape.view.presentation.annotations.AnnotationFactory;
 import org.cytoscape.view.presentation.annotations.AnnotationManager;
 import org.cytoscape.view.presentation.annotations.ArrowAnnotation;
 import org.cytoscape.view.presentation.annotations.BoundedTextAnnotation;
@@ -122,6 +123,7 @@ public class CyFrame {
 	private CyServiceRegistrar bundleContext;
 	private CyApplicationManager appManager;
         private AnnotationManager annotationManager;
+        private AnnotationFactory annotationFactory;
 	private CyNetworkView networkView = null;
 	private CyNetwork currentNetwork = null;
 	private CyTable nodeTable = null, edgeTable = null;
@@ -150,6 +152,7 @@ public class CyFrame {
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
                 annotationManager = bundleContext.getService(AnnotationManager.class);
+                annotationFactory = bundleContext.getService(AnnotationFactory.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
                 nodeShapeMap = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
@@ -396,6 +399,8 @@ public class CyFrame {
                         annotationTextMap.put(bta.hashCode(), bta.getText());
                     }else if( ann instanceof ArrowAnnotation){
                         ArrowAnnotation aa = (ArrowAnnotation) ann;
+                        annotationBorderColorMap.put(aa.hashCode(), (Color) aa.getLineColor());
+                        annotationFillColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE));
                     }
                 }
 
@@ -758,6 +763,48 @@ public class CyFrame {
                     for (Annotation ann : currAnnotationList) {
                         if (!annotationList.contains(ann)) {
                             // make ann invisible here
+                            Color transparent = new Color(0,0,0,0);
+                            if (ann instanceof TextAnnotation) {
+                                TextAnnotation ta = (TextAnnotation) ann;
+                                ta.setTextColor(transparent);
+                            } else if (ann instanceof ShapeAnnotation) {
+                                ShapeAnnotation sa = (ShapeAnnotation) ann;
+                                sa.setFillColor(transparent);
+                                sa.setBorderColor(transparent);
+                            } else if (ann instanceof ImageAnnotation) {
+                                ImageAnnotation ia = (ImageAnnotation) ann;
+                                ia.setBorderColor(transparent);
+                            } else if (ann instanceof BoundedTextAnnotation) {
+                                BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+                                bta.setFillColor(transparent);
+                                bta.setBorderColor(transparent);
+                                bta.setTextColor(transparent);
+                            } else if (ann instanceof ArrowAnnotation) {
+                                ArrowAnnotation aa = (ArrowAnnotation) ann;
+                                aa.setLineColor(transparent);
+                                aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
+                            }
+                        }else{
+                            if (ann instanceof TextAnnotation) {
+                                TextAnnotation ta = (TextAnnotation) ann;
+                                ta.setTextColor(annotationTextColorMap.get(ta.hashCode()));
+                            } else if (ann instanceof ShapeAnnotation) {
+                                ShapeAnnotation sa = (ShapeAnnotation) ann;
+                                sa.setFillColor(annotationFillColorMap.get(sa.hashCode()));
+                                sa.setBorderColor(annotationBorderColorMap.get(sa.hashCode()));
+                            } else if (ann instanceof ImageAnnotation) {
+                                ImageAnnotation ia = (ImageAnnotation) ann;
+                                ia.setBorderColor(annotationBorderColorMap.get(ia.hashCode()));
+                            } else if (ann instanceof BoundedTextAnnotation) {
+                                BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+                                bta.setFillColor(annotationFillColorMap.get(bta.hashCode()));
+                                bta.setBorderColor(annotationBorderColorMap.get(bta.hashCode()));
+                                bta.setTextColor(annotationTextColorMap.get(bta.hashCode()));
+                            } else if (ann instanceof ArrowAnnotation) {
+                                ArrowAnnotation aa = (ArrowAnnotation) ann;
+                                aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
+                                aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
+                            }
                         }
                     }
                 }
@@ -767,7 +814,8 @@ public class CyFrame {
                     for (Annotation ann : annotationList) {
                         if (!currAnnotationList.contains(ann)) {
                             // make ann visible here
-                            System.out.print("making visible");
+                            Annotation newAnn = annotationFactory.createAnnotation(ann.getClass(), currentView, ann.getArgMap());
+                            annotationManager.addAnnotation(newAnn);
                         }
                     }
                 }
@@ -802,6 +850,8 @@ public class CyFrame {
                         bta.setText( annotationTextMap.get(bta.hashCode()));
                     }else if( ann instanceof ArrowAnnotation){
                         ArrowAnnotation aa = (ArrowAnnotation) ann;
+                        aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
+                        aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
                     }
                 }
 
@@ -1768,6 +1818,15 @@ public class CyFrame {
 	public List<CyEdge> getEdgeList() {
 		return edgeList;
 	}
+        
+        /**
+	 * Get the list of annotations in this frame
+	 *
+	 * @return the list of annotations
+	 */
+	public List<Annotation> getAnnotationList() {
+		return annotationList;
+	}
 
 	/**
 	 * Set the list of nodes in this frame
@@ -1785,6 +1844,15 @@ public class CyFrame {
 	 */
 	public void setEdgeList(List<CyEdge>edgeList) {
 		this.edgeList = edgeList;
+	}
+        
+        /**
+	 * Set the list of edges in this frame
+	 *
+	 * @param edgeList the list of edges
+	 */
+	public void setAnnotationList(List<Annotation> annotationList) {
+		this.annotationList = annotationList;
 	}
 
 	/**
