@@ -16,6 +16,7 @@
 package edu.ucsf.rbvi.CyAnimator.internal.model;   
 
 import java.util.*;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.Font;
@@ -63,10 +64,10 @@ import org.cytoscape.work.util.BoundedDouble;
 import org.cytoscape.work.util.ListSingleSelection;
 
 public class CyFrame {
-	
+
 	private String frameid = "";
 	private static final String PNG = "png";
-        private HashMap<Long, NodeShape> nodeShapeMap;
+	private HashMap<Long, NodeShape> nodeShapeMap;
 	private HashMap<Long, double[]> nodePosMap;
 	private HashMap<Long, Color> nodeColMap;
 	private HashMap<Long, Integer> nodeOpacityMap;
@@ -76,55 +77,56 @@ public class CyFrame {
 	private HashMap<Long, Color> nodeBorderColorMap;
 	private HashMap<Long, Integer> nodeBorderTransMap;
 	private HashMap<Long, double[]> nodeSizeMap;
-        private HashMap<Long, String> nodeLabelMap;
+	private HashMap<Long, String> nodeLabelMap;
 	private HashMap<Long, Color> nodeLabelColMap;
 	private HashMap<Long, Integer> nodeLabelFontSizeMap;
 	private HashMap<Long, Integer> nodeLabelTransMap;
-        private HashMap<Long, Font> nodeLabelFontMap;
-        private HashMap<Long, Double> nodeLabelWidthMap;
-        private HashMap<CyNode, CyNode> record;
-        private HashMap<CyEdge, CyEdge> recordEdge;
+	private HashMap<Long, Font> nodeLabelFontMap;
+	private HashMap<Long, Double> nodeLabelWidthMap;
+	private HashMap<CyNode, CyNode> record;
+	private HashMap<CyEdge, CyEdge> recordEdge;
 
 	private HashMap<Long, Integer> edgeOpacityMap;
 	private HashMap<Long, Integer> edgeStrokeOpacityMap;
 	private HashMap<Long, Color> edgeColMap;
 	private HashMap<Long, Color> edgeStrokeColMap;
 	private HashMap<Long, Double> edgeWidthMap;
-        private HashMap<Long, String> edgeLabel;
+	private HashMap<Long, String> edgeLabel;
 	private HashMap<Long, Color> edgeLabelColMap;
 	private HashMap<Long, Integer> edgeLabelFontSizeMap;
 	private HashMap<Long, Integer> edgeLabelTransMap;
-        private HashMap<Long, Font> edgeLabelFontMap;
-        private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
-        private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
-        private HashMap<Long, LineType> edgeLineTypeMap;
-	
+	private HashMap<Long, Font> edgeLabelFontMap;
+	private HashMap<Long, ArrowShape> edgeSourceArrowShapeMap;
+	private HashMap<Long, ArrowShape> edgeTargetArrowShapeMap;
+	private HashMap<Long, LineType> edgeLineTypeMap;
+
 	private String title = null;
-        private Paint backgroundPaint = null;
+	private Paint backgroundPaint = null;
 	private double zoom = 0;
-        private double size = 0;
-        private double width = 0;
-        private double height = 0;
-        
-        private List<Annotation> currAnnotationList;
-        private List<Annotation> annotationList;
-        private HashMap<Integer, Point> annotationPosMap;
-        private HashMap<Integer, Color> annotationFillColorMap;
-        private HashMap<Integer, Color> annotationBorderColorMap;
-        private HashMap<Integer, Color> annotationTextColorMap;
-        private HashMap<Integer, Double> annotationZoomMap;
-        private HashMap<Integer, Double> annotationFontSizeMap;
-        private HashMap<Integer, Double> annotationBorderWidthMap;
-        private HashMap<Integer, String> annotationTextMap;
-        private HashMap<Integer, String> annotationShapeMap;
-	
+	private double size = 0;
+	private double width = 0;
+	private double height = 0;
+
+	private List<Annotation> currAnnotationList;
+	private List<Annotation> annotationList;
+	private HashMap<Integer, Point> annotationPosMap;
+	private HashMap<Integer, Color> annotationFillColorMap;
+	private HashMap<Integer, Color> annotationBorderColorMap;
+	private HashMap<Integer, Color> annotationTextColorMap;
+	private HashMap<Integer, Double> annotationZoomMap;
+	private HashMap<Integer, Double> annotationFontSizeMap;
+	private HashMap<Integer, Double> annotationBorderWidthMap;
+	private HashMap<Integer, String> annotationTextMap;
+	private HashMap<Integer, String> annotationShapeMap;
+	private HashMap<Integer, Dimension> annotationSizeMap;
+
 	private double xalign;
 	private double yalign;
-	
+
 	private CyServiceRegistrar bundleContext;
 	private CyApplicationManager appManager;
-        private AnnotationManager annotationManager;
-        private AnnotationFactory annotationFactory;
+	private AnnotationManager annotationManager;
+	private AnnotationFactory annotationFactory;
 	private CyNetworkView networkView = null;
 	private CyNetwork currentNetwork = null;
 	private CyTable nodeTable = null, edgeTable = null;
@@ -143,7 +145,7 @@ public class CyFrame {
 
 	private static final int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
 //	private DGraphView dview = null; 
-	
+
 	/**
 	 * Creates this CyFrame by initializing and populating all of the fields.
 	 * 
@@ -152,25 +154,25 @@ public class CyFrame {
 	public CyFrame(CyServiceRegistrar bc){
 		bundleContext = bc;
 		appManager = bundleContext.getService(CyApplicationManager.class);
-                annotationManager = bundleContext.getService(AnnotationManager.class);
-                annotationFactory = bundleContext.getService(AnnotationFactory.class);
+		annotationManager = bundleContext.getService(AnnotationManager.class);
+		annotationFactory = bundleContext.getService(AnnotationFactory.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
-                nodeShapeMap = new HashMap<Long, NodeShape>();
+		nodeShapeMap = new HashMap<Long, NodeShape>();
 		nodePosMap = new HashMap<Long, double[]>();
 		nodeColMap = new HashMap<Long, Color>();
 		nodeFillColMap = new HashMap<Long, Color>();
-                nodeLabelMap = new HashMap<Long, String>();
+		nodeLabelMap = new HashMap<Long, String>();
 		nodeLabelColMap = new HashMap<Long, Color>();
 		nodeLabelFontSizeMap = new HashMap<Long, Integer>();
 		nodeLabelTransMap = new HashMap<Long, Integer>();
-                nodeLabelFontMap = new HashMap<Long, Font>();
-                nodeLabelWidthMap = new HashMap<Long, Double>();
+		nodeLabelFontMap = new HashMap<Long, Font>();
+		nodeLabelWidthMap = new HashMap<Long, Double>();
 		nodeSizeMap = new HashMap<Long, double[]>();
 		nodeBorderWidthMap = new HashMap<Long, Double>();
 		nodeBorderColorMap = new HashMap<Long, Color>();
 		nodeBorderTransMap = new HashMap<Long, Integer>();
-                record = new HashMap<CyNode, CyNode>();
-                recordEdge = new HashMap<CyEdge, CyEdge>();
+		record = new HashMap<CyNode, CyNode>();
+		recordEdge = new HashMap<CyEdge, CyEdge>();
 		edgeMap = new HashMap<Long, View<CyEdge>>();
 		nodeMap = new HashMap<Long, View<CyNode>>();
 		nodeOpacityMap = new HashMap<Long, Integer>();
@@ -179,25 +181,26 @@ public class CyFrame {
 		edgeStrokeOpacityMap = new HashMap<Long, Integer>();
 		edgeColMap = new HashMap<Long, Color>();
 		edgeStrokeColMap = new HashMap<Long, Color>();
-                edgeLabel = new HashMap<Long, String>();
+		edgeLabel = new HashMap<Long, String>();
 		edgeLabelColMap = new HashMap<Long, Color>();
 		edgeLabelFontSizeMap = new HashMap<Long, Integer>();
 		edgeLabelTransMap = new HashMap<Long, Integer>();
-                edgeLabelFontMap = new HashMap<Long, Font>();
+		edgeLabelFontMap = new HashMap<Long, Font>();
 		edgeWidthMap = new HashMap<Long, Double>();
-                edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
-                edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
-                edgeLineTypeMap = new HashMap<Long, LineType>();
-                annotationList = new ArrayList<Annotation>();
-                annotationPosMap = new HashMap<Integer, Point>();
-                annotationZoomMap = new HashMap<Integer, Double>();
-                annotationFillColorMap = new HashMap<Integer, Color>();
-                annotationBorderColorMap = new HashMap<Integer, Color>();
-                annotationTextColorMap = new HashMap<Integer, Color>();
-                annotationFontSizeMap = new HashMap<Integer, Double>();
-                annotationBorderWidthMap = new HashMap<Integer, Double>();
-                annotationTextMap = new HashMap<Integer, String>();
-                annotationShapeMap = new HashMap<Integer, String>();
+		edgeSourceArrowShapeMap = new HashMap<Long, ArrowShape>();
+		edgeTargetArrowShapeMap = new HashMap<Long, ArrowShape>();
+		edgeLineTypeMap = new HashMap<Long, LineType>();
+		annotationList = new ArrayList<Annotation>();
+		annotationPosMap = new HashMap<Integer, Point>();
+		annotationSizeMap = new HashMap<Integer, Dimension>();
+		annotationZoomMap = new HashMap<Integer, Double>();
+		annotationFillColorMap = new HashMap<Integer, Color>();
+		annotationBorderColorMap = new HashMap<Integer, Color>();
+		annotationTextColorMap = new HashMap<Integer, Color>();
+		annotationFontSizeMap = new HashMap<Integer, Double>();
+		annotationBorderWidthMap = new HashMap<Integer, Double>();
+		annotationTextMap = new HashMap<Integer, String>();
+		annotationShapeMap = new HashMap<Integer, String>();
 		this.currentNetwork = appManager.getCurrentNetwork();
 		networkView = appManager.getCurrentNetworkView();
 		nodeTable = currentNetwork.getDefaultNodeTable();
@@ -209,8 +212,8 @@ public class CyFrame {
 
 		nodeIdList = new ArrayList<Long>();
 		edgeIdList = new ArrayList<Long>();
-                annotationIdList = new ArrayList<Long>();
-		
+		annotationIdList = new ArrayList<Long>();
+	
 		// Initialize our node view maps
 		for (View<CyEdge> ev: networkView.getEdgeViews()) {
 			if (ev.getModel() == null) continue;
@@ -225,15 +228,15 @@ public class CyFrame {
 			nodeMap.put(nodeid, nv);
 			nodeIdList.add(nodeid);
 		}
-                
-                // Initialize our annotations list
-                currAnnotationList = annotationManager.getAnnotations(networkView);
-                if(currAnnotationList != null){
-                    for (Annotation ann: annotationManager.getAnnotations(networkView)){
-                        annotationList.add(ann);
-                        annotationIdList.add((long) ann.hashCode());
-                    }
-                }
+	
+		// Initialize our annotations list
+		currAnnotationList = annotationManager.getAnnotations(networkView);
+		if(currAnnotationList != null){
+			for (Annotation ann: annotationManager.getAnnotations(networkView)){
+				annotationList.add(ann);
+				annotationIdList.add((long) ann.hashCode());
+			}
+		}
 
 		// Remember the visual style
 		VisualMappingManager visualManager = bundleContext.getService(VisualMappingManager.class);
@@ -245,33 +248,33 @@ public class CyFrame {
 		// Get our initial edgeList
 		edgeList = currentNetwork.getEdgeList();
 	}
-	
+
 	/*
 	 * Captures all of the current visual settings for nodes and edges from a 
 	 * CyNetworkView and stores them in this frame.
 	 */
 	public void populate() {
-                title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
+		title = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_TITLE);
 		backgroundPaint = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
 		zoom = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
-                size = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SIZE);
-                width = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
-                height = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
+		size = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_SIZE);
+		width = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
+		height = networkView.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
 		xalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION);
 		yalign = networkView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
-		
+	
 	//	dview = (DGraphView)networkView;
-		
+	
 		CyTable nodeTable = networkView.getModel().getDefaultNodeTable();
 		for(CyNode node: nodeList){
-		
+	
 			View<CyNode> nodeView = networkView.getNodeView(node);
 			if(nodeView == null){ continue; }
 			long nodeName = node.getSUID();//nodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 
-                        // stores node shape type
-                        NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
-                        nodeShapeMap.put(nodeName, shape);
+			// stores node shape type
+			NodeShape shape = nodeView.getVisualProperty(BasicVisualLexicon.NODE_SHAPE);
+			nodeShapeMap.put(nodeName, shape);
 
 			//stores the x and y position of the node
 			double[] xy = new double[3];
@@ -279,19 +282,19 @@ public class CyFrame {
 			xy[1] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION);
 			xy[2] = nodeView.getVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION);
 			nodePosMap.put(nodeName, xy);
-			
+		
 			double height = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 			double width = nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH);
 			double[] size = {height, width};
 			nodeSizeMap.put(nodeName, size);
-			
+		
 			double borderWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH);
 			nodeBorderWidthMap.put(nodeName, borderWidth);
 			Color borderColor = (Color) nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT);
 			nodeBorderColorMap.put(nodeName, borderColor);
 			Integer borderTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
 			nodeBorderTransMap.put(nodeName, borderTrans);
-			
+		
 			//grab color and opacity
 			Color nodeColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_PAINT);
 			Integer trans = nodeColor.getAlpha();
@@ -307,28 +310,28 @@ public class CyFrame {
 			nodeFillOpacityMap.put(nodeName, transFill);
 
 			// Grab the label information
-                        String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
-                        nodeLabelMap.put(nodeName, label);
+			String label = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL);
+			nodeLabelMap.put(nodeName, label);
 			Color labelColor = (Color)nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR);
 			nodeLabelColMap.put(nodeName, labelColor);
 			Integer labelFontSize = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
 			nodeLabelFontSizeMap.put(nodeName, labelFontSize);
 			Integer labelTrans = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
 			nodeLabelTransMap.put(nodeName, labelTrans);
-                        Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
-                        nodeLabelFontMap.put(nodeName, font);
-                        Double labelWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH);
-                        nodeLabelWidthMap.put(nodeName, labelWidth);
+			Font font = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+			nodeLabelFontMap.put(nodeName, font);
+			Double labelWidth = nodeView.getVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH);
+			nodeLabelWidthMap.put(nodeName, labelWidth);
 
 			centerPoint = new Point3D(networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION),
 			networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION),
 			networkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION));
-			
+		
 		}
 
 		CyTable edgeTable = networkView.getModel().getDefaultEdgeTable();
 		for(CyEdge edge: edgeList){
-			
+		
 			View<CyEdge> edgeView = networkView.getEdgeView(edge);
 			if(edgeView == null){  continue; }
 			long edgeName = edge.getSUID();//edgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
@@ -350,79 +353,85 @@ public class CyFrame {
 			edgeStrokeOpacityMap.put(edgeName, transStroke);
 
 			// Grab the label information
-                        String label = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL);
-                        edgeLabel.put(edgeName, label);
+			String label = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL);
+			edgeLabel.put(edgeName, label);
 			Color labelColor = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR);
 			edgeLabelColMap.put(edgeName, labelColor);
 			Integer labelFontSize = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
 			Integer labelTransMap = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
 			edgeLabelFontSizeMap.put(edgeName, labelFontSize);
 			edgeLabelTransMap.put(edgeName, labelTransMap);
-                        Font font = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
-                        edgeLabelFontMap.put(edgeName, font);
+			Font font = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+			edgeLabelFontMap.put(edgeName, font);
 
-                        // Grab the shape information
-                        ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
-                        edgeSourceArrowShapeMap.put(edgeName, source);
-                        ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
-                        edgeTargetArrowShapeMap.put(edgeName, target);
-                        LineType line = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE);
-                        edgeLineTypeMap.put(edgeName, line);
+			// Grab the shape information
+			ArrowShape source = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+			edgeSourceArrowShapeMap.put(edgeName, source);
+			ArrowShape target = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+			edgeTargetArrowShapeMap.put(edgeName, target);
+			LineType line = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE);
+			edgeLineTypeMap.put(edgeName, line);
 		}
 
-                for(Annotation ann: annotationList){
-                    Double x = new Double(ann.getArgMap().get("x"));
-                    Double y = new Double(ann.getArgMap().get("y"));
-		    // System.out.println("ArgMap for annotation "+ann+"="+ann.getArgMap());
-                    annotationPosMap.put( ann.hashCode(), new Point( x.intValue(), y.intValue() ) );
-                    annotationZoomMap.put(ann.hashCode(), ann.getSpecificZoom());
-                    if(ann instanceof TextAnnotation){
-                        TextAnnotation ta = (TextAnnotation) ann;
-												// System.out.println("Getting font size: "+ta.getFontSize()+" specific zoom = "+ta.getSpecificZoom());
-                        annotationTextColorMap.put(ta.hashCode(), ta.getTextColor());
-                        annotationFontSizeMap.put(ta.hashCode(), ta.getFontSize());
-                        annotationTextMap.put(ta.hashCode(), ta.getText());
-                    }else if( ann instanceof BoundedTextAnnotation){
-                        BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
-                        annotationFillColorMap.put(bta.hashCode(), (Color) bta.getFillColor());
-                        annotationBorderColorMap.put(bta.hashCode(), (Color) bta.getBorderColor());
-                        annotationTextColorMap.put(bta.hashCode(), bta.getTextColor());
-                        annotationFontSizeMap.put(bta.hashCode(), bta.getFontSize());
-                        annotationBorderWidthMap.put(bta.hashCode(), bta.getBorderWidth());
-                        annotationTextMap.put(bta.hashCode(), bta.getText());
-                        annotationShapeMap.put(bta.hashCode(), bta.getShapeType());
-                    }else if( ann instanceof ImageAnnotation){
-                        ImageAnnotation ia = (ImageAnnotation) ann;
-                        annotationBorderColorMap.put(ia.hashCode(), (Color) ia.getBorderColor());
-                        annotationBorderWidthMap.put(ia.hashCode(), ia.getBorderWidth());
-                        annotationShapeMap.put( ia.hashCode(), ia.getShapeType());
-                    }else if( ann instanceof ShapeAnnotation){
-                        ShapeAnnotation sa = (ShapeAnnotation) ann;
-                        annotationFillColorMap.put(sa.hashCode(), (Color) sa.getFillColor());
-                        annotationBorderColorMap.put(sa.hashCode(), (Color) sa.getBorderColor());
-                        annotationBorderWidthMap.put(sa.hashCode(), sa.getBorderWidth());
-                        annotationShapeMap.put( sa.hashCode(), sa.getShapeType());
-                    }else if( ann instanceof ArrowAnnotation){
-                        ArrowAnnotation aa = (ArrowAnnotation) ann;
-                        annotationBorderColorMap.put(aa.hashCode(), (Color) aa.getLineColor());
-                        annotationFillColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE));
-                    }
-                }
+		// Handle the annotations.  Note that we need to be really careful
+		// about the order since BoundedTextAnnotation (for example) implements
+		// both ShapeAnnotation and TextAnnotation if either of those are first,
+		// we won't get the right information.
+		for(Annotation ann: annotationList){
+			Double x = new Double(ann.getArgMap().get(Annotation.X));
+			Double y = new Double(ann.getArgMap().get(Annotation.Y));
+			// System.out.println("ArgMap for annotation "+ann+"="+ann.getArgMap());
+			annotationPosMap.put( ann.hashCode(), new Point( x.intValue(), y.intValue() ) );
+			annotationZoomMap.put(ann.hashCode(), ann.getSpecificZoom());
+			if( ann instanceof BoundedTextAnnotation){
+				BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+				annotationFillColorMap.put(bta.hashCode(), (Color) bta.getFillColor());
+				annotationBorderColorMap.put(bta.hashCode(), (Color) bta.getBorderColor());
+				annotationTextColorMap.put(bta.hashCode(), bta.getTextColor());
+				annotationFontSizeMap.put(bta.hashCode(), bta.getFontSize());
+				annotationBorderWidthMap.put(bta.hashCode(), bta.getBorderWidth());
+				annotationTextMap.put(bta.hashCode(), bta.getText());
+				annotationShapeMap.put(bta.hashCode(), bta.getShapeType());
+				setAnnotationSize(bta);
+			} else if(ann instanceof TextAnnotation){
+				TextAnnotation ta = (TextAnnotation) ann;
+				annotationTextColorMap.put(ta.hashCode(), ta.getTextColor());
+				annotationFontSizeMap.put(ta.hashCode(), ta.getFontSize());
+				annotationTextMap.put(ta.hashCode(), ta.getText());
+			}else if( ann instanceof ImageAnnotation){
+				ImageAnnotation ia = (ImageAnnotation) ann;
+				annotationBorderColorMap.put(ia.hashCode(), (Color) ia.getBorderColor());
+				annotationBorderWidthMap.put(ia.hashCode(), ia.getBorderWidth());
+				annotationShapeMap.put( ia.hashCode(), ia.getShapeType());
+				setAnnotationSize(ia);
+			}else if( ann instanceof ShapeAnnotation){
+				ShapeAnnotation sa = (ShapeAnnotation) ann;
+				annotationFillColorMap.put(sa.hashCode(), (Color) sa.getFillColor());
+				annotationBorderColorMap.put(sa.hashCode(), (Color) sa.getBorderColor());
+				annotationBorderWidthMap.put(sa.hashCode(), sa.getBorderWidth());
+				annotationShapeMap.put( sa.hashCode(), sa.getShapeType());
+				setAnnotationSize(sa);
+			}else if( ann instanceof ArrowAnnotation){
+				ArrowAnnotation aa = (ArrowAnnotation) ann;
+				annotationBorderColorMap.put(aa.hashCode(), (Color) aa.getLineColor());
+				annotationFillColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE));
+			}
+		}
 
 	}
-	
+
 	/**
 	 * Captures and stores a thumbnail image from the current CyNetworkView for
 	 * this frame.
 	 * @throws IOException throws exception if cannot create or read temporary file
 	 */
 	public void captureImage() throws IOException {
-		
+	
 	/*	double scale = .35;
 		double wscale = .25; */
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
-		
+	
 		NetworkViewTaskFactory exportImageTaskFactory = bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			TunableSetter tunableSetter = bundleContext.getService(TunableSetter.class);
@@ -437,12 +446,12 @@ public class CyFrame {
 			taskManager.execute(tunableSetter.createTaskIterator(
 					exportImageTaskFactory.createTaskIterator(view), tunables),
 					new TaskObserver() {
-						
+					
 						public void taskFinished(ObservableTask arg0) {
 							// TODO Auto-generated method stub
-							
-						}
 						
+						}
+					
 						public void allFinished(FinishStatus arg0) {
 							BufferedImage image = null, scaledImage = null;
 							try {
@@ -461,9 +470,9 @@ public class CyFrame {
 						}
 					});
 		}
-	
+
 	}
-	
+
 	/*
 	 * Cycles through the list of nodes and edges and updates the node and edge views 
 	 * based upon the visual data stored as part of the CyFrame.  
@@ -485,386 +494,395 @@ public class CyFrame {
 				removeEdges.add(ev);
 		}
 
-                //currentView.getModel().removeEdges(removeEdges);
-                for (CyEdge edge : removeEdges) {
-                    View<CyEdge> edgeView = currentView.getEdgeView(edge);
-                    if (edgeView == null) {
-                        continue;
-                    }
-                    if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
-                        edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
-                    }
-                    edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
-                    currentView.updateView();
-                }
+		//currentView.getModel().removeEdges(removeEdges);
+		for (CyEdge edge : removeEdges) {
+			View<CyEdge> edgeView = currentView.getEdgeView(edge);
+			if (edgeView == null) {
+			continue;
+			}
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
+			edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
+			currentView.updateView();
+		}
 
-                // Initialize our edge view maps
-                List<CyNode> removeNodes = new ArrayList<CyNode>();
-                CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
-                for (CyNode nv : currentView.getModel().getNodeList()) {
-                    if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/)) {
-                        removeNodes.add(nv);
-                    }
-                }
+		// Initialize our edge view maps
+		List<CyNode> removeNodes = new ArrayList<CyNode>();
+		CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
+		for (CyNode nv : currentView.getModel().getNodeList()) {
+			if (!nodeMap.containsKey(nv.getSUID()/*curNodeTable.getRow(nv.getSUID()).get(CyNetwork.NAME, String.class)*/)) {
+			removeNodes.add(nv);
+			}
+		}
 
-                //currentView.getModel().removeNodes(removeNodes);
-                for (CyNode node : removeNodes) {
-                    View<CyNode> nodeView = currentView.getNodeView(node);
-                    if (nodeView == null) {
-                        continue;
-                    }
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
-                    currentView.updateView();
-                }
+		//currentView.getModel().removeNodes(removeNodes);
+		for (CyNode node : removeNodes) {
+			View<CyNode> nodeView = currentView.getNodeView(node);
+			if (nodeView == null) {
+			continue;
+			}
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
+			currentView.updateView();
+		}
 
 		for (CyNode node : nodeList) {
-                    View<CyNode> nodeView = currentView.getNodeView(node);
-                    if (nodeView == null) {
-                        // Add temporary node to network for viewing the node which is removed from current network
-                        CyNode artNode = currentView.getModel().addNode();
-                        record.put(node, artNode);
-                        currentView.updateView();
-                        nodeView = currentView.getNodeView(artNode);
-                    }
+			View<CyNode> nodeView = currentView.getNodeView(node);
+			if (nodeView == null) {
+			// Add temporary node to network for viewing the node which is removed from current network
+			CyNode artNode = currentView.getModel().addNode();
+			record.put(node, artNode);
+			currentView.updateView();
+			nodeView = currentView.getNodeView(artNode);
+			}
 
-                    long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
 
-                    double[] xy = nodePosMap.get(nodeName);
-                    Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
-                    Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
-                            // System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
-                    //if(xy == null || nodeView == null){ continue; }
+			double[] xy = nodePosMap.get(nodeName);
+			Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
+			Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
+				// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
+			//if(xy == null || nodeView == null){ continue; }
 
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Y_LOCATION)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_Y_LOCATION);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Z_LOCATION)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_Z_LOCATION);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Y_LOCATION)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_Y_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Z_LOCATION)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_Z_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
 
-                    double[] size = nodeSizeMap.get(nodeName);
+			double[] size = nodeSizeMap.get(nodeName);
 
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_HEIGHT)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_HEIGHT);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_WIDTH)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_WIDTH);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_HEIGHT)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_HEIGHT);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_WIDTH)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
 
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_WIDTH)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_WIDTH);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_PAINT)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_PAINT);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_WIDTH)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_PAINT)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_PAINT);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
 
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_PAINT)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_PAINT);
-                    }
-                    if (p != null) {
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-                    }
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_FILL_COLOR);
-                    }
-                    if (pFill != null) {
-                        nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
-                    }
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_PAINT)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_PAINT);
+			}
+			if (p != null) {
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			}
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_FILL_COLOR);
+			}
+			if (pFill != null) {
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
+			}
 
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabelMap.get(nodeName));
-                    Color labelColor = nodeLabelColMap.get(nodeName);
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
-                            new Color(labelColor.getRed(),
-                                    labelColor.getGreen(), labelColor.getBlue()));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_TRANSPARENCY)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_TRANSPARENCY);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_SIZE)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
-                    if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_WIDTH)) {
-                        nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_WIDTH);
-                    }
-                    nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH, nodeLabelWidthMap.get(nodeName));
-                }
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabelMap.get(nodeName));
+			Color labelColor = nodeLabelColMap.get(nodeName);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
+				new Color(labelColor.getRed(),
+					labelColor.getGreen(), labelColor.getBlue()));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_TRANSPARENCY)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_SIZE)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_WIDTH)) {
+			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH, nodeLabelWidthMap.get(nodeName));
+		}
 
 		for(CyEdge edge: getEdgeList())
 		{
-                    View<CyEdge> edgeView = currentView.getEdgeView(edge);
-                    if (edgeView == null) {
-                        // Add temporary edge to network for viewing the edge which is removed from current network
-                        CyEdge artEdge = null;
-                        if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
-                            artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
-                        } else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-                            artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
-                        } else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-                            artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
-                        } else {
-                            continue;
-                        }
-                        currentView.updateView();
-                        edgeView = currentView.getEdgeView(artEdge);
-                        recordEdge.put(edge, artEdge);
-                    }
+			View<CyEdge> edgeView = currentView.getEdgeView(edge);
+			if (edgeView == null) {
+			// Add temporary edge to network for viewing the edge which is removed from current network
+			CyEdge artEdge = null;
+			if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
+				artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
+			} else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
+				artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
+			} else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
+				artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
+			} else {
+				continue;
+			}
+			currentView.updateView();
+			edgeView = currentView.getEdgeView(artEdge);
+			recordEdge.put(edge, artEdge);
+			}
 
-                        long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
-                        Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
-                        if (p == null && pStroke == null) {
-                            continue;
-                        }
-                        Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
+			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
+			if (p == null && pStroke == null) {
+				continue;
+			}
+			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
 
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
-                        }
-                        if (p != null) {
-                            edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-                        }
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
-                        }
-                        if (pStroke != null) {
-                            edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
-                        }
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
+			}
+			if (p != null) {
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			}
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			}
+			if (pStroke != null) {
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
+			}
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
 
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
-                        Color labelColor = edgeLabelColMap.get(edgeName);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
-                                new Color(labelColor.getRed(),
-                                        labelColor.getGreen(), labelColor.getBlue()));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TRANSPARENCY)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_TRANSPARENCY);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
-                        Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
-                                labelTrans = edgeLabelTransMap.get(edgeName);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_FACE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE, edgeLabelFontMap.get(edgeName));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
-                        if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE)) {
-                            edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
-                        }
-                        edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
-                }
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SIZE)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_SIZE);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SIZE, size);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_WIDTH)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_WIDTH);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_HEIGHT)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_HEIGHT);
-                }
-                currentView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
-                    //networkView.getComponent().
-                //	dview = (DGraphView)currentView;
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
+			Color labelColor = edgeLabelColMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
+				new Color(labelColor.getRed(),
+					labelColor.getGreen(), labelColor.getBlue()));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TRANSPARENCY)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TRANSPARENCY);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
+			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
+				labelTrans = edgeLabelTransMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_FACE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE, edgeLabelFontMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
+		}
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SIZE)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SIZE);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SIZE, size);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_WIDTH)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_WIDTH);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_HEIGHT)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_HEIGHT);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
+			//networkView.getComponent().
+		//	dview = (DGraphView)currentView;
 
-                    //InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(networkView);
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
-                }
-                networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
-                }
-                networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
-                if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION)) {
-                    currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
-                }
-                networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
+			//InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(networkView);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
 
-                    //dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
-                //ifc.setBounds(arg0, arg1, arg2, arg3)
-                
-                // hide annotation which were not present earlier
-                if( currAnnotationList != null){
-                    for (Annotation ann : currAnnotationList) {
-                        if (!annotationList.contains(ann)) {
-                            // make ann invisible here
-                            Color transparent = new Color(0,0,0,0);
-                            if (ann instanceof TextAnnotation) {
-                                TextAnnotation ta = (TextAnnotation) ann;
-                                ta.setTextColor(transparent);
-                            } else if (ann instanceof ShapeAnnotation) {
-                                ShapeAnnotation sa = (ShapeAnnotation) ann;
-                                sa.setFillColor(transparent);
-                                sa.setBorderColor(transparent);
-                            } else if (ann instanceof ImageAnnotation) {
-                                ImageAnnotation ia = (ImageAnnotation) ann;
-                                ia.setBorderColor(transparent);
-                            } else if (ann instanceof BoundedTextAnnotation) {
-                                BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
-                                bta.setFillColor(transparent);
-                                bta.setBorderColor(transparent);
-                                bta.setTextColor(transparent);
-                            } else if (ann instanceof ArrowAnnotation) {
-                                ArrowAnnotation aa = (ArrowAnnotation) ann;
-                                aa.setLineColor(transparent);
-                                aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
-                            }
-                        }else{
-                            if (ann instanceof TextAnnotation) {
-                                TextAnnotation ta = (TextAnnotation) ann;
-                                ta.setTextColor(annotationTextColorMap.get(ta.hashCode()));
-                            } else if (ann instanceof ShapeAnnotation) {
-                                ShapeAnnotation sa = (ShapeAnnotation) ann;
-                                sa.setFillColor(annotationFillColorMap.get(sa.hashCode()));
-                                sa.setBorderColor(annotationBorderColorMap.get(sa.hashCode()));
-                            } else if (ann instanceof ImageAnnotation) {
-                                ImageAnnotation ia = (ImageAnnotation) ann;
-                                ia.setBorderColor(annotationBorderColorMap.get(ia.hashCode()));
-                            } else if (ann instanceof BoundedTextAnnotation) {
-                                BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
-                                bta.setFillColor(annotationFillColorMap.get(bta.hashCode()));
-                                bta.setBorderColor(annotationBorderColorMap.get(bta.hashCode()));
-                                bta.setTextColor(annotationTextColorMap.get(bta.hashCode()));
-                            } else if (ann instanceof ArrowAnnotation) {
-                                ArrowAnnotation aa = (ArrowAnnotation) ann;
-                                aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
-                                aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
-                            }
-                        }
-                    }
-                }
-                
-                // show annotation which were removed later
-                if( annotationList != null){
-                    for (Annotation ann : annotationList) {
-                        if (!currAnnotationList.contains(ann)) {
-                            // make ann visible here
-														// System.out.println("Adding annotation: "+ann);
-                            Annotation newAnn = annotationFactory.createAnnotation(ann.getClass(), currentView, ann.getArgMap());
-                            annotationManager.addAnnotation(newAnn);
-                        }
-                    }
-                }
+			//dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
+		//ifc.setBounds(arg0, arg1, arg2, arg3)
+	
+		// hide annotation which were not present earlier
+		if( currAnnotationList != null){
+			for (Annotation ann : currAnnotationList) {
+				if (!annotationList.contains(ann)) {
+					// make ann invisible here
+					Color transparent = new Color(0,0,0,0);
+					if (ann instanceof ImageAnnotation) {
+						ImageAnnotation ia = (ImageAnnotation) ann;
+						ia.setBorderColor(transparent);
+					} else if (ann instanceof BoundedTextAnnotation) {
+						BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+						bta.setFillColor(transparent);
+						bta.setBorderColor(transparent);
+						bta.setTextColor(transparent);
+					} else if (ann instanceof ShapeAnnotation) {
+						ShapeAnnotation sa = (ShapeAnnotation) ann;
+						sa.setFillColor(transparent);
+						sa.setBorderColor(transparent);
+					} else if (ann instanceof TextAnnotation) {
+						TextAnnotation ta = (TextAnnotation) ann;
+						ta.setTextColor(transparent);
+					} else if (ann instanceof ArrowAnnotation) {
+						ArrowAnnotation aa = (ArrowAnnotation) ann;
+						aa.setLineColor(transparent);
+						aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
+					}
+				}else{
+					if (ann instanceof ImageAnnotation) {
+						ImageAnnotation ia = (ImageAnnotation) ann;
+						ia.setBorderColor(annotationBorderColorMap.get(ia.hashCode()));
+					} else if (ann instanceof BoundedTextAnnotation) {
+						BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+						bta.setFillColor(annotationFillColorMap.get(bta.hashCode()));
+						bta.setBorderColor(annotationBorderColorMap.get(bta.hashCode()));
+						bta.setTextColor(annotationTextColorMap.get(bta.hashCode()));
+					} else if (ann instanceof ShapeAnnotation) {
+						ShapeAnnotation sa = (ShapeAnnotation) ann;
+						sa.setFillColor(annotationFillColorMap.get(sa.hashCode()));
+						sa.setBorderColor(annotationBorderColorMap.get(sa.hashCode()));
+					} else if (ann instanceof TextAnnotation) {
+						TextAnnotation ta = (TextAnnotation) ann;
+						ta.setTextColor(annotationTextColorMap.get(ta.hashCode()));
+					} else if (ann instanceof ArrowAnnotation) {
+						ArrowAnnotation aa = (ArrowAnnotation) ann;
+						aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
+						aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
+					}
+				}
+			}
+		}
+	
+		// show annotation which were removed later
+		if( annotationList != null){
+			for (Annotation ann : annotationList) {
+				if (!currAnnotationList.contains(ann)) {
+					// make ann visible here
+					// System.out.println("Adding annotation: "+ann);
+					Annotation newAnn = annotationFactory.createAnnotation(ann.getClass(), currentView, ann.getArgMap());
+					annotationManager.addAnnotation(newAnn);
+				}
+			}
+		}
 
-                for(Annotation ann: annotationList){
-                    ann.moveAnnotation( annotationPosMap.get( ann.hashCode() ));
-										// System.out.println("Setting zoom to: "+annotationZoomMap.get(ann.hashCode()));
-                    ann.setZoom( annotationZoomMap.get( ann.hashCode()) );
-                    // make ann visible here
-                    if(ann instanceof TextAnnotation){
-                        TextAnnotation ta = (TextAnnotation)ann;
-                        ta.setTextColor( annotationTextColorMap.get(ta.hashCode()));
-												// System.out.println("Setting font size to: "+annotationFontSizeMap.get(ta.hashCode()));
-                        ta.setFontSize( annotationFontSizeMap.get(ta.hashCode()));
-                        ta.setText( annotationTextMap.get(ta.hashCode()));
-                    }else if( ann instanceof BoundedTextAnnotation){
-                        BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
-                        bta.setFillColor( annotationFillColorMap.get(bta.hashCode()));
-                        bta.setBorderColor( annotationBorderColorMap.get(bta.hashCode()));
-                        bta.setTextColor(annotationTextColorMap.get(bta.hashCode()));
-                        bta.setFontSize( annotationFontSizeMap.get(bta.hashCode()));
-                        bta.setBorderWidth( annotationBorderWidthMap.get(bta.hashCode()));
-                        bta.setText( annotationTextMap.get(bta.hashCode()));
-                        bta.setShapeType( annotationShapeMap.get(bta.hashCode()));
-                    }else if( ann instanceof ImageAnnotation){
-                        ImageAnnotation ia = (ImageAnnotation) ann;
-                        ia.setBorderColor( annotationBorderColorMap.get(ia.hashCode()));
-                        ia.setBorderWidth( annotationBorderWidthMap.get(ia.hashCode()));
-                        ia.setShapeType( annotationShapeMap.get(ia.hashCode()));
-                    }else if( ann instanceof ShapeAnnotation){
-                        ShapeAnnotation sa = (ShapeAnnotation) ann;
-                        sa.setFillColor( annotationFillColorMap.get(sa.hashCode()));
-                        sa.setBorderColor( annotationBorderColorMap.get(sa.hashCode()));
-                        sa.setBorderWidth( annotationBorderWidthMap.get(sa.hashCode()));
-                        sa.setShapeType( annotationShapeMap.get(sa.hashCode()));
-                    }else if( ann instanceof ArrowAnnotation){
-                        ArrowAnnotation aa = (ArrowAnnotation) ann;
-                        aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
-                        aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
-                    }
-                }
+		for(Annotation ann: annotationList){
+			ann.moveAnnotation( annotationPosMap.get( ann.hashCode() ));
+			// System.out.println("Setting zoom to: "+annotationZoomMap.get(ann.hashCode()));
+			ann.setSpecificZoom( annotationZoomMap.get( ann.hashCode()) );
+			// make ann visible here
+			if( ann instanceof BoundedTextAnnotation){
+				BoundedTextAnnotation bta = (BoundedTextAnnotation) ann;
+				bta.setFillColor( annotationFillColorMap.get(bta.hashCode()));
+				bta.setBorderColor( annotationBorderColorMap.get(bta.hashCode()));
+				bta.setTextColor(annotationTextColorMap.get(bta.hashCode()));
+				bta.setFontSize( annotationFontSizeMap.get(bta.hashCode()));
+				// System.out.println("Setting bounded text font size to: "+annotationFontSizeMap.get(bta.hashCode()));
+				bta.setBorderWidth( annotationBorderWidthMap.get(bta.hashCode()));
+				bta.setText( annotationTextMap.get(bta.hashCode()));
+				bta.setShapeType( annotationShapeMap.get(bta.hashCode()));
+				Dimension d = annotationSizeMap.get(bta.hashCode());
+				// System.out.println("Setting bounded text size to: "+d);
+				bta.setSize(d.getWidth(), d.getHeight());
+			}else if( ann instanceof ImageAnnotation){
+				ImageAnnotation ia = (ImageAnnotation) ann;
+				ia.setBorderColor( annotationBorderColorMap.get(ia.hashCode()));
+				ia.setBorderWidth( annotationBorderWidthMap.get(ia.hashCode()));
+				ia.setShapeType( annotationShapeMap.get(ia.hashCode()));
+				Dimension d = annotationSizeMap.get(ia.hashCode());
+				ia.setSize(d.getWidth(), d.getHeight());
+			}else if( ann instanceof ShapeAnnotation){
+				ShapeAnnotation sa = (ShapeAnnotation) ann;
+				sa.setFillColor( annotationFillColorMap.get(sa.hashCode()));
+				sa.setBorderColor( annotationBorderColorMap.get(sa.hashCode()));
+				sa.setBorderWidth( annotationBorderWidthMap.get(sa.hashCode()));
+				sa.setShapeType( annotationShapeMap.get(sa.hashCode()));
+				Dimension d = annotationSizeMap.get(sa.hashCode());
+				// System.out.println("Setting shape size to: "+d);
+				sa.setSize(d.getWidth(), d.getHeight());
+			} else if(ann instanceof TextAnnotation){
+				TextAnnotation ta = (TextAnnotation)ann;
+				ta.setTextColor( annotationTextColorMap.get(ta.hashCode()));
+				// System.out.println("Setting font size to: "+annotationFontSizeMap.get(ta.hashCode()));
+				ta.setFontSize( annotationFontSizeMap.get(ta.hashCode()));
+				ta.setText( annotationTextMap.get(ta.hashCode()));
+			}else if( ann instanceof ArrowAnnotation){
+				ArrowAnnotation aa = (ArrowAnnotation) ann;
+				aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
+				aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
+			}
+		}
 
-                currentView.updateView();
+		currentView.updateView();
 	}
 
   /**
@@ -873,26 +891,26 @@ public class CyFrame {
 	 *
 	 */
    public void clearDisplay(){
-     Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
-     Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
-     for (CyEdge e: recordEdge.values() ){
-       removeAddedEdges.add(e);
-       removeAddedEdgesKeys.add(e.getSUID());
-     }
+	 Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
+	 Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
+	 for (CyEdge e: recordEdge.values() ){
+	   removeAddedEdges.add(e);
+	   removeAddedEdgesKeys.add(e.getSUID());
+	 }
 
-     appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
-     appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
+	 appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
+	 appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
 
-     Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
-     Collection<Long> removeAddedKeys = new ArrayList<Long>();
-     for (CyNode n: record.values() ){
-       removeAddedNodes.add(n);
-       removeAddedKeys.add(n.getSUID());
-     }
+	 Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
+	 Collection<Long> removeAddedKeys = new ArrayList<Long>();
+	 for (CyNode n: record.values() ){
+	   removeAddedNodes.add(n);
+	   removeAddedKeys.add(n.getSUID());
+	 }
 
-     appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
-     appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
-     appManager.getCurrentNetworkView().updateView();
+	 appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
+	 appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
+	 appManager.getCurrentNetworkView().updateView();
    }
 
 	/**
@@ -936,7 +954,7 @@ public class CyFrame {
 		this.intercount = intercount;
 	}
 
-        /**
+	/**
 	 * Return the title of network
 	 *
 	 * @return title
@@ -989,8 +1007,8 @@ public class CyFrame {
 	public void setBackgroundPaint(Paint bg) {
 		backgroundPaint = bg;
 	}
-        
-        /**
+
+	/**
 	 * @return the network size
 	 */
 	public Double getNetworkSize() {
@@ -1005,8 +1023,8 @@ public class CyFrame {
 	public void setNetworkSize(Double size) {
 		this.size = size;
 	}
-        
-        /**
+
+	/**
 	 * @return the network width
 	 */
 	public Double getNetworkWidth() {
@@ -1021,8 +1039,8 @@ public class CyFrame {
 	public void setNetworkWidth(Double width) {
 		this.width = width;
 	}
-        
-        /**
+
+	/**
 	 * @return the network height
 	 */
 	public Double getNetworkHeight() {
@@ -1037,17 +1055,17 @@ public class CyFrame {
 	public void setNetworkHeight(Double height) {
 		this.height = height;
 	}
-        
-        /**
+
+	/**
 	 * Return the position of annotation.
 	 * 
-         * @param hashcode of annotation whose position is to be returned 
+	 * @param hashcode of annotation whose position is to be returned 
 	 * @return Point
 	 */
 	public Point getAnnotationPos(int hashcode) {
-            if(annotationPosMap.containsKey(hashcode))
-		return annotationPosMap.get(hashcode);
-            return null;
+		if(annotationPosMap.containsKey(hashcode))
+			return annotationPosMap.get(hashcode);
+		return null;
 	}
 
 	/**
@@ -1059,17 +1077,39 @@ public class CyFrame {
 		// System.out.println("Setting annotation position to: "+pt);
 		annotationPosMap.put(hashcode, pt);
 	}
-        
-        /**
+
+	/**
+	 * Return the size of the annotation (for those that support it)
+	 *
+	 * @param hashcode of annotation whose size is to be returned
+	 * @return Dimension
+	 */
+	public Dimension getAnnotationSize(int hashcode) {
+		if(annotationSizeMap.containsKey(hashcode))
+			return annotationSizeMap.get(hashcode);
+		return null;
+	}
+
+	/**
+	 * Set the size of the annotation (for those that support it)
+	 *
+	 * @param hashcode of annotation whose size is to be returned
+	 * @param size the size of annotation as a Dimension
+	 */
+	public void setAnnotationSize(int hashcode, Dimension size) {
+		annotationSizeMap.put(hashcode, size);
+	}
+
+	/**
 	 * Return the zoom value for annotation.
 	 * 
-         * @param hashcode of annotation whose zoom is to be returned 
+	 * @param hashcode of annotation whose zoom is to be returned 
 	 * @return zoom
 	 */
 	public double getAnnotationZoom(int hashcode) {
-            if(annotationZoomMap.containsKey(hashcode))
+		if(annotationZoomMap.containsKey(hashcode))
 		return annotationZoomMap.get(hashcode);
-            return 0;
+		return 0;
 	}
 
 	/**
@@ -1080,17 +1120,17 @@ public class CyFrame {
 	public void setAnnotationZoom(int hashcode, double zoom) {
 		annotationZoomMap.put(hashcode, zoom);
 	}
-        
-        /**
+
+	/**
 	 * Return the Color with which annotation is filled.
 	 * 
-         * @param hashcode of annotation who is filled with Color
+	 * @param hashcode of annotation who is filled with Color
 	 * @return Color
 	 */
 	public Color getAnnotationFillColor(int hashcode) {
-            if(annotationFillColorMap.containsKey(hashcode))
+		if(annotationFillColorMap.containsKey(hashcode))
 		return annotationFillColorMap.get(hashcode);
-            return null;
+		return null;
 	}
 
 	/**
@@ -1101,17 +1141,17 @@ public class CyFrame {
 	public void setAnnotationFillColor(int hashcode, Color color) {
 		annotationFillColorMap.put(hashcode, color);
 	}
-        
-        /**
+
+	/**
 	 * Return the Color of border of annotation.
 	 * 
-         * @param hashcode of annotation whose border color is to be returned 
+	 * @param hashcode of annotation whose border color is to be returned 
 	 * @return Color
 	 */
 	public Color getAnnotationBorderColor(int hashcode) {
-            if(annotationBorderColorMap.containsKey(hashcode))
+		if(annotationBorderColorMap.containsKey(hashcode))
 		return annotationBorderColorMap.get(hashcode);
-            return null;
+		return null;
 	}
 
 	/**
@@ -1122,17 +1162,17 @@ public class CyFrame {
 	public void setAnnotationBorderColor(int hashcode, Color color) {
 		annotationBorderColorMap.put(hashcode, color);
 	}
-        
-        /**
+
+	/**
 	 * Return the Color of text of annotation.
 	 * 
-         * @param hashcode of annotation whose text color is to be returned 
+	 * @param hashcode of annotation whose text color is to be returned 
 	 * @return Color
 	 */
 	public Color getAnnotationTextColor(int hashcode) {
-            if(annotationTextColorMap.containsKey(hashcode))
+		if(annotationTextColorMap.containsKey(hashcode))
 		return annotationTextColorMap.get(hashcode);
-            return null;
+		return null;
 	}
 
 	/**
@@ -1144,16 +1184,16 @@ public class CyFrame {
 		annotationTextColorMap.put(hashcode, color);
 	}
 
-        /**
+	/**
 	 * Return the font size of text of annotation.
 	 * 
-         * @param hashcode of annotation whose text font size is to be returned 
+	 * @param hashcode of annotation whose text font size is to be returned 
 	 * @return double
 	 */
 	public double getAnnotationFontSize(int hashcode) {
-            if(annotationFontSizeMap.containsKey(hashcode))
+		if(annotationFontSizeMap.containsKey(hashcode))
 		return annotationFontSizeMap.get(hashcode);
-            return 0.0;
+		return 0.0;
 	}
 
 	/**
@@ -1165,16 +1205,16 @@ public class CyFrame {
 		annotationFontSizeMap.put(hashcode, size);
 	}
 
-        /**
+	/**
 	 * Return the border width of annotation.
 	 * 
-         * @param hashcode of annotation whose border width is to be returned 
+	 * @param hashcode of annotation whose border width is to be returned 
 	 * @return double
 	 */
 	public double getAnnotationBorderWidth(int hashcode) {
-            if(annotationBorderWidthMap.containsKey(hashcode))
+		if(annotationBorderWidthMap.containsKey(hashcode))
 		return annotationBorderWidthMap.get(hashcode);
-            return 0.0;
+		return 0.0;
 	}
 
 	/**
@@ -1186,16 +1226,16 @@ public class CyFrame {
 		annotationBorderWidthMap.put(hashcode, size);
 	}
 
-        /**
+	/**
 	 * Return the text of annotation.
 	 * 
-         * @param hashcode of annotation whose text is to be returned 
+	 * @param hashcode of annotation whose text is to be returned 
 	 * @return string
 	 */
 	public String getAnnotationText(int hashcode) {
-            if(annotationTextMap.containsKey(hashcode))
+		if(annotationTextMap.containsKey(hashcode))
 		return annotationTextMap.get(hashcode);
-            return "";
+		return "";
 	}
 
 	/**
@@ -1206,8 +1246,8 @@ public class CyFrame {
 	public void setAnnotationText(int hashcode, String text) {
 		annotationTextMap.put(hashcode, text);
 	}
-        
-        /**
+
+	/**
 	 * Get the node shape
 	 *
 	 * @param nodeID the ID of the node whose shape is to retrieve
@@ -1440,7 +1480,7 @@ public class CyFrame {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Sets node size of an individual node
 	 * 
@@ -1450,7 +1490,7 @@ public class CyFrame {
 	public void setNodeSize(long nodeID, double[] size){
 		nodeSizeMap.put(nodeID, size);
 	}
-	
+
 	/**
 	 * 
 	 * @param nodeID
@@ -1461,7 +1501,7 @@ public class CyFrame {
 			return nodeBorderWidthMap.get(nodeID);
 		return 0.0f;
 	}
-	
+
 	/**
 	  * 
 	  * @param nodeID
@@ -1530,8 +1570,8 @@ public class CyFrame {
 	public void setNodeLabelFontSize(long nodeID, Integer size) {
 		nodeLabelFontSizeMap.put(nodeID, size);
 	}
-        
-        /**
+
+	/**
 	 * 
 	 * @param nodeID
 	 * @return font label font 
@@ -1551,7 +1591,7 @@ public class CyFrame {
 		nodeLabelFontMap.put(nodeID, font);
 	}
 
-        /**
+	/**
 	 * 
 	 * @param nodeID
 	 * @return font label width
@@ -1570,7 +1610,7 @@ public class CyFrame {
 	public void setNodeLabelWidth(long nodeID, Double width) {
 		nodeLabelWidthMap.put(nodeID, width);
 	}
-        
+
 	/**
 	 * 
 	 * @param nodeID
@@ -1591,7 +1631,7 @@ public class CyFrame {
 		nodeLabelTransMap.put(nodeID, trans);
 	}
 
-        /**
+	/**
 	 *
 	 * @param nodeID
 	 * @return node label
@@ -1602,8 +1642,8 @@ public class CyFrame {
 		return null;
 	}
 
-        /**
-          *
+	/**
+	  *
 	  * @param nodeID
 	  * @param label
 	  */
@@ -1630,7 +1670,7 @@ public class CyFrame {
 	public void setNodeLabelColor(long nodeID, Color color){
 		nodeLabelColMap.put(nodeID, color);
 	}
-	
+
 	/**
 	 * 
 	 * @param edgeID
@@ -1641,7 +1681,7 @@ public class CyFrame {
 			return edgeWidthMap.get(edgeID);
 		return 0.0f;
 	}
-	
+
 	/**
 	 * 
 	 * @param edgeID
@@ -1651,7 +1691,7 @@ public class CyFrame {
 		edgeWidthMap.put(edgeID, width);
 	}
 
-        /**
+	/**
 	 *
 	 * @param edgeID
 	 * @return the edge label
@@ -1682,7 +1722,7 @@ public class CyFrame {
 		return null;
 	}
 
-        /**
+	/**
 	 *
 	 * @param edgeID
 	 * @return font label font
@@ -1693,7 +1733,7 @@ public class CyFrame {
 		return null;
 	}
 
-        /**
+	/**
 	  * 
 	  * @param edgeID
 	  * @param font label font
@@ -1722,7 +1762,7 @@ public class CyFrame {
 		edgeLabelColMap.put(edgeID, color);
 	}
 
-        /**
+	/**
 	 *
 	 * @param edgeID
 	 * @return edge label size
@@ -1751,7 +1791,7 @@ public class CyFrame {
 		edgeLabelTransMap.put(edgeID, trans);
 	}
 
-        /**
+	/**
 	 *
 	 * @param edgeID
 	 * @return edge source arrow shape
@@ -1771,7 +1811,7 @@ public class CyFrame {
 		edgeSourceArrowShapeMap.put(edgeID, shape);
 	}
 
-        /**
+	/**
 	 *
 	 * @param edgeID
 	 * @return edge target arrow shape
@@ -1790,8 +1830,8 @@ public class CyFrame {
 	public void setEdgeTargetArrowShape(long edgeID, ArrowShape shape){
 		edgeTargetArrowShapeMap.put(edgeID, shape);
 	}
-        
-        /**
+
+	/**
 	 *
 	 * @param edgeID
 	 * @return edge line type
@@ -1828,8 +1868,8 @@ public class CyFrame {
 	public List<CyEdge> getEdgeList() {
 		return edgeList;
 	}
-        
-        /**
+
+	/**
 	 * Get the list of annotations in this frame
 	 *
 	 * @return the list of annotations
@@ -1855,8 +1895,8 @@ public class CyFrame {
 	public void setEdgeList(List<CyEdge>edgeList) {
 		this.edgeList = edgeList;
 	}
-        
-        /**
+
+	/**
 	 * Set the list of edges in this frame
 	 *
 	 * @param edgeList the list of edges
@@ -1882,8 +1922,8 @@ public class CyFrame {
 	public List<Long> getEdgeIdList() {
 		return edgeIdList;
 	}
-        
-        /**
+
+	/**
 	 * Get the list of annotations in this frame
 	 *
 	 * @return the list of annotations
@@ -1927,7 +1967,7 @@ public class CyFrame {
 	public void writeImage(String fileName, final int videoResolution,final BooleanWrapper finished) throws IOException {
 		display();
 		CyNetworkView view = appManager.getCurrentNetworkView();
-		
+	
 		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			Map<String, Object> tunables = new HashMap<String, Object>();
@@ -1961,13 +2001,21 @@ public class CyFrame {
 	public void setCenterPoint(Point3D pnt) {
 		this.centerPoint = pnt;
 	}
-	
+
 	/**
 	 * Returns the BundleContext of this CyFrame.
 	 * @return the BundleContext of this CyFrame.
 	 */
 	public CyServiceRegistrar getBundleContext() {
 		return bundleContext;
+	}
+
+	private void setAnnotationSize(ShapeAnnotation ann) {
+		Double width = new Double(ann.getArgMap().get(ShapeAnnotation.WIDTH));
+		Double height = new Double(ann.getArgMap().get(ShapeAnnotation.HEIGHT));
+		Dimension d = new Dimension();
+		d.setSize(width, height);
+		annotationSizeMap.put(ann.hashCode(), d);
 	}
 
 }
