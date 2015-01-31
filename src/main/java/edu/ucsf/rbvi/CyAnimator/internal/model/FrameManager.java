@@ -36,8 +36,9 @@ public class FrameManager {
 	public Timer timer;
 	
 	//frames per second
-	private int fps = 30;
-	
+	public int fps = 30;
+	private int videoType = 1;
+        private int videoResolution = 100;
 	private CyServiceRegistrar bundleContext;
 	private TaskManager<?,?> taskManager;
 	//keeps track of the current frame being displayed during animation
@@ -58,10 +59,9 @@ public class FrameManager {
 	 * @throws IOException throws exception if cannot export image.
 	 */
 	public CyFrame captureCurrentFrame() throws IOException{
-		
 	//	CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
 		CyFrame frame = new CyFrame(bundleContext);
-		
+
 	/*	CyApplicationManager appManager = (CyApplicationManager) getService(CyApplicationManager.class);
 		CyNetworkView networkView = appManager.getCurrentNetworkView(); */
 		
@@ -69,7 +69,7 @@ public class FrameManager {
 		frame.populate(); 
 		
 		//set the interpolation count, or number of frames between this frame and the next to be interpolated
-		frame.setInterCount(30);
+		frame.setInterCount(fps);
 		
 		//frame.setID(networkView.getIdentifier()+"_"+frameid);
 		//System.out.println("Frame ID: "+frameid);
@@ -143,6 +143,7 @@ public class FrameManager {
 				if(frameIndex == frames.length){ frameIndex = 0;}
 				
 				frames[frameIndex].display();
+                                frames[frameIndex].clearDisplay();
 				frameIndex++;
 			}
 		};
@@ -173,7 +174,7 @@ public class FrameManager {
 	 * 
 	 */
 	public void recordAnimation(String directory) throws IOException {
-		WriteTask task = new WriteTask(this, "Writing output files", directory);
+		WriteTask task = new WriteTask(this, "Writing output files", directory, videoType, videoResolution);
 		taskManager.execute(new TaskIterator(task));
 	}
 	
@@ -216,6 +217,7 @@ public class FrameManager {
 		else{ frameIndex++; }
 		
 		frames[frameIndex].display();
+                frames[frameIndex].clearDisplay();
 	}
 	
 	/**
@@ -230,6 +232,7 @@ public class FrameManager {
 		else{ frameIndex--; }
 		
 		frames[frameIndex].display();
+                frames[frameIndex].clearDisplay();
 	}
 	
 	/**
@@ -264,5 +267,14 @@ public class FrameManager {
 	public Timer getTimer(){
 		return timer;
 	}
-	
+        
+        /**
+         * update frame and video related settings.
+         * @return
+         */
+	public void updateSettings(int frameCount, int videoType, int videoResolution){
+            this.fps = frameCount;
+            this.videoType = videoType;
+            this.videoResolution = videoResolution;
+        }
 }

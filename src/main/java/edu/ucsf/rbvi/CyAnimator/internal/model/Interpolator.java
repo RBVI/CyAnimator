@@ -26,6 +26,9 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.Color;
 import java.util.*;
+import org.cytoscape.model.CyEdge;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.view.presentation.annotations.Annotation;
 
 public class Interpolator {
 	
@@ -35,12 +38,14 @@ public class Interpolator {
 	 * the animation.
 	 */
 	List<FrameInterpolator> nodeInterpolators = new ArrayList<FrameInterpolator>();
-	List<FrameInterpolator> edgeInterpolators = new ArrayList<FrameInterpolator>();
+	List<FrameInterpolator> edgeInterpolators = new ArrayList<FrameInterpolator>();	
+        List<FrameInterpolator> annotationInterpolators = new ArrayList<FrameInterpolator>();
 	List<FrameInterpolator> networkInterpolators = new ArrayList<FrameInterpolator>();
 	
 	public Interpolator(){
 		
 		//add any desired interpolators to their respective interpolator lists
+                nodeInterpolators.add(new interpolateNodeShape());
 		nodeInterpolators.add(new interpolateNodePosition());
 		nodeInterpolators.add(new interpolateNodeColor());
 		nodeInterpolators.add(new interpolateNodeBorderColor());
@@ -53,12 +58,17 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeOpacity());
 		edgeInterpolators.add(new interpolateEdgeWidth());
 		edgeInterpolators.add(new interpolateEdgeLabel());
+                edgeInterpolators.add(new interpolateEdgeArrowShape());
+                
+                annotationInterpolators.add(new interpolateAnnotationsPosition());
+                annotationInterpolators.add(new interpolateAnnotationsSize());
+                annotationInterpolators.add(new interpolateAnnotationsColor());
+                annotationInterpolators.add(new interpolateAnnotationsText());
 
+                networkInterpolators.add(new interpolateNetworkTitle());
 		networkInterpolators.add(new interpolateNetworkZoom());
 		networkInterpolators.add(new interpolateNetworkColor());
 		networkInterpolators.add(new interpolateNetworkCenter());
-	
-		
 	}
 
 	/**
@@ -70,7 +80,7 @@ public class Interpolator {
 	 */
 	public CyFrame[] makeFrames(List<CyFrame> frameList) {
 
-		if(frameList.size() == 0){ return null; }
+		if(frameList.isEmpty()){ return null; }
 		
 		//initialize the framecount to the number of key frames
 		int framecount = frameList.size();
@@ -79,7 +89,7 @@ public class Interpolator {
 		for(int i=0; i<frameList.size()-1; i++){ 
 			
 			//each frame contains the number of frames which will be interpolated after it which is the interCount
-			framecount = framecount + frameList.get(i).getInterCount() - 1; 
+			framecount = framecount + frameList.get(i).getInterCount() - 1;
 		}
 		
 		//create the main CyFrame array which will then be run through all of the interpolators
@@ -88,6 +98,7 @@ public class Interpolator {
 		//initialize the CyFrame array
 		for(int i=0; i<cyFrameArray.length; i++){
 			cyFrameArray[i] = new CyFrame(frameList.get(0).getBundleContext());
+                        cyFrameArray[i].populate();
 		}
 
 		int start = 0;
@@ -111,13 +122,25 @@ public class Interpolator {
 			
 			//set the first frame to the the first key frame
 			cyFrameArray[start] = frameList.get(i);
-			List<Long> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
-			List<Long> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
+			List<CyNode> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
+			List<CyEdge> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
+                        List<Annotation> annotationList = annotationUnionize(frameList.get(i), frameList.get(i+1));
+                                                
+			List<Long> nodeIdList = nodeIdUnionize(frameList.get(i), frameList.get(i+1));
+			List<Long> edgeIdList = edgeIdUnionize(frameList.get(i), frameList.get(i+1));
+                        List<Long> annotationIdList = annotationsIdUnionize(frameList.get(i), frameList.get(i+1));
 
-			//reset the nodeLists once the unionizer has updated them
+                        //reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
-				cyFrameArray[k].setNodeIdList(nodeList);
-				cyFrameArray[k].setEdgeIdList(edgeList);
+				cyFrameArray[k].setNodeList(nodeList);
+				cyFrameArray[k].setEdgeList(edgeList);
+                                cyFrameArray[k].setAnnotationList(annotationList);
+			}
+                        
+                        //reset the nodeLists once the unionizer has updated them
+			for (int k = start+1; k < end; k++) {
+				cyFrameArray[k].setNodeIdList(nodeIdList);
+				cyFrameArray[k].setEdgeIdList(edgeIdList);
 			}
 
 			/*
@@ -128,19 +151,25 @@ public class Interpolator {
 			 * interpolation lists.
 			 */
 			for(FrameInterpolator interp: nodeInterpolators){
-				cyFrameArray = interp.interpolate(nodeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(nodeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
 
 			for(FrameInterpolator interp: edgeInterpolators){
-				cyFrameArray = interp.interpolate(edgeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(edgeIdList, frameList.get(i), frameList.get(i+1), 
+				                                  start, end, cyFrameArray);
+			}
+
+                        for(FrameInterpolator interp: annotationInterpolators){
+				cyFrameArray = interp.interpolate(annotationIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
 
 			for(FrameInterpolator interp: networkInterpolators){
-				cyFrameArray = interp.interpolate(nodeList, frameList.get(i), frameList.get(i+1), 
+				cyFrameArray = interp.interpolate(nodeIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}
+
 			start = end;
 		}
 	   		
@@ -160,7 +189,93 @@ public class Interpolator {
 	 * @param frameTwo is the second of two frames to be unionized
 	 * @return the unionized list of NodeViews
 	 */
-	public List<Long> nodeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+	public List<CyNode> nodeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<CyNode> list1 = frameOne.getNodeList();
+		List<CyNode> list2 = frameTwo.getNodeList();
+		Map<CyNode,CyNode> bigList = new HashMap<CyNode,CyNode>();	
+		
+		for (CyNode node: list1) {
+			bigList.put(node, node);
+		}
+
+		for (CyNode node: list2) {
+			bigList.put(node, node);
+		}
+
+		return new ArrayList<CyNode>(bigList.keySet());
+	}
+	
+	
+	/**
+	 * Takes two CyFrames and returns the union of the EdgeView lists that are contained
+	 * within each frame.  This is to ensure that when edges are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose edge list will be unionized
+	 * @param frameTwo is the second frame whose edge list will be unionized
+	 * @return the unionized list of EdgeViews
+	 * 
+	 */
+	public List<CyEdge> edgeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<CyEdge> list1 = frameOne.getEdgeList();
+		List<CyEdge> list2 = frameTwo.getEdgeList();
+		Map<CyEdge,CyEdge> bigList = new HashMap<CyEdge,CyEdge>();	
+
+		for (CyEdge edge: list1) {
+			bigList.put(edge, edge);
+		}
+
+		for (CyEdge edge: list2) {
+			bigList.put(edge, edge);
+		}
+		
+		return new ArrayList<CyEdge>(bigList.keySet());
+		
+	}
+        
+        /**
+	 * Takes two CyFrames and returns the union of the Annotation lists that are contained
+	 * within each frame.  This is to ensure that when annotations are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose annotation list will be unionized
+	 * @param frameTwo is the second frame whose annotation list will be unionized
+	 * @return the unionized list of Annotations
+	 * 
+	 */
+	public List<Annotation> annotationUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<Annotation> list1 = frameOne.getAnnotationList();
+		List<Annotation> list2 = frameTwo.getAnnotationList();
+		Map<Annotation,Annotation> bigList = new HashMap<Annotation,Annotation>();	
+
+		for (Annotation ann: list1) {
+			bigList.put(ann, ann);
+		}
+
+		for (Annotation ann: list2) {
+			bigList.put(ann, ann);
+		}
+		
+		return new ArrayList<Annotation>(bigList.keySet());
+		
+	}
+        
+        /**
+	 * Takes two CyFrames and returns a list of NodeViews which is the union of the list of 
+	 * NodeViews that are in each of the two frames.  This is done to accomodate the adding/deleting
+	 * of nodes between frames in animation as the union provides a complete set of nodes when
+	 * moving across frames.
+	 * 
+	 * @param frameOne is the first of two frames to be unionized
+	 * @param frameTwo is the second of two frames to be unionized
+	 * @return the unionized list of NodeViews
+	 */
+	public List<Long> nodeIdUnionize(CyFrame frameOne, CyFrame frameTwo){
 		
 		List<Long> list1 = frameOne.getNodeIdList();
 		List<Long> list2 = frameTwo.getNodeIdList();
@@ -189,7 +304,7 @@ public class Interpolator {
 	 * @return the unionized list of EdgeViews
 	 * 
 	 */
-	public List<Long> edgeViewUnionize(CyFrame frameOne, CyFrame frameTwo){
+	public List<Long> edgeIdUnionize(CyFrame frameOne, CyFrame frameTwo){
 		
 		List<Long> list1 = frameOne.getEdgeIdList();
 		List<Long> list2 = frameTwo.getEdgeIdList();
@@ -206,7 +321,35 @@ public class Interpolator {
 		return new ArrayList<Long>(bigList.keySet());
 		
 	}
+        
+        /**
+	 * Takes two CyFrames and returns the union of the annotations lists that are contained
+	 * within each frame.  This is to ensure that when annoations are added/deleted they will
+	 * be able to be interpolated from one frame to the next instead of just instantly
+	 * disappearing.
+	 * 
+	 * @param frameOne is the first frame whose annotations list will be unionized
+	 * @param frameTwo is the second frame whose annotations list will be unionized
+	 * @return the unionized list of annotations
+	 * 
+	 */
+	public List<Long> annotationsIdUnionize(CyFrame frameOne, CyFrame frameTwo){
+		
+		List<Long> list1 = frameOne.getAnnotationIdList();
+		List<Long> list2 = frameTwo.getAnnotationIdList();
+		Map<Long,Long> bigList = new HashMap<Long,Long>();	
 
+		for (Long id: list1) {
+			bigList.put(id, id);
+		}
+
+		for (Long id: list2) {
+			bigList.put(id, id);
+		}
+		
+		return new ArrayList<Long>(bigList.keySet());
+		
+	}
 	
 	/**
 	 * This method performs a generic color interpolation and is used by many of the interpolators
@@ -223,7 +366,7 @@ public class Interpolator {
 	 * @return the array of interpolated colors 
 	 * 
 	 */
-	public Color[] interpolateColor(Color colorOne, Color colorTwo, int framenum, boolean includeAlpha){
+	public static Color[] interpolateColor(Color colorOne, Color colorTwo, int framenum, boolean includeAlpha){
 		Color[] paints = new Color[framenum+1];
 
 		if (colorOne == null || colorTwo == null) {
@@ -318,893 +461,4 @@ public class Interpolator {
 		return paints;
 	}
 
-	/**
-	 * Interpolates the node position, using the standard linear interpolation formula described
-	 * at http://en.wikipedia.org/wiki/Linear_interpolation. It essentially just finds the absolute
-	 * difference between the position of a node in frame one, and in frame two.  It then divides
-	 * this distance by the number of frames which will be interpolated and increments or decrements
-	 * from the node position in the first frame to the node position in the second.  The incrementing
-	 * is done on the x values, which are then plugged into the interpolation formula to generate a y-value.
-	 * 
-	 */
-	
-	class interpolateNodePosition implements FrameInterpolator {
-		
-		public interpolateNodePosition(){
-			
-		}
-		
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is in this case a list of ID's
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-
-			int framenum = stop-start;
-
-			for(long nodeid: idList){
-				//Get the node positions and set up the position interpolation
-				double[] xyOne = frameOne.getNodePosition(nodeid);
-				double[] xyTwo = frameTwo.getNodePosition(nodeid);		
-				if(xyOne == null && xyTwo == null){ continue; }
-
-				// Handle missing (or appearing) nodes
-				if (xyOne == null || xyTwo == null) {
-					double[] xy = new double[3];
-					if (xyOne == null)
-						xy = xyTwo;
-					else
-						xy = xyOne;
-
-					for(int k=1; k<framenum; k++) {
-						cyFrameArray[start+k].setNodePosition(nodeid, xy);
-					}
-					continue;
-				}
-				
-				double incrementLength = (xyTwo[0] - xyOne[0])/framenum;
-				double[] xArray = new double[framenum+1];
-				xArray[1] = xyOne[0] + incrementLength;
-
-				for(int k=1; k<framenum; k++){
-
-					double[] xy = new double[3];
-					xy[0] = 0;
-					xy[1] = 0;
-					xy[2] = 0;
-
-					xArray[k+1] = xArray[k] + incrementLength;
-					xy[0] = xArray[k];
-
-					//Do the position interpolation
-					if((xyTwo[0] - xyOne[0]) == 0){
-						xy[1] = xyOne[1];
-						xy[2] = xyOne[2];
-					}else{
-
-						xy[1] = xyOne[1] + ((xArray[k] - xyOne[0])*((xyTwo[1]-xyOne[1])/(xyTwo[0] - xyOne[0])));
-						xy[2] = xyOne[1] + ((xArray[k] - xyOne[0])*((xyTwo[2]-xyOne[2])/(xyTwo[0] - xyOne[0])));
-					}
-
-					cyFrameArray[start+k].setNodePosition(nodeid, xy);
-				}
-
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	/**
-	 * Fills in the interpolated color values for NodeViews.  Works by using the inner
-	 * interpolateColor() method.
-	 * 
-	 */
-	class interpolateNodeColor implements FrameInterpolator {
-
-		public interpolateNodeColor(){
-			
-		}
-		
-		
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is in this case a list of NodeViews
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-
-			
-			int framenum = (stop-start) - 1;
-			
-			for(long nodeid: idList){
-				
-				Color colorOne = frameOne.getNodeColor(nodeid);
-				Color colorTwo = frameTwo.getNodeColor(nodeid);
-				Color colorFillOne = frameOne.getNodeFillColor(nodeid);
-				Color colorFillTwo = frameTwo.getNodeFillColor(nodeid);
-				if(colorOne != null || colorTwo != null) {
-					// Handle missing (or appearing) nodes
-					if (colorOne == null) 
-						colorOne = colorTwo;
-					else if (colorTwo == null)
-						colorTwo = colorOne;
-				
-					if (colorOne == colorTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeColor(nodeid, colorOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, false);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeColor(nodeid, paints[k]);
-						}	
-					}
-				}
-				
-				if (colorFillOne != null || colorFillTwo != null) {
-					if (colorFillOne == null)
-						colorFillOne = colorFillTwo;
-					else if (colorFillTwo == null)
-						colorFillTwo = colorFillOne;
-
-					if (colorFillOne == colorFillTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeFillColor(nodeid, colorFillOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorFillOne, colorFillTwo, framenum, false);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeFillColor(nodeid, paints[k]);
-						}	
-					}
-				}
-			}	
-			return cyFrameArray;
-		}
-		
-	}
-	
-	
-	/**
-	 * Interpolates node opacity by linearly incrementing or decrementing the opacity value. 
-	 * 
-	 */
-	class interpolateNodeOpacity implements FrameInterpolator {
-		
-		public interpolateNodeOpacity(){
-			
-		}
-		
-		
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is in this case a list of NodeViews
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = (stop-start) - 1;	
-		
-			for(long nodeid: idList){
-				
-				//Get the node transparencies and set up the transparency interpolation
-				Integer transOne = frameOne.getNodeOpacity(nodeid);
-				Integer transTwo = frameTwo.getNodeOpacity(nodeid);
-				Integer transFillOne = frameOne.getNodeFillOpacity(nodeid);
-				Integer transFillTwo = frameTwo.getNodeFillOpacity(nodeid);
-				
-				if (transOne == null) transOne = new Integer(0);
-				if (transTwo == null) transTwo = new Integer(0);
-				if (transFillOne == null) transFillOne = new Integer(0);
-				if (transFillTwo == null) transFillTwo = new Integer(0);
-
-				if (transOne.intValue() == transTwo.intValue()) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeOpacity(nodeid, transOne);
-					}
-				} else {
-					int transIncLength = (transTwo - transOne)/framenum;
-					int[] transArray = new int[framenum+2];
-					transArray[1] = transOne + transIncLength;
-					
-					for(int k=1; k<framenum+1; k++){
-						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setNodeOpacity(nodeid, transArray[k]);
-					}
-				}
-				
-				if (transFillOne.intValue() == transFillTwo.intValue()) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setNodeFillOpacity(nodeid, transFillOne);
-					}
-				} else {
-					float transIncLength = ((float)(transFillTwo - transFillOne))/((float)framenum);
-					float[] transArray = new float[framenum+2];
-					transArray[1] = transFillOne + transIncLength;
-					
-					for(int k=1; k<framenum+1; k++){
-						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setNodeFillOpacity(nodeid, (int)transArray[k]);
-					}
-				}
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	/**
-	 * 
-	 * Linearly interpolates both the height and width of a node simultaneously 
-	 * to achieve the affect of interpolating the size.
-	 *
-	 */
-	class interpolateNodeSize implements FrameInterpolator {
-
-		public interpolateNodeSize(){
-
-		}
-
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-				int start, int stop, CyFrame[] cyFrameArray){
-
-			int framenum = stop-start;
-
-			for(long nodeid: idList){
-
-				//Get the node sizes and set up the size interpolation
-				double[] sizeOne = frameOne.getNodeSize(nodeid);
-				double[] sizeTwo = frameTwo.getNodeSize(nodeid);
-
-				if (sizeOne == null && sizeTwo == null) {
-					continue;
-				}
-
-				if (sizeOne == null && sizeTwo != null) {
-					sizeOne = new double[2];
-					sizeOne[0] = sizeTwo[0];
-					sizeOne[1] = sizeTwo[1];
-				}
-
-				if (sizeOne != null && sizeTwo == null) {
-					sizeTwo = new double[2];
-					sizeTwo[0] = sizeOne[0];
-					sizeTwo[1] = sizeOne[1];
-				}
-				
-				
-				if (sizeOne[0] == sizeTwo[0] && sizeOne[1] == sizeTwo[1]) {
-					for(int k=1; k<framenum; k++){
-						cyFrameArray[start+k].setNodeSize(nodeid, sizeOne);
-					}
-					continue;
-				}
-
-				double sizeIncXlength = (sizeTwo[0] - sizeOne[0])/framenum;
-				double sizeIncYlength = (sizeTwo[1] - sizeOne[1])/framenum;
-				double[] sizeXArray = new double[framenum+1];
-				double[] sizeYArray = new double[framenum+1];
-				sizeXArray[1] = sizeOne[0] + sizeIncXlength;
-				sizeYArray[1] = sizeOne[1] + sizeIncYlength;
-					
-				for(int k=1; k<framenum; k++){
-					sizeXArray[k+1] = sizeXArray[k] + sizeIncXlength;
-					sizeYArray[k+1] = sizeYArray[k] + sizeIncYlength;
-					double[] temp = {sizeXArray[k], sizeYArray[k]};
-					cyFrameArray[start+k].setNodeSize(nodeid, temp);
-				}	
-
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	/**
-	 * 
-	 * Linearly interpolates the node border width.
-	 *
-	 */
-	class interpolateNodeBorderWidth implements FrameInterpolator {
-
-		public interpolateNodeBorderWidth(){
-
-		}
-
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-				int start, int stop, CyFrame[] cyFrameArray){
-
-			int framenum = stop-start;	
-
-			for(long nodeid: idList){
-
-				//get the border widths of the node from each of the two frames
-				double widthOne = frameOne.getNodeBorderWidth(nodeid);
-				double widthTwo = frameTwo.getNodeBorderWidth(nodeid);
-				
-				
-				//if (widthOne == null) sizeOne = new Integer(1);
-				//if (widthTwo == null) sizeTwo = new Integer(1);
-				
-				
-				if (widthOne == widthTwo) {
-					for(int k=1; k<framenum; k++){
-						cyFrameArray[start+k].setNodeBorderWidth(nodeid, widthOne);
-					}
-					continue;
-				}
-
-				double widthInclength = (widthTwo - widthOne)/framenum;
-				double[] widthArray = new double[framenum+1];
-				widthArray[1] = widthOne + widthInclength;
-					
-				for(int k=1; k<framenum; k++){
-					widthArray[k+1] = widthArray[k] + widthInclength;
-					cyFrameArray[start+k].setNodeBorderWidth(nodeid, widthArray[k]);
-				}	
-
-			}
-			return cyFrameArray;
-		}
-	}
-
-	/**
-	 * Linearly interpolate node border color
-	 * @author Allan Wu
-	 *
-	 */
-	class interpolateNodeBorderColor implements FrameInterpolator {
-		
-		public interpolateNodeBorderColor() {}
-		
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne,
-				CyFrame frameTwo, int start, int end, CyFrame[] cyFrameArray) {
-
-			int framenum = (end-start) - 1;	
-	
-			for(long nodeid: idList)
-			{
-				Color colorOne = frameOne.getNodeBorderColor(nodeid);
-				Color colorTwo = frameTwo.getNodeBorderColor(nodeid);
-				if(colorOne != null || colorTwo != null) {
-					if (colorOne == colorTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderColor(nodeid, colorOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderColor(nodeid, paints[k]);
-						}	
-					}
-				}
-				Integer transOne = frameOne.getNodeBorderTrans(nodeid);
-				Integer transTwo = frameTwo.getNodeBorderTrans(nodeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne);
-						}	
-					} else {
-						double sizeInc = ((double) transTwo - (double) transOne) / ((double) framenum), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeBorderTrans(nodeid, transOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
-			}	
-			return cyFrameArray;
-		}
-	}
-
-	/**
-	 * 
-	 * Linearly interpolates label size and color
-	 *
-	 */
-	class interpolateNodeLabel implements FrameInterpolator {
-
-		public interpolateNodeLabel() {
-
-		}
-
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-				                         int start, int stop, CyFrame[] cyFrameArray){
-
-			int framenum = (stop-start) - 1;	
-	
-			for(long nodeid: idList)
-			{
-				Color colorOne = frameOne.getNodeLabelColor(nodeid);
-				Color colorTwo = frameTwo.getNodeLabelColor(nodeid);
-				if(colorOne != null || colorTwo != null) {
-					if (colorOne == colorTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelColor(nodeid, colorOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelColor(nodeid, paints[k]);
-						}	
-					}
-				}
-				Integer sizeOne = frameOne.getNodeLabelFontSize(nodeid);
-				Integer sizeTwo = frameTwo.getNodeLabelFontSize(nodeid);
-				if(sizeOne != null || sizeTwo != null) {
-					if (sizeOne == sizeTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne);
-						}	
-					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelFontSize(nodeid, sizeOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
-				Integer transOne = frameOne.getNodeLabelTrans(nodeid);
-				Integer transTwo = frameTwo.getNodeLabelTrans(nodeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne);
-						}	
-					} else {
-						double sizeInc = ((double) transTwo - (double) transOne) / ((double) (framenum + 1)), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setNodeLabelTrans(nodeid, transOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
-			}	
-			return cyFrameArray;
-		}
-	}
-
-	/**
-	 * Interpolates edgeColor using the interpolateColor() method.
-	 */
-	class interpolateEdgeColor implements FrameInterpolator {
-		
-		public interpolateEdgeColor(){
-			
-		}
-	
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is in this case a list of EdgeViews
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = (stop-start) - 1;	
-
-			for(long edgeid: idList){
-				
-				Color colorOne = frameOne.getEdgeColor(edgeid);
-				Color colorTwo = frameTwo.getEdgeColor(edgeid);
-				if(colorOne != null || colorTwo != null) {
-
-					// Handle missing (or appearing) nodes
-					if (colorOne == null) 
-						colorOne = colorTwo;
-					else if (colorTwo == null)
-						colorTwo = colorOne;
-				
-					if (colorOne == colorTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeColor(edgeid, colorOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, false);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeColor(edgeid, paints[k]);
-						}
-					}
-				}
-				
-				Color colorStrokeOne = frameOne.getEdgeStrokeColor(edgeid);
-				Color colorStrokeTwo = frameTwo.getEdgeStrokeColor(edgeid);
-				if(colorStrokeOne != null || colorStrokeTwo != null) {
-
-					// Handle missing (or appearing) nodes
-					if (colorStrokeOne == null) 
-						colorStrokeOne = colorStrokeTwo;
-					else if (colorStrokeTwo == null)
-						colorStrokeTwo = colorStrokeOne;
-				
-					if (colorStrokeOne == colorStrokeTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeStrokeColor(edgeid, colorStrokeOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorStrokeOne, colorStrokeTwo, framenum, false);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeStrokeColor(edgeid, paints[k]);
-						}
-					}
-				}
-			}
-			return cyFrameArray;
-		}
-	}
-		
-	
-	/**
-	 * Linearly interpolates the edge opacity.
-	 */
-	class interpolateEdgeOpacity implements FrameInterpolator {
-		public interpolateEdgeOpacity(){
-			
-		}
-		
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is in this case a list of EdgeViews
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = (stop-start) - 1;	
-		
-			for(long edgeid: idList){
-				
-				//Get the node transparencies and set up the transparency interpolation
-				Double transOne;
-				Double transTwo;
-				
-				if (frameOne.getEdgeOpacity(edgeid) == null) transOne = new Double(0);
-				else transOne = new Double(frameOne.getEdgeOpacity(edgeid));
-				if (frameTwo.getEdgeOpacity(edgeid) == null) transTwo = new Double(0);
-				else transTwo = new Double(frameTwo.getEdgeOpacity(edgeid));
-
-				if (transOne.intValue() == transTwo.intValue()) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeOpacity(edgeid, transOne.intValue());
-					}
-				} else {
-					double transIncLength = ((double)(transTwo - transOne))/((double)(framenum + 1));
-					double[] transArray = new double[framenum+2];
-					transArray[1] = transOne + transIncLength;
-					
-					for(int k=1; k<framenum+1; k++){
-						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setEdgeOpacity(edgeid, (int)transArray[k]);
-					}
-				}
-				
-				//Get the node transparencies and set up the transparency interpolation
-				Double transStrokeOne = new Double(frameOne.getEdgeStrokeOpacity(edgeid));
-				Double transStrokeTwo = new Double(frameTwo.getEdgeStrokeOpacity(edgeid));
-				
-				if (transStrokeOne == null) transStrokeOne = new Double(0);
-				if (transStrokeTwo == null) transStrokeTwo = new Double(0);
-
-				if (transStrokeOne.intValue() == transStrokeTwo.intValue()) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, transStrokeOne.intValue());
-					}
-				} else {
-					double transIncLength = ((double)(transStrokeTwo - transStrokeOne))/((double)(framenum + 1));
-					double[] transArray = new double[framenum+2];
-					transArray[1] = transStrokeOne + transIncLength;
-					
-					for(int k=1; k<framenum+1; k++){
-						transArray[k+1] = transArray[k] + transIncLength;
-						cyFrameArray[start+k].setEdgeStrokeOpacity(edgeid, (int)transArray[k]);
-					}
-				}
-				
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	/**
-	 * 
-	 * Linearly interpolates the edge line width.
-	 *
-	 */
-	class interpolateEdgeWidth implements FrameInterpolator {
-
-		public interpolateEdgeWidth(){
-
-		}
-		/**
-		 * 
-		 * 
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-				int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = (stop-start) - 1;	
-		
-			for(long edgeid: idList){
-				
-				//get the edge widths of the edge from each of the two frames
-				double widthOne = frameOne.getEdgeWidth(edgeid);
-				double widthTwo = frameTwo.getEdgeWidth(edgeid);
-				
-				
-				//if (widthOne == null) sizeOne = new Integer(1);
-				//if (widthTwo == null) sizeTwo = new Integer(1);
-				
-				
-				if (widthOne == widthTwo) {
-					for(int k=1; k<framenum+1; k++){
-						cyFrameArray[start+k].setEdgeWidth(edgeid, widthOne);
-					}
-					continue;
-				}
-
-				double widthInclength = (widthTwo - widthOne)/(framenum + 1);
-				double[] widthArray = new double[framenum+2];
-				widthArray[1] = widthOne + widthInclength;
-					
-				for(int k=1; k<framenum+1; k++){
-					widthArray[k+1] = widthArray[k] + widthInclength;
-					cyFrameArray[start+k].setEdgeWidth(edgeid, widthArray[k]);
-				}	
-
-			}
-			return cyFrameArray;
-		}
-	}
-
-	/**
-	 * 
-	 * Linearly interpolates label size and color
-	 *
-	 */
-	class interpolateEdgeLabel implements FrameInterpolator {
-
-		public interpolateEdgeLabel(){
-
-		}
-
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-				                         int start, int stop, CyFrame[] cyFrameArray){
-
-			int framenum = (stop-start) - 1;	
-	
-			for(long edgeid: idList)
-			{
-				Color colorOne = frameOne.getEdgeLabelColor(edgeid);
-				Color colorTwo = frameTwo.getEdgeLabelColor(edgeid);
-				if(colorOne != null || colorTwo != null) {
-					if (colorOne == colorTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelColor(edgeid, colorOne);
-						}	
-					} else {
-						Color[] paints = interpolateColor(colorOne, colorTwo, framenum, true);
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelColor(edgeid, paints[k]);
-						}	
-					}
-				}
-				Integer sizeOne = frameOne.getEdgeLabelFontSize(edgeid);
-				Integer sizeTwo = frameTwo.getEdgeLabelFontSize(edgeid);
-				if(sizeOne != null || sizeTwo != null) {
-					if (sizeOne == sizeTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne);
-						}	
-					} else {
-						double sizeInc = ((double) sizeTwo - (double) sizeOne)/ ((double) framenum + 1), sizeIncrease = sizeInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelFontSize(edgeid, sizeOne + (int) sizeIncrease);
-							sizeIncrease += sizeInc;
-						}	
-					}
-				}
-				Integer transOne = frameOne.getEdgeLabelTrans(edgeid);
-				Integer transTwo = frameTwo.getEdgeLabelTrans(edgeid);
-				if(transOne != null || transTwo != null) {
-					if (transOne == transTwo) {
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne);
-						}	
-					} else {
-						int transInc = (transTwo - transOne)/ (framenum + 1), transIncrease = transInc;
-	
-						for(int k=1; k<framenum+1; k++){
-							cyFrameArray[start+k].setEdgeLabelTrans(edgeid, transOne + transIncrease);
-							transIncrease += transInc;
-						}	
-					}
-				}
-			}	
-			return cyFrameArray;
-		}
-	}
-
-	
-	/**
-	 * Linearly interpolates the network zoom.
-	 * 
-	 */
-	class interpolateNetworkZoom implements FrameInterpolator {
-		
-		public interpolateNetworkZoom(){
-			
-		}
-	
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is not used in this case 
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = stop-start;
-			
-			double[] zoomValues = new double[framenum+1];
-		//	zoomValues[0] = 0;
-			zoomValues[0] = frameOne.getZoom();
-			zoomValues[framenum] = frameTwo.getZoom();
-			double zoomInc = Math.abs(frameOne.getZoom() - frameTwo.getZoom())/framenum;
-			
-			for(int k=1; k<framenum; k++){
-				
-				
-				if(frameOne.getZoom() < frameTwo.getZoom()){
-					zoomValues[k] = zoomValues[k-1] + zoomInc;
-				}else{
-					zoomValues[k] = zoomValues[k-1] - zoomInc;
-				}
-				
-				cyFrameArray[start+k].setZoom(zoomValues[k]);
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	
-	
-	class interpolateNetworkColor implements FrameInterpolator {
-		
-		public interpolateNetworkColor(){
-			
-		}
-	
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is not used in this case
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-		                             int start, int stop, CyFrame[] cyFrameArray){
-	
-			int framenum = (stop-start) - 1;
-			
-			Color colorOne = (Color)frameOne.getBackgroundPaint();
-			Color colorTwo = (Color)frameTwo.getBackgroundPaint();
-			Color[] paints = interpolateColor(colorOne, colorTwo, framenum, false);
-			
-			for(int k=1; k<framenum+1; k++){
-				cyFrameArray[start+k].setBackgroundPaint(paints[k]);
-			}
-			return cyFrameArray;
-		}
-	}
-	
-	class interpolateNetworkCenter implements FrameInterpolator {
-	
-		public interpolateNetworkCenter(){}
-		
-		/**
-		 * Performs the interpolation.
-		 *  
-		 * @param idList is not used in this case
-		 * @param frameOne is the frame to be interpolated from
-		 * @param frameTwo is the frame to be interpolated to
-		 * @param start is the starting position of the frame in the CyFrame array
-		 * @param end is the ending positiong of the interpolation in the CyFrame array
-		 * @param cyFrameArray is the array of CyFrames which gets populated with the interpolated data
-		 * @return the array of CyFrames filled with interpolated node position data
-		 */
-		public CyFrame[] interpolate(List<Long> idList, CyFrame frameOne, CyFrame frameTwo, 
-                int start, int stop, CyFrame[] cyFrameArray){
-			
-			int framenum = stop-start;
-			
-			double xone = frameOne.getCenterPoint().getX();
-			double yone = frameOne.getCenterPoint().getY();
-			double zone = frameOne.getCenterPoint().getZ();
-			
-			double xtwo = frameTwo.getCenterPoint().getX();
-			double ytwo = frameTwo.getCenterPoint().getY();
-			double ztwo = frameTwo.getCenterPoint().getZ();
-			
-			double incrementLength = (xtwo - xone)/framenum;
-			double[] xArray = new double[framenum+1];
-			xArray[0] = xone;
-
-			for(int k=1; k<framenum; k++){
-
-				Point3D xy = new Point3D(0, 0, 0);
-				
-				xArray[k] = xArray[k-1] + incrementLength;
-				//xy.setLocation(xArray[k], arg1)[0] = xArray[k];
-
-				//Do the position interpolation
-				if((xtwo - xone) == 0){
-					xy.setLocation(xArray[k], yone, zone);
-				}else{
-
-					double y = yone + ((xArray[k] - xone)*((ytwo-yone)/(xtwo -xone)));
-					double z = zone + ((xArray[k] - xone)*((ztwo-zone)/(xtwo -xone)));
-					xy.setLocation(xArray[k], y, z);
-				}
-
-				cyFrameArray[start+k].setCenterPoint(xy);
-			}
-			
-			return cyFrameArray;
-		}
-		
-	}
-}	
+}

@@ -4,7 +4,7 @@
 	<properties>
 		<bundle.symbolicName>CyAnimator</bundle.symbolicName>
 		<bundle.namespace>edu.ucsf.rbvi.CyAnimator.internal</bundle.namespace>
-		<cytoscape.api.version>3.1.0</cytoscape.api.version>
+		<cytoscape.api.version>3.2.0</cytoscape.api.version>
 		
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
 		<osgi.api.version>4.2.0</osgi.api.version>
@@ -15,7 +15,7 @@
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 
 	<build>
 		<plugins>
@@ -31,6 +31,9 @@
 						<Export-Package>!${bundle.namespace}.*</Export-Package>
 						<Private-Package>${bundle.namespace}.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
+						<Embed-Dependency>*;scope=!provided</Embed-Dependency>
+						<Embed-Transitive>true</Embed-Transitive>
+						<Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -73,6 +76,10 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
+                <repository>
+                        <id>xuggle repo</id>
+                        <url>http://xuggle.googlecode.com/svn/trunk/repo/share/java/</url>
+                </repository>
 	</repositories>
 
 	<dependencies>
@@ -80,61 +87,73 @@
 			<groupId>org.cytoscape</groupId>
 			<artifactId>model-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>command-executor-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>group-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>application-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>core-task-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>viewmodel-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>layout-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>presentation-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>work-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>service-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>io-api</artifactId>
 			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.logging</groupId>
@@ -147,6 +166,17 @@
 			<artifactId>org.osgi.core</artifactId>
 			<version>${osgi.api.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>xuggle</groupId>
+			<artifactId>xuggle-xuggler</artifactId>
+			<version>5.4</version>
+			<optional>true</optional>
+		</dependency>
+                <dependency>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-io</artifactId>
+                        <version>1.3.2</version>
+                </dependency>
 	</dependencies>
 
 </project>
