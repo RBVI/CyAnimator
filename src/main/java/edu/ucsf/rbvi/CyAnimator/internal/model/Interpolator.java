@@ -39,13 +39,13 @@ public class Interpolator {
 	 */
 	List<FrameInterpolator> nodeInterpolators = new ArrayList<FrameInterpolator>();
 	List<FrameInterpolator> edgeInterpolators = new ArrayList<FrameInterpolator>();	
-        List<FrameInterpolator> annotationInterpolators = new ArrayList<FrameInterpolator>();
+	List<FrameInterpolator> annotationInterpolators = new ArrayList<FrameInterpolator>();
 	List<FrameInterpolator> networkInterpolators = new ArrayList<FrameInterpolator>();
 	
 	public Interpolator(){
 		
 		//add any desired interpolators to their respective interpolator lists
-                nodeInterpolators.add(new interpolateNodeShape());
+		nodeInterpolators.add(new interpolateNodeShape());
 		nodeInterpolators.add(new interpolateNodePosition());
 		nodeInterpolators.add(new interpolateNodeColor());
 		nodeInterpolators.add(new interpolateNodeBorderColor());
@@ -58,14 +58,14 @@ public class Interpolator {
 		edgeInterpolators.add(new interpolateEdgeOpacity());
 		edgeInterpolators.add(new interpolateEdgeWidth());
 		edgeInterpolators.add(new interpolateEdgeLabel());
-                edgeInterpolators.add(new interpolateEdgeArrowShape());
-                
-                annotationInterpolators.add(new interpolateAnnotationsPosition());
-                annotationInterpolators.add(new interpolateAnnotationsSize());
-                annotationInterpolators.add(new interpolateAnnotationsColor());
-                annotationInterpolators.add(new interpolateAnnotationsText());
+		edgeInterpolators.add(new interpolateEdgeArrowShape());
 
-                networkInterpolators.add(new interpolateNetworkTitle());
+		annotationInterpolators.add(new interpolateAnnotationsPosition());
+		annotationInterpolators.add(new interpolateAnnotationsSize());
+		annotationInterpolators.add(new interpolateAnnotationsColor());
+		annotationInterpolators.add(new interpolateAnnotationsText());
+
+		networkInterpolators.add(new interpolateNetworkTitle());
 		networkInterpolators.add(new interpolateNetworkZoom());
 		networkInterpolators.add(new interpolateNetworkColor());
 		networkInterpolators.add(new interpolateNetworkCenter());
@@ -86,19 +86,19 @@ public class Interpolator {
 		int framecount = frameList.size();
 		
 		//add on the number of frames to be interpolated
-		for(int i=0; i<frameList.size()-1; i++){ 
+		for(int i=1; i<frameList.size(); i++){ 
 			
 			//each frame contains the number of frames which will be interpolated after it which is the interCount
 			framecount = framecount + frameList.get(i).getInterCount() - 1;
 		}
-		
+
 		//create the main CyFrame array which will then be run through all of the interpolators
 		CyFrame[] cyFrameArray = new CyFrame[framecount]; //(frameList.size()-1)*framecount + 1];
 
 		//initialize the CyFrame array
 		for(int i=0; i<cyFrameArray.length; i++){
 			cyFrameArray[i] = new CyFrame(frameList.get(0).getBundleContext());
-                        cyFrameArray[i].populate();
+			cyFrameArray[i].populate();
 		}
 
 		int start = 0;
@@ -115,7 +115,7 @@ public class Interpolator {
 		for(int i=0; i < frameList.size()-1; i++) {
 			
 			//set framecount for this round of interpolation
-			framecount = frameList.get(i).getInterCount();
+			framecount = frameList.get(i+1).getInterCount();
 			
 			//set ending point for frames to be made
 			end = start + framecount;
@@ -124,20 +124,20 @@ public class Interpolator {
 			cyFrameArray[start] = frameList.get(i);
 			List<CyNode> nodeList = nodeViewUnionize(frameList.get(i), frameList.get(i+1));
 			List<CyEdge> edgeList = edgeViewUnionize(frameList.get(i), frameList.get(i+1));
-                        List<Annotation> annotationList = annotationUnionize(frameList.get(i), frameList.get(i+1));
-                                                
+			List<Annotation> annotationList = annotationUnionize(frameList.get(i), frameList.get(i+1));
+
 			List<Long> nodeIdList = nodeIdUnionize(frameList.get(i), frameList.get(i+1));
 			List<Long> edgeIdList = edgeIdUnionize(frameList.get(i), frameList.get(i+1));
-                        List<Long> annotationIdList = annotationsIdUnionize(frameList.get(i), frameList.get(i+1));
+			List<Long> annotationIdList = annotationsIdUnionize(frameList.get(i), frameList.get(i+1));
 
-                        //reset the nodeLists once the unionizer has updated them
+      //reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
 				cyFrameArray[k].setNodeList(nodeList);
 				cyFrameArray[k].setEdgeList(edgeList);
-                                cyFrameArray[k].setAnnotationList(annotationList);
+				cyFrameArray[k].setAnnotationList(annotationList);
 			}
-                        
-                        //reset the nodeLists once the unionizer has updated them
+
+      //reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
 				cyFrameArray[k].setNodeIdList(nodeIdList);
 				cyFrameArray[k].setEdgeIdList(edgeIdList);
@@ -160,7 +160,7 @@ public class Interpolator {
 				                                  start, end, cyFrameArray);
 			}
 
-                        for(FrameInterpolator interp: annotationInterpolators){
+			for(FrameInterpolator interp: annotationInterpolators){
 				cyFrameArray = interp.interpolate(annotationIdList, frameList.get(i), frameList.get(i+1), 
 				                                  start, end, cyFrameArray);
 			}

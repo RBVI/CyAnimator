@@ -1,5 +1,6 @@
 package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
+import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
@@ -16,7 +17,8 @@ public class CyAnimatorDialogTask extends AbstractTask {
 	
 	@Override
 	public void run(TaskMonitor arg0) throws Exception {
-		CyAnimatorDialog dialog = new CyAnimatorDialog(bc);
+		CySwingApplication swingApplication = bc.getService(CySwingApplication.class);
+		CyAnimatorDialog dialog = new CyAnimatorDialog(bc, swingApplication.getJFrame());
 		dialog.actionPerformed(null);
 	}
 

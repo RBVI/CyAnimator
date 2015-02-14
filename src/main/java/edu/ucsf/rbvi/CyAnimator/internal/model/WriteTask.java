@@ -18,16 +18,16 @@ public class WriteTask extends AbstractTask {
 	boolean canceled = false;
 	String title;
 	String directory;
-        int videoType;
-        int videoResolution;
+	int videoType;
+	int videoResolution;
 
 	public WriteTask(FrameManager frameManager, String title, String directory, int videoType, int videoResolution) {
 		super();
 		this.frameManager = frameManager;
 		this.title = title;
 		this.directory = directory;
-                this.videoType = videoType;
-                this.videoResolution = videoResolution;
+		this.videoType = videoType;
+		this.videoResolution = videoResolution;
 	}
 
 	public String getTitle() {
@@ -40,9 +40,9 @@ public class WriteTask extends AbstractTask {
 		String curDir = System.getProperty("user.dir");
 		curDir = directory;
 
-                if(videoType != 0){
-                    curDir += "/.CyAnimator";
-                }
+		if(videoType != 0){
+		    curDir += "/.CyAnimator";
+		}
 
 		//assigns the output directory, for now it is by default cytoscape/outputImgs
 		File file = new File(curDir); //+"/outputImgs");
@@ -53,7 +53,7 @@ public class WriteTask extends AbstractTask {
 		}
 
 		monitor.showMessage(Level.INFO, "Writing frames");
-		monitor.setProgress(0.0);;
+		monitor.setProgress(0.0);
 
 		for(int i=0; i<this.frameManager.frames.length; i++) {
 			DecimalFormat frame = new DecimalFormat("#000");
@@ -78,21 +78,23 @@ public class WriteTask extends AbstractTask {
 				monitor.showMessage(Level.ERROR, "Failed to write file "+name);
 				return;
 			}
-			monitor.setProgress((i*100)/this.frameManager.frames.length);
+			monitor.setProgress(((double)i)/((double)this.frameManager.frames.length));
 		}
-                
-                for (CyFrame frame : this.frameManager.frames) {
-                    frame.clearDisplay();
-                }
+		
+		for (CyFrame frame : this.frameManager.frames) {
+		    frame.clearDisplay();
+		}
 
-                if(videoType == 1){
-                    GifSequenceWriter wr = new GifSequenceWriter();
-                    wr.createGIF(curDir, directory, this.frameManager.fps);
-                    FileUtils.deleteDirectory(file);
-                }else if ( videoType == 2 ){
-                    VideoCreator vc = new VideoCreator(curDir, directory, this.frameManager.fps);
-                    vc.CreateVideo();
-                    FileUtils.deleteDirectory(file);
-                }
+		if(videoType == 1){
+				monitor.showMessage(Level.INFO, "Creating animated GIF");
+		    GifSequenceWriter wr = new GifSequenceWriter();
+		    wr.createGIF(curDir, directory, this.frameManager.fps);
+		    FileUtils.deleteDirectory(file);
+		}else if ( videoType == 2 ){
+				monitor.showMessage(Level.INFO, "Creating MP4 Video");
+		    VideoCreator vc = new VideoCreator(curDir, directory, this.frameManager.fps);
+		    vc.CreateVideo();
+		    FileUtils.deleteDirectory(file);
+		}
 	}
 }
