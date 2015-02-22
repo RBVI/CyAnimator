@@ -15,6 +15,6 @@ public class CyAnimatorDialogTaskFactory extends AbstractNetworkViewTaskFactory 
 	
 	public TaskIterator createTaskIterator(CyNetworkView arg0) {
 		// TODO Auto-generated method stub
-		return new TaskIterator(new CyAnimatorDialogTask(bc));
+		return new TaskIterator(new CyAnimatorDialogTask(bc, arg0));
 	}
 }

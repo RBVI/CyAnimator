@@ -58,6 +58,7 @@ import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
 
 
@@ -80,7 +81,6 @@ public class CyAnimatorDialog extends JDialog
 	private JButton backwardButton;
 	private JButton recordButton;
 	private JButton browseButton;
-	private JButton saveButton;
 
 	private JComboBox choicesList;
 	private JComboBox resolutionsList;
@@ -115,12 +115,12 @@ public class CyAnimatorDialog extends JDialog
 	ArrayList<CyFrame> frameList;
 		   
 
-	public CyAnimatorDialog(CyServiceRegistrar bundleContext, JFrame frame){
+	public CyAnimatorDialog(CyServiceRegistrar bundleContext, CyNetwork network, JFrame frame){
 		super(frame);
 
 		this.setTitle("CyAnimator");
 		bc = bundleContext;
-		frameManager = new FrameManager(bc);
+		frameManager = FrameManager.getFrameManager(bc, network);
 
 
 		frameList = frameManager.getKeyFrameList();
@@ -140,12 +140,12 @@ public class CyAnimatorDialog extends JDialog
 	 * Create the control buttons, panels, and initialize the main JDialog.
 	 */
 	public void initialize(){
-		tabbedPane = new JTabbedPane();
+		// tabbedPane = new JTabbedPane();
 		mainPanel = new JPanel();
 		mainPanel.addPropertyChangeListener(this);
 
 		BoxLayout mainbox = new BoxLayout(mainPanel, BoxLayout.Y_AXIS);
-		mainPanel.setLayout(mainbox);		
+		mainPanel.setLayout(mainbox);	
 
 		captureButton = new JButton("Add Frame");
 		captureButton.addActionListener(this);
@@ -154,7 +154,7 @@ public class CyAnimatorDialog extends JDialog
 		ImageIcon playIcon = createImageIcon("/images/play.png", "Play Button");
 		playButton = new JButton(playIcon);
 		playButton.addActionListener(this);
-		playButton.setActionCommand("play");	
+		playButton.setActionCommand("play");
 
 		ImageIcon stopIcon = createImageIcon("/images/stop.png", "Stop Button");
 		stopButton = new JButton(stopIcon);
@@ -191,13 +191,7 @@ public class CyAnimatorDialog extends JDialog
 		browseButton.addActionListener(this);
 		browseButton.setActionCommand("browse");
 		browseButton.setToolTipText("Browse Directory to Save Video");
-			
-			saveButton = new JButton("Save");
-			saveButton.setSize(new Dimension(100, 30));
-		saveButton.addActionListener(this);
-		saveButton.setActionCommand("save");
-		saveButton.setToolTipText("Save Settings");
-			
+		
 		speedSlider = new JSlider(1,60);
 
 		speedSlider.addChangeListener(new SliderListener());
@@ -219,8 +213,8 @@ public class CyAnimatorDialog extends JDialog
 
 		updateThumbnails(); 
 		mainPanel.add(framePane);
-							
-			String[] choices = { "Frames" , "GIF", "MP4"};
+						
+			String[] choices = { "Frames" , "GIF", "MP4", "MOV/H264"};
 			String[] resolutions = { "100", "200", "300", "400", "500"};
 			String[] frameCount = { "10", "20", "30", "40", "50"};
 
@@ -230,25 +224,21 @@ public class CyAnimatorDialog extends JDialog
 			choicesList.setSelectedIndex(1);
 			resolutionsList.setSelectedIndex(0);
 			frameCountList.setSelectedIndex(2);
-			
+
 			choicesList.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					saveButton.setEnabled(true);
-				}
-			});
-			resolutionsList.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					saveButton.setEnabled(true);
-				}
-			});
-			frameCountList.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					saveButton.setEnabled(true);
+					int type = choicesList.getSelectedIndex();
+					// No frames/second in just images
+					if (type == 0)
+						frameCountList.setEnabled(false);
+					else
+						frameCountList.setEnabled(true);
 				}
 			});
 
+		
 			settingPanel = new JPanel();
-			
+		
 			directorySettingPanel = new JPanel();
 			directorySettingPanel.setPreferredSize(new Dimension(600, 50));
 			directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -257,28 +247,27 @@ public class CyAnimatorDialog extends JDialog
 			directoryText.setText("");
 			directorySettingPanel.add(directoryText);
 			directorySettingPanel.add(browseButton);
-			
+		
 			outputSettingPanel = new JPanel();
 			outputSettingPanel.setPreferredSize(new Dimension(600, 100));
 			outputSettingPanel.setBorder(BorderFactory.createTitledBorder("Video Options"));
 			outputSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 			outputSettingPanel.add(new JLabel("Video Type: "));
 			outputSettingPanel.add(choicesList);
-			
+		
 			frameSettingPanel = new JPanel();
 			frameSettingPanel.setPreferredSize(new Dimension(600, 100));
 			frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
 			frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-			frameSettingPanel.add(new JLabel("Frame Per Second: "));
+			frameSettingPanel.add(new JLabel("Frames Per Second: "));
 			frameSettingPanel.add(frameCountList);
 			frameSettingPanel.add(new JLabel("Resolution: "));
 			frameSettingPanel.add(resolutionsList);
-			
+		
 			settingButtonPanel = new JPanel();
 			settingButtonPanel.setPreferredSize(new Dimension(600, 50));
 			settingButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-			settingButtonPanel.add(saveButton);
-			
+		
 			settingPanel.setPreferredSize(new Dimension(600, 200));
 			settingPanel.setLayout(new BoxLayout(settingPanel, BoxLayout.Y_AXIS));
 			settingPanel.add(directorySettingPanel);
@@ -288,9 +277,10 @@ public class CyAnimatorDialog extends JDialog
 		this.setSize(new Dimension(600,300));
 		this.setLocation(900, 100);
 
-			tabbedPane.addTab("Home",mainPanel);
-			tabbedPane.addTab("Settings", settingPanel);
-		setContentPane(tabbedPane);
+		setContentPane(mainPanel);
+		// tabbedPane.addTab("Home",mainPanel);
+		// tabbedPane.addTab("Settings", settingPanel);
+		// setContentPane(tabbedPane);
 	}
 
 
@@ -322,23 +312,18 @@ public class CyAnimatorDialog extends JDialog
 			//move backwards one frame in the animation
 			frameManager.stepBackward();
 		} else if(command.equals("record")){
-			// save button is not required
-			settingPanel.remove(settingButtonPanel);
 			int result = JOptionPane.showConfirmDialog(this, 
 											 settingPanel,
 											 "Output Options",
 											 JOptionPane.OK_CANCEL_OPTION,
 											 JOptionPane.PLAIN_MESSAGE);
-			settingPanel.add(settingButtonPanel);
-			tabbedPane.addTab("Settings", settingPanel);
 			if (result != JOptionPane.OK_OPTION) return;
-					
+				
 			int choice = choicesList.getSelectedIndex();
 			int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
 			int frameCount = (frameCountList.getSelectedIndex() + 1)*10;
 			frameManager.updateSettings(frameCount, choice, resolution);
-			saveButton.setEnabled(false);
-				
+			
 			if( ! new File(filePath).exists() ){
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
 				int returnVal = fc.showSaveDialog(new JPanel());
@@ -361,13 +346,6 @@ public class CyAnimatorDialog extends JDialog
 				filePath = file.getPath();
 							directoryText.setText(filePath);
 			}
-					saveButton.setEnabled(true);
-		} else if(command.equals("save")){					
-			int choice = choicesList.getSelectedIndex();
-			int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
-			int frameCount = (frameCountList.getSelectedIndex() + 1)*10;
-			frameManager.updateSettings(frameCount, choice, resolution);
-			saveButton.setEnabled(false);
 		} else if (command.startsWith("interpolate")) {
 			//If event is fired from interpolation menu this matches the interpolation count.
 			Pattern interpolateCount = Pattern.compile("interpolate([0-9]+)_$");
@@ -397,8 +375,8 @@ public class CyAnimatorDialog extends JDialog
 			//thumbnailPopupIndex is set in PopupListener to the most recent thumbnail that was rightclicked
 			frameManager.deleteKeyFrame(thumbnailPopupIndex);
 
-			updateThumbnails();		
-		} else if(command.equals("move right")){	
+			updateThumbnails();	
+		} else if(command.equals("move right")){
 			//thumbnailPopupIndex is set in PopupListener to the most recent thumbnail that was rightclicked
 			int i = thumbnailPopupIndex;
 
@@ -410,7 +388,7 @@ public class CyAnimatorDialog extends JDialog
 			}
 
 			frameManager.setKeyFrameList(frameList);
-			updateThumbnails();		
+			updateThumbnails();	
 		} else if(command.equals("move left")){
 			int i = thumbnailPopupIndex;
 
@@ -418,12 +396,12 @@ public class CyAnimatorDialog extends JDialog
 			if(i != 0){
 				CyFrame tmp = frameList.get(i-1);
 				frameList.set(i-1, frameList.get(i));
-				frameList.set(i, tmp);	
-			}	
+				frameList.set(i, tmp);
+			}
 
 			frameManager.setKeyFrameList(frameList);
 			updateThumbnails();
-		}	
+		}
 		setVisible(true);
 	}
 
@@ -580,18 +558,18 @@ public class CyAnimatorDialog extends JDialog
 		public void stateChanged(ChangeEvent e) {
 			JSlider source = (JSlider)e.getSource();
 			if (!source.getValueIsAdjusting()) {
-				
+			
 				//fps is frames per second
 				int fps = (int)source.getValue();
 				//fps = fps/60;
 				int  f = fps*fps;
 				if(frameManager.timer == null){ return; }
 				// System.out.println("FPS: "+fps);
-				
+			
 				//timer delay is set in milliseconds, so 1000/fps gives delay per frame
 				frameManager.timer.setDelay(1000/fps);
-				
-			}	
+			
+			}
 		}
 	}
 
@@ -620,7 +598,7 @@ public class CyAnimatorDialog extends JDialog
 			startX = e.getX();
 			startY = e.getY();
 
-			//this.currFrameIndex = Integer.parseInt(e.getComponent().getName());	
+			//this.currFrameIndex = Integer.parseInt(e.getComponent().getName());
 		}
 
 

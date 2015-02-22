@@ -9,6 +9,8 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.TaskMonitor.Level;
 import org.apache.commons.io.FileUtils;
 
+import com.xuggle.xuggler.ICodec;
+
 public class WriteTask extends AbstractTask {
 	/**
 	 * 
@@ -92,7 +94,14 @@ public class WriteTask extends AbstractTask {
 		    FileUtils.deleteDirectory(file);
 		}else if ( videoType == 2 ){
 				monitor.showMessage(Level.INFO, "Creating MP4 Video");
-		    VideoCreator vc = new VideoCreator(curDir, directory, this.frameManager.fps);
+		    VideoCreator vc = new VideoCreator(ICodec.ID.CODEC_ID_MPEG4, curDir, 
+				                                   directory+"/video.mp4", this.frameManager.fps);
+		    vc.CreateVideo();
+		    FileUtils.deleteDirectory(file);
+		}else if ( videoType == 3 ){
+				monitor.showMessage(Level.INFO, "Creating H.264 Video");
+		    VideoCreator vc = new VideoCreator(ICodec.ID.CODEC_ID_H264, curDir, 
+				                                   directory+"/video.mov", this.frameManager.fps);
 		    vc.CreateVideo();
 		    FileUtils.deleteDirectory(file);
 		}

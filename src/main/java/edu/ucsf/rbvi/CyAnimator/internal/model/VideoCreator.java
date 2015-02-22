@@ -18,108 +18,120 @@ import java.io.*;
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
+import com.xuggle.xuggler.IRational;
 import java.text.DecimalFormat;
 
 public class VideoCreator {
-    private int IMAGE_WIDTH = 880, IMAGE_HEIGHT = 440;
-    
-    private double FRAME_RATE = 20;
-    
-    private String inputImgDirPath = "";
+	private int IMAGE_WIDTH = 880, IMAGE_HEIGHT = 440;
+	
+	private double FRAME_RATE = 20;
+	
+	private String inputImgDirPath = "";
 
-    private String outputFilename = "";
-    
-    public VideoCreator(String inputImgDirPath, String outputVideoPath, double frameRate){
-        this.inputImgDirPath = inputImgDirPath;
-        this.outputFilename = outputVideoPath + "/video.mp4";
-        this.FRAME_RATE = frameRate;
-    }
+	private String outputFilename = "";
 
-    public void CreateVideo() {
+	private ICodec.ID type;
+	
+	public VideoCreator(ICodec.ID videoType, String inputImgDirPath, 
+	                    String outputVideoPath, double frameRate){
+		this.inputImgDirPath = inputImgDirPath;
+		this.outputFilename = outputVideoPath;
+		this.FRAME_RATE = frameRate;
+		this.type = videoType;
+	}
+
+	public void CreateVideo() {
   // let's make a IMediaWriter to write the file.
-        final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
+		final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
-        long startTime = System.nanoTime();
-        
-        int filesCount = new File(inputImgDirPath).list().length;
-        DecimalFormat frame = new DecimalFormat("#000");
+		long startTime = System.nanoTime();
+		
+		int filesCount = new File(inputImgDirPath).list().length;
+		DecimalFormat frame = new DecimalFormat("#000");
 
 // get width and height of image for setting resolution of video - there can be better 
 // solution for getting these param
 
-        for (int index = 0; index < filesCount - 1; index++) {
+		for (int index = 0; index < filesCount - 1; index++) {
 
-            BufferedImage screen = null;
-            try {
-                screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
-                IMAGE_WIDTH = screen.getWidth();
-                IMAGE_HEIGHT = screen.getHeight();
-                break;
-            } catch (IOException e) {
-                continue;
-            }
-        }
+			BufferedImage screen = null;
+			try {
+				screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
+				IMAGE_WIDTH = screen.getWidth();
+				IMAGE_HEIGHT = screen.getHeight();
+				break;
+			} catch (IOException e) {
+				continue;
+			}
+		}
 
   // We tell it we're going to add one video stream, with id 0,
   // at position 0, and that it will have a fixed frame rate of FRAME_RATE.
-        writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, IMAGE_WIDTH, IMAGE_HEIGHT);
-        
-        for (int index = 0; index < filesCount - 1; index++) {
+		IRational rate = IRational.make(FRAME_RATE);
+		if (type == ICodec.ID.CODEC_ID_H264) {
+			if ((double)IMAGE_WIDTH%2 != 0)
+				IMAGE_WIDTH += 1;
+			if ((double)IMAGE_HEIGHT%2 != 0)
+				IMAGE_HEIGHT += 1;
+		}
+		writer.addVideoStream(0, 0, type, rate, IMAGE_WIDTH, IMAGE_HEIGHT);
+		
+		for (int index = 0; index < filesCount - 1; index++) {
 // read image
-            BufferedImage screen = null;
-            try {
-                screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
-            } catch (IOException e) {
-                System.out.println("Could not read image");
-                continue;
-            }
+			BufferedImage screen = null;
+			try {
+				screen = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
+			} catch (IOException e) {
+				System.out.println("Could not read image");
+				continue;
+			}
 
 // convert to the right image type
-            BufferedImage bgrScreen = convertToType(screen,
-                    BufferedImage.TYPE_3BYTE_BGR);
+			BufferedImage bgrScreen = convertToType(screen,
+				    BufferedImage.TYPE_3BYTE_BGR);
 
 // encode the image to stream #0
-            writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime,
-                    TimeUnit.NANOSECONDS);
+			writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime,
+				    TimeUnit.NANOSECONDS);
 
 // sleep for frame rate milliseconds
-            try {
+			try {
 
-                Thread.sleep((long) (1000 / FRAME_RATE));
+				Thread.sleep((long) (1000 / FRAME_RATE));
 
-            } catch (InterruptedException e) {
+			} catch (InterruptedException e) {
 
-    // ignore
-            }
+	// ignore
+			}
 
-        }
+		}
 
   // tell the writer to close and write the trailer if  needed
-        writer.close();
+		writer.close();
 
-    }
+	}
 
-    public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
+	public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
 
-        BufferedImage image;
+		BufferedImage image;
 
   // if the source image is already the target type, return the source image
-        if (sourceImage.getType() == targetType) {
+		if (sourceImage.getType() == targetType) {
 
-            image = sourceImage;
+			image = sourceImage;
 
-        } // otherwise create a new image of the target type and draw the new image
-        else {
+		} // otherwise create a new image of the target type and draw the new image
+		else {
 
-            image = new BufferedImage(sourceImage.getWidth(),
-                    sourceImage.getHeight(), targetType);
+			image = new BufferedImage(sourceImage.getWidth(),
+			                          sourceImage.getHeight(), targetType);
 
-            image.getGraphics().drawImage(sourceImage, 0, 0, null);
+			image.getGraphics().drawImage(sourceImage, 0, 0, null);
 
-        }
+		}
 
-        return image;
+		return image;
 
-    }
+	}
 
 }
