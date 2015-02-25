@@ -452,10 +452,11 @@ public class Interpolator {
 			}
 			
 			//create the new color and put it in the Color[]
-			if (includeAlpha)
+			if (includeAlpha) {
 				paints[k] = new Color((int) rArray[k+1], (int) gArray[k+1], (int) bArray[k+1], (int) aArray[k+1]);	
-			else
+			} else {
 				paints[k] = new Color((int) rArray[k+1], (int) gArray[k+1], (int) bArray[k+1]);	
+			}
 		}
 
 		return paints;

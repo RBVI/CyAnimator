@@ -235,6 +235,7 @@ public class CyFrame {
 			for (Annotation ann: annotationManager.getAnnotations(networkView)){
 				annotationList.add(ann);
 				annotationIdList.add((long) ann.hashCode());
+				// System.out.println("Added annotation: "+ann.toString()+" with ID: "+(long) ann.hashCode());
 			}
 		}
 
@@ -381,6 +382,7 @@ public class CyFrame {
 			Double x = new Double(ann.getArgMap().get(Annotation.X));
 			Double y = new Double(ann.getArgMap().get(Annotation.Y));
 			// System.out.println("ArgMap for annotation "+ann+"="+ann.getArgMap());
+			// System.out.println("Position for annotation "+ann+"("+ann.hashCode()+") "+"="+x.intValue()+","+y.intValue());
 			annotationPosMap.put( ann.hashCode(), new Point( x.intValue(), y.intValue() ) );
 			annotationZoomMap.put(ann.hashCode(), ann.getSpecificZoom());
 			if( ann instanceof BoundedTextAnnotation){

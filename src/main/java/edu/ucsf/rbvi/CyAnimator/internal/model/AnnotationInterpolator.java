@@ -126,6 +126,11 @@ class interpolateAnnotationsSize implements FrameInterpolator {
 			double fontSizeOne = frameOne.getAnnotationFontSize((int) annotationId);
 			double fontSizeTwo = frameTwo.getAnnotationFontSize((int) annotationId);
 
+			if (fontSizeOne == 0.0)
+				fontSizeOne = fontSizeTwo;
+			else if (fontSizeTwo == 0.0)
+				fontSizeTwo = fontSizeOne;
+
 			if( fontSizeOne == fontSizeTwo){
 				for(int k=1; k<framenum + 1; k++){
 					cyFrameArray[start+k].setAnnotationFontSize((int) annotationId, fontSizeTwo);
@@ -143,6 +148,11 @@ class interpolateAnnotationsSize implements FrameInterpolator {
 		for(long annotationId: idList){
 			double borderWidthOne = frameOne.getAnnotationBorderWidth((int) annotationId);
 			double borderWidthTwo = frameTwo.getAnnotationBorderWidth((int) annotationId);
+
+			if (borderWidthOne == 0.0)
+				borderWidthOne = borderWidthTwo;
+			else if (borderWidthTwo == 0.0)
+				borderWidthTwo = borderWidthOne;
 
 			if( borderWidthOne == borderWidthTwo){
 				for(int k=1; k<framenum + 1; k++){
@@ -162,25 +172,31 @@ class interpolateAnnotationsSize implements FrameInterpolator {
 			Dimension dimOne = frameOne.getAnnotationSize((int) annotationId);
 			Dimension dimTwo = frameTwo.getAnnotationSize((int) annotationId);
 
-			if (dimOne.equals(dimTwo)) {
-				for(int k=1; k<framenum + 1; k++){
-					cyFrameArray[start+k].setAnnotationSize((int) annotationId, dimTwo);
+			if (dimOne != null || dimTwo != null) {
+				if (dimOne == null)
+					dimOne = dimTwo;
+				if (dimTwo == null)
+					dimTwo = dimOne;
+
+				if (dimOne.equals(dimTwo)) {
+					for(int k=1; k<framenum + 1; k++){
+						cyFrameArray[start+k].setAnnotationSize((int) annotationId, dimTwo);
+					}
+				} else {
+					double widthInc = (dimTwo.getWidth() - dimOne.getWidth())/ (framenum + 1);
+					double heightInc = (dimTwo.getHeight() - dimOne.getHeight())/ (framenum + 1);
+
+					double height = dimOne.getHeight()+heightInc;
+					double width = dimOne.getWidth()+widthInc;
+
+					for (int k=1; k<framenum+1; k++) {
+						Dimension dim = new Dimension();
+						dim.setSize(width,height);
+						cyFrameArray[start+k].setAnnotationSize((int) annotationId, dim);
+						width += widthInc;
+						height += heightInc;
+					}
 				}
-			} else {
-				double widthInc = (dimTwo.getWidth() - dimOne.getWidth())/ (framenum + 1);
-				double heightInc = (dimTwo.getHeight() - dimOne.getHeight())/ (framenum + 1);
-
-				double height = dimOne.getHeight()+heightInc;
-				double width = dimOne.getWidth()+widthInc;
-
-				for (int k=1; k<framenum+1; k++) {
-					Dimension dim = new Dimension();
-					dim.setSize(width,height);
-					cyFrameArray[start+k].setAnnotationSize((int) annotationId, dim);
-					width += widthInc;
-					height += heightInc;
-				}
-
 			}
 		}
 
@@ -220,18 +236,12 @@ class interpolateAnnotationsColor implements FrameInterpolator {
 			Color colorTextTwo = frameTwo.getAnnotationTextColor((int) annotationId);
 
 			if (colorFillOne != null || colorFillTwo != null) {
-				if (colorFillOne == null) {
-					colorFillOne = colorFillTwo;
-				} else if (colorFillTwo == null) {
-					colorFillTwo = colorFillOne;
-				}
-
 				if (colorFillOne == colorFillTwo) {
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationFillColor((int) annotationId, colorFillOne);
 					}
 				} else {
-					Color[] paints = interpolateColor(colorFillOne, colorFillTwo, framenum, false);
+					Color[] paints = interpolateColor(colorFillOne, colorFillTwo, framenum, true);
 
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationFillColor((int) annotationId, paints[k]);
@@ -240,19 +250,12 @@ class interpolateAnnotationsColor implements FrameInterpolator {
 			}
 
 			if (colorBorderOne != null || colorBorderTwo != null) {
-				// Handle missing (or appearing) nodes
-				if (colorBorderOne == null) {
-					colorBorderOne = colorBorderTwo;
-				} else if (colorBorderTwo == null) {
-					colorBorderTwo = colorBorderOne;
-				}
-
 				if (colorBorderOne == colorBorderTwo) {
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationBorderColor((int) annotationId, colorBorderOne);
 					}
 				} else {
-					Color[] paints = interpolateColor(colorBorderOne, colorBorderTwo, framenum, false);
+					Color[] paints = interpolateColor(colorBorderOne, colorBorderTwo, framenum, true);
 
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationBorderColor((int) annotationId, paints[k]);
@@ -261,19 +264,12 @@ class interpolateAnnotationsColor implements FrameInterpolator {
 			}
 
 			if (colorTextOne != null || colorTextTwo != null) {
-				// Handle missing (or appearing) nodes
-				if (colorTextOne == null) {
-					colorTextOne = colorTextTwo;
-				} else if (colorTextTwo == null) {
-					colorTextTwo = colorTextOne;
-				}
-
 				if (colorTextOne == colorTextTwo) {
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationTextColor((int) annotationId, colorTextOne);
 					}
 				} else {
-					Color[] paints = interpolateColor(colorTextOne, colorTextTwo, framenum, false);
+					Color[] paints = interpolateColor(colorTextOne, colorTextTwo, framenum, true);
 
 					for (int k = 1; k < framenum + 1; k++) {
 						cyFrameArray[start + k].setAnnotationTextColor((int) annotationId, paints[k]);
