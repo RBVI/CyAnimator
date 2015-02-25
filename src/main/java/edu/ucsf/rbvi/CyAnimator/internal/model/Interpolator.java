@@ -368,12 +368,16 @@ public class Interpolator {
 	 */
 	public static Color[] interpolateColor(Color colorOne, Color colorTwo, int framenum, boolean includeAlpha){
 		Color[] paints = new Color[framenum+1];
+		boolean useBezier = false;
 
 		if (colorOne == null || colorTwo == null) {
-			if (colorOne == null)
+			if (colorOne == null) {
 				colorOne = new Color(colorTwo.getRed(), colorTwo.getGreen(), colorTwo.getBlue(), 0);
-			else
+			} else {
 				colorTwo = new Color(colorOne.getRed(), colorOne.getGreen(), colorOne.getBlue(), 0);
+			}
+			// Use Bezier interpolation for opacity -- it should face in slowly and fade out slowly
+			useBezier = true;
 		}
 
 		float red1 = colorOne.getRed(); 
@@ -416,6 +420,8 @@ public class Interpolator {
 		aArray[1] = alpha1 ;//+ aIncLen;
 		aArray[framenum+1] = alpha2;
 
+		if (includeAlpha && useBezier)
+			aArray = bezier(alpha1, alpha2, framenum);
 		
 		//fill the middle of the RGB arrays
 		for(int k=1; k<framenum+1; k++){
@@ -443,12 +449,14 @@ public class Interpolator {
 				}	
 			}
 
-			if(alpha1 < alpha2){	
-				aArray[k+1] = aArray[k] + aIncLen;
-			}else{
-				if((aArray[k] - aIncLen) > 0){
-					aArray[k+1] = aArray[k] - aIncLen;
-				}	
+			if (includeAlpha && !useBezier) {
+				if(alpha1 < alpha2){	
+					aArray[k+1] = aArray[k] + aIncLen;
+				}else{
+					if((aArray[k] - aIncLen) > 0){
+						aArray[k+1] = aArray[k] - aIncLen;
+					}	
+				}
 			}
 			
 			//create the new color and put it in the Color[]
@@ -460,6 +468,49 @@ public class Interpolator {
 		}
 
 		return paints;
+	}
+
+	/**
+	 * This method does a bezier interpolation between alpha1 and alpha2.  It
+	 * assumes that we're looking at a third point that's 3/4 of the way between
+	 * alpha1 and alpha2 with 1/4 of the value.
+	 */
+	public static float[] bezier(float alpha1, float alpha2, int framenum) {
+
+		float alpha3Y = Math.abs(alpha2-alpha1)*.25f;
+		float alpha3X;
+		float [] alphas = new float[framenum+2];
+		Arrays.fill(alphas, -1.0f);
+		alphas[0] = alpha1;
+		alphas[framenum+1] = alpha2;
+		if (alpha1 < alpha2) {
+			alpha3X = .75f;
+		} else {
+			alpha3X = .25f;
+		}
+
+		float tincr = 1.0f/((framenum+1)*2);
+		for (float t = tincr*2; t < 1.0; t = t + tincr) {
+			// Calculate the x and y values
+			float y = (1.0f-t)*(1.0f-t)*alpha1 + 2.0f*(1.0f-t)*t*alpha3Y + t*t*alpha2;
+			float x = 2.0f*(1.0f-t)*t*alpha3X + t*t; // alpha1X = 0.0; alpha2X = 1.0;
+			int index = (int)(x*(framenum+1));
+			// System.out.println("t = "+t+" x = "+x+" index = "+index+" y = "+y);
+			float alphav = alphas[index];
+			if (alphav != -1.0f)
+				alphas[index] = (y + alphav) / 2;
+			else
+				alphas[index] = y;
+		}
+
+		// Fill any missing values
+		for (int i = 1; i < framenum+1; i++) {
+			if (alphas[i] < 0.0f) {
+				alphas[i] = (alphas[i-1]+alphas[i+1])/2;
+			}
+		}
+
+		return alphas;
 	}
 
 }
