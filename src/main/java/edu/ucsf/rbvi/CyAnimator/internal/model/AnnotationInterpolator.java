@@ -308,6 +308,11 @@ class interpolateAnnotationsText implements FrameInterpolator {
 			String textOne = frameOne.getAnnotationText((int) annotationId);
 			String textTwo = frameTwo.getAnnotationText((int) annotationId);
 
+			if (textOne == null || textOne == "")
+				textOne = textTwo;
+			else if (textTwo == null || textTwo == "")
+				textTwo = textOne;
+
 			if (textOne == textTwo) {
 				for (int k = 1; k < framenum + 1; k++) {
 					cyFrameArray[start + k].setAnnotationText((int) annotationId, textTwo);

@@ -107,7 +107,7 @@ public class CyFrame {
 	private double width = 0;
 	private double height = 0;
 
-	private List<Annotation> currAnnotationList;
+	// private List<Annotation> currAnnotationList;
 	private List<Annotation> annotationList;
 	private HashMap<Integer, Point> annotationPosMap;
 	private HashMap<Integer, Color> annotationFillColorMap;
@@ -230,12 +230,22 @@ public class CyFrame {
 		}
 	
 		// Initialize our annotations list
-		currAnnotationList = annotationManager.getAnnotations(networkView);
+		List<Annotation> currAnnotationList = annotationManager.getAnnotations(networkView);
 		if(currAnnotationList != null){
-			for (Annotation ann: annotationManager.getAnnotations(networkView)){
+			for (Annotation ann: currAnnotationList){
+				if (ann instanceof ArrowAnnotation)
+					continue;
 				annotationList.add(ann);
 				annotationIdList.add((long) ann.hashCode());
 				// System.out.println("Added annotation: "+ann.toString()+" with ID: "+(long) ann.hashCode());
+			}
+			// Make sure Arrow annotations are after everything else
+			for (Annotation ann: currAnnotationList){
+				if (ann instanceof ArrowAnnotation) {
+					annotationList.add(ann);
+					annotationIdList.add((long) ann.hashCode());
+				// System.out.println("Added annotation: "+ann.toString()+" with ID: "+(long) ann.hashCode());
+				}
 			}
 		}
 
@@ -416,7 +426,8 @@ public class CyFrame {
 			}else if( ann instanceof ArrowAnnotation){
 				ArrowAnnotation aa = (ArrowAnnotation) ann;
 				annotationBorderColorMap.put(aa.hashCode(), (Color) aa.getLineColor());
-				annotationFillColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE));
+				annotationFillColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.TARGET));
+				annotationTextColorMap.put(aa.hashCode(), (Color) aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE));
 			}
 		}
 
@@ -644,20 +655,20 @@ public class CyFrame {
 		{
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
 			if (edgeView == null) {
-			// Add temporary edge to network for viewing the edge which is removed from current network
-			CyEdge artEdge = null;
-			if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
-				artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
-			} else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-				artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
-			} else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-				artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
-			} else {
-				continue;
-			}
-			currentView.updateView();
-			edgeView = currentView.getEdgeView(artEdge);
-			recordEdge.put(edge, artEdge);
+				// Add temporary edge to network for viewing the edge which is removed from current network
+				CyEdge artEdge = null;
+				if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
+				} else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
+				} else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
+				} else {
+					continue;
+				}
+				currentView.updateView();
+				edgeView = currentView.getEdgeView(artEdge);
+				recordEdge.put(edge, artEdge);
 			}
 
 			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
@@ -771,9 +782,7 @@ public class CyFrame {
 		}
 		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
 
-			//dview.setBounds(x, y, Math.round(ifc.getWidth()), Math.round(ifc.getHeight()));
-		//ifc.setBounds(arg0, arg1, arg2, arg3)
-	
+		List<Annotation> currAnnotationList = annotationManager.getAnnotations(networkView);
 		// hide annotation which were not present earlier
 		if( currAnnotationList != null){
 			for (Annotation ann : currAnnotationList) {
@@ -798,6 +807,7 @@ public class CyFrame {
 					} else if (ann instanceof ArrowAnnotation) {
 						ArrowAnnotation aa = (ArrowAnnotation) ann;
 						aa.setLineColor(transparent);
+						aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, transparent);
 						aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
 					}
 				}else{
@@ -819,7 +829,18 @@ public class CyFrame {
 					} else if (ann instanceof ArrowAnnotation) {
 						ArrowAnnotation aa = (ArrowAnnotation) ann;
 						aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
-						aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
+
+						// Special handling for arrow heads.  If we don't have a specific color, use the
+						// line color
+						if (annotationFillColorMap.get(aa.hashCode()) != null)
+							aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, annotationFillColorMap.get(aa.hashCode()));
+						else
+							aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, annotationBorderColorMap.get(aa.hashCode()));
+
+						if (annotationTextColorMap.get(aa.hashCode()) != null)
+							aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationTextColorMap.get(aa.hashCode()));
+						else
+							aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
 					}
 				}
 			}
@@ -880,7 +901,8 @@ public class CyFrame {
 			}else if( ann instanceof ArrowAnnotation){
 				ArrowAnnotation aa = (ArrowAnnotation) ann;
 				aa.setLineColor(annotationBorderColorMap.get(aa.hashCode()));
-				aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationFillColorMap.get(aa.hashCode()));
+				aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, annotationFillColorMap.get(aa.hashCode()));
+				aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationTextColorMap.get(aa.hashCode()));
 			}
 		}
 
@@ -1968,8 +1990,16 @@ public class CyFrame {
  	 */
 	public void writeImage(String fileName, final int videoResolution,final BooleanWrapper finished) throws IOException {
 		display();
+		// Make sure we let the renderer catch up
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		CyNetworkView view = appManager.getCurrentNetworkView();
-	
+
 		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			Map<String, Object> tunables = new HashMap<String, Object>();
@@ -1984,6 +2014,7 @@ public class CyFrame {
 			taskManager.execute(exportImageTaskFactory.createTaskIterator(view));
 			finished.setValue(true);
 		}
+		clearDisplay();
 	}
 
 	/**

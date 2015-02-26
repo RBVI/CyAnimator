@@ -451,8 +451,9 @@ public class CyAnimatorDialog extends JDialog
 			//put the image on the thumbnail button
 			JButton thumbnailButton = new JButton(ic);
 			thumbnailButton.addMouseListener(dragnDrop);
-			thumbnailButton.addActionListener(this);
-			thumbnailButton.setActionCommand(frame.getID());
+			// thumbnailButton.addActionListener(this);
+			// System.out.println("FrameID = "+frame.getID());
+			// thumbnailButton.setActionCommand(frame.getID());
 
 
 			//for some reason thumbnailButton.getWidth() returns 0 so I had
