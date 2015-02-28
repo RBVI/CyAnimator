@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyEdge;
@@ -126,7 +127,7 @@ public class CyFrame {
 	private CyServiceRegistrar bundleContext;
 	private CyApplicationManager appManager;
 	private AnnotationManager annotationManager;
-	private AnnotationFactory annotationFactory;
+	private final AnnotationFactory annotationFactory;
 	private CyNetworkView networkView = null;
 	private CyNetwork currentNetwork = null;
 	private CyTable nodeTable = null, edgeTable = null;
@@ -496,30 +497,65 @@ public class CyFrame {
 
 		// We want to use the current view in case we're interpolating
 		// across views
-		CyNetworkView currentView = appManager.getCurrentNetworkView();
+		final CyNetworkView currentView = appManager.getCurrentNetworkView();
 
+		// Make sure everything is on the EDT
+		try {
+		SwingUtilities.invokeAndWait( new Runnable () {
+			public void run() {
+				handleMissingEdges(currentView);
+				handleMissingNodes(currentView);
 
-		// First see if we have any views we need to remove
-		Collection<CyEdge> removeEdges = new ArrayList<CyEdge>();
-		CyTable curEdgeTable = currentView.getModel().getDefaultEdgeTable();
-		for (CyEdge ev: currentView.getModel().getEdgeList()) {
-			if (!edgeMap.containsKey(ev.getSUID()/*curEdgeTable.getRow(ev.getSUID()).get(CyNetwork.NAME, String.class)*/))
-				removeEdges.add(ev);
-		}
+				handleNodes(currentView);
+				handleEdges(currentView);
 
-		//currentView.getModel().removeEdges(removeEdges);
-		for (CyEdge edge : removeEdges) {
-			View<CyEdge> edgeView = currentView.getEdgeView(edge);
-			if (edgeView == null) {
-			continue;
+				handleNetwork(currentView);
+		
+				handleMissingAnnotations(currentView);
+				handleAnnotations(currentView);
+
+				currentView.updateView();
 			}
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
-			edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
-			currentView.updateView();
-		}
+		} );
+		} catch (Exception e) {}
+	}
 
+  /**
+	 * Removes temporarily added nodes and edges from network.
+	 *
+	 *
+	 */
+   public void clearDisplay(){
+	 final Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
+	 final Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
+	 for (CyEdge e: recordEdge.values() ){
+	   removeAddedEdges.add(e);
+	   removeAddedEdgesKeys.add(e.getSUID());
+	 }
+
+	 final Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
+	 final Collection<Long> removeAddedKeys = new ArrayList<Long>();
+	 for (CyNode n: record.values() ){
+	   removeAddedNodes.add(n);
+	   removeAddedKeys.add(n.getSUID());
+	 }
+
+		try {
+		SwingUtilities.invokeAndWait( new Runnable () {
+			public void run() {
+	 			CyNetwork network = appManager.getCurrentNetworkView().getModel();
+				network.removeEdges(removeAddedEdges);
+	 			network.getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
+
+	 			network.removeNodes(removeAddedNodes);
+	 			network.getDefaultNodeTable().deleteRows(removeAddedKeys);
+	 			appManager.getCurrentNetworkView().updateView();
+			}
+		} );
+		} catch(Exception e) {}
+  }
+
+	private void handleMissingNodes(final CyNetworkView currentView) {
 		// Initialize our edge view maps
 		List<CyNode> removeNodes = new ArrayList<CyNode>();
 		CyTable curNodeTable = currentView.getModel().getDefaultNodeTable();
@@ -529,260 +565,47 @@ public class CyFrame {
 			}
 		}
 
-		//currentView.getModel().removeNodes(removeNodes);
 		for (CyNode node : removeNodes) {
 			View<CyNode> nodeView = currentView.getNodeView(node);
 			if (nodeView == null) {
-			continue;
+				continue;
 			}
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
 			}
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
 			currentView.updateView();
 		}
+	}
 
-		for (CyNode node : nodeList) {
-			View<CyNode> nodeView = currentView.getNodeView(node);
-			if (nodeView == null) {
-			// Add temporary node to network for viewing the node which is removed from current network
-			CyNode artNode = currentView.getModel().addNode();
-			record.put(node, artNode);
-			currentView.updateView();
-			nodeView = currentView.getNodeView(artNode);
-			}
-
-			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
-
-			double[] xy = nodePosMap.get(nodeName);
-			Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
-			Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
-				// System.out.println("DISPLAY "+node+": "+xy[0]+"  "+xy[1]+", trans = "+trans);
-			//if(xy == null || nodeView == null){ continue; }
-
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Y_LOCATION)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_Y_LOCATION);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Z_LOCATION)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_Z_LOCATION);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
-
-			double[] size = nodeSizeMap.get(nodeName);
-
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_HEIGHT)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_HEIGHT);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_WIDTH)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_WIDTH);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
-
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_WIDTH)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_WIDTH);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_PAINT)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_PAINT);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
-
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_PAINT)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_PAINT);
-			}
-			if (p != null) {
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-			}
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_FILL_COLOR);
-			}
-			if (pFill != null) {
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), pFill.getGreen(), pFill.getBlue(), transFill));
-			}
-
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabelMap.get(nodeName));
-			Color labelColor = nodeLabelColMap.get(nodeName);
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
-				new Color(labelColor.getRed(),
-					labelColor.getGreen(), labelColor.getBlue()));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_TRANSPARENCY)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_TRANSPARENCY);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_SIZE)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
-			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_WIDTH)) {
-			nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_WIDTH);
-			}
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH, nodeLabelWidthMap.get(nodeName));
+	private void handleMissingEdges(final CyNetworkView currentView) {
+		// First see if we have any views we need to remove
+		Collection<CyEdge> removeEdges = new ArrayList<CyEdge>();
+		CyTable curEdgeTable = currentView.getModel().getDefaultEdgeTable();
+		for (CyEdge ev: currentView.getModel().getEdgeList()) {
+			if (!edgeMap.containsKey(ev.getSUID()/*curEdgeTable.getRow(ev.getSUID()).get(CyNetwork.NAME, String.class)*/))
+				removeEdges.add(ev);
 		}
 
-		for(CyEdge edge: getEdgeList())
-		{
+		for (CyEdge edge : removeEdges) {
 			View<CyEdge> edgeView = currentView.getEdgeView(edge);
 			if (edgeView == null) {
-				// Add temporary edge to network for viewing the edge which is removed from current network
-				CyEdge artEdge = null;
-				if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
-					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
-				} else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-					artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
-				} else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
-					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
-				} else {
-					continue;
-				}
-				currentView.updateView();
-				edgeView = currentView.getEdgeView(artEdge);
-				recordEdge.put(edge, artEdge);
-			}
-
-			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
-			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
-			if (p == null && pStroke == null) {
 				continue;
 			}
-			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
-
 			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
 			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
-			}
-			if (p != null) {
-				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
-			}
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
-			}
-			if (pStroke != null) {
-				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
-			}
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
+			currentView.updateView();
+		}
+	}
 
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
-			Color labelColor = edgeLabelColMap.get(edgeName);
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
-				new Color(labelColor.getRed(),
-					labelColor.getGreen(), labelColor.getBlue()));
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TRANSPARENCY)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TRANSPARENCY);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
-			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
-				labelTrans = edgeLabelTransMap.get(edgeName);
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_FACE)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE, edgeLabelFontMap.get(edgeName));
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
-			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE)) {
-				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
-			}
-			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
-		}
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SIZE)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SIZE);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SIZE, size);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_WIDTH)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_WIDTH);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_HEIGHT)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_HEIGHT);
-		}
-		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
-			//networkView.getComponent().
-		//	dview = (DGraphView)currentView;
+	private void handleMissingAnnotations(final CyNetworkView currentView) {
+		final List<Annotation> currAnnotationList = annotationManager.getAnnotations(networkView);
 
-			//InternalFrameComponent ifc = Cytoscape.getDesktop().getNetworkViewManager().getInternalFrameComponent(networkView);
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
-		}
-		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
-		}
-		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
-		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION)) {
-			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
-		}
-		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
-
-		List<Annotation> currAnnotationList = annotationManager.getAnnotations(networkView);
+		// The annotation sets might not be on the EDT (Cytoscape core bug).  We need
+		// to make sure we are
+		
 		// hide annotation which were not present earlier
 		if( currAnnotationList != null){
 			for (Annotation ann : currAnnotationList) {
@@ -857,7 +680,255 @@ public class CyFrame {
 				}
 			}
 		}
+	}
 
+	private void handleNodes(final CyNetworkView currentView) {
+		for (CyNode node : nodeList) {
+			View<CyNode> nodeView = currentView.getNodeView(node);
+			if (nodeView == null) {
+				// Add temporary node to network for viewing the node which is removed from current network
+				CyNode artNode = currentView.getModel().addNode();
+				record.put(node, artNode);
+				currentView.updateView();
+				nodeView = currentView.getNodeView(artNode);
+			}
+		
+			long nodeName = node.getSUID();//curNodeTable.getRow(node.getSUID()).get(CyNetwork.NAME, String.class);
+		
+			double[] xy = nodePosMap.get(nodeName);
+			Color p = nodeColMap.get(nodeName), pFill = nodeFillColMap.get(nodeName);
+			Integer trans = nodeOpacityMap.get(nodeName), transFill = nodeFillOpacityMap.get(nodeName);
+		
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_SHAPE)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_SHAPE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SHAPE, nodeShapeMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_X_LOCATION)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_X_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, xy[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Y_LOCATION)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_Y_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, xy[1]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_Z_LOCATION)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_Z_LOCATION);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, xy[2]);
+		
+			double[] size = nodeSizeMap.get(nodeName);
+		
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_HEIGHT)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_HEIGHT);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, size[0]);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_WIDTH)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, size[1]);
+		
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_WIDTH)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_WIDTH, nodeBorderWidthMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_PAINT)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_PAINT);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, nodeBorderColorMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, nodeBorderTransMap.get(nodeName));
+		
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_PAINT)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_PAINT);
+			}
+			if (p != null) {
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			}
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_FILL_COLOR)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_FILL_COLOR);
+			}
+			if (pFill != null) {
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_FILL_COLOR, new Color(pFill.getRed(), 
+				                           pFill.getGreen(), pFill.getBlue(), transFill));
+			}
+		
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL, nodeLabelMap.get(nodeName));
+			Color labelColor = nodeLabelColMap.get(nodeName);
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_COLOR)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_COLOR);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_COLOR,
+			                           new Color(labelColor.getRed(),
+			                           labelColor.getGreen(), labelColor.getBlue()));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_TRANSPARENCY)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_TRANSPARENCY, nodeFillOpacityMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_SIZE)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_SIZE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, nodeLabelFontSizeMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, nodeLabelTransMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_FONT_FACE)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_FONT_FACE);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_FACE, nodeLabelFontMap.get(nodeName));
+			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_LABEL_WIDTH)) {
+				nodeView.clearValueLock(BasicVisualLexicon.NODE_LABEL_WIDTH);
+			}
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_WIDTH, nodeLabelWidthMap.get(nodeName));
+		}
+	}
+
+	private void handleEdges(final CyNetworkView currentView) {
+		for(CyEdge edge: getEdgeList()) {
+
+			View<CyEdge> edgeView = currentView.getEdgeView(edge);
+			if (edgeView == null) {
+				// Add temporary edge to network for viewing the edge which is removed from current network
+				CyEdge artEdge = null;
+				if (record.containsKey(edge.getSource()) && nodeList.contains(edge.getTarget()) && !record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), edge.getTarget(), true);
+				} else if (nodeList.contains(edge.getSource()) && !record.containsKey(edge.getSource()) && 
+									record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(edge.getSource(), record.get(edge.getTarget()), true);
+				} else if (record.containsKey(edge.getSource()) && record.containsKey(edge.getTarget())) {
+					artEdge = currentView.getModel().addEdge(record.get(edge.getSource()), record.get(edge.getTarget()), true);
+				} else {
+					continue;
+				}
+				currentView.updateView();
+				edgeView = currentView.getEdgeView(artEdge);
+				recordEdge.put(edge, artEdge);
+			}
+
+			long edgeName = edge.getSUID();//curEdgeTable.getRow(edge.getSUID()).get(CyNetwork.NAME, String.class);
+			Color p = edgeColMap.get(edgeName), pStroke = edgeStrokeColMap.get(edgeName);
+			if (p == null && pStroke == null) {
+				continue;
+			}
+			Integer trans = edgeOpacityMap.get(edgeName), transStroke = edgeStrokeOpacityMap.get(edgeName);
+
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_VISIBLE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_PAINT)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_PAINT);
+			}
+			if (p != null) {
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_PAINT, new Color(p.getRed(), p.getGreen(), p.getBlue(), trans));
+			}
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
+			}
+			if (pStroke != null) {
+				edgeView.setVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, 
+				                           new Color(pStroke.getRed(), pStroke.getGreen(), pStroke.getBlue(), transStroke));
+			}
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_WIDTH)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_WIDTH);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, edgeWidthMap.get(edgeName));
+
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL, edgeLabel.get(edgeName));
+			Color labelColor = edgeLabelColMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_COLOR)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_COLOR);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_COLOR,
+				new Color(labelColor.getRed(),
+					labelColor.getGreen(), labelColor.getBlue()));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TRANSPARENCY)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TRANSPARENCY);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY, edgeStrokeOpacityMap.get(edgeName));
+			Integer labelFontSize = edgeLabelFontSizeMap.get(edgeName),
+				labelTrans = edgeLabelTransMap.get(edgeName);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, labelFontSize);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_FONT_FACE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_FONT_FACE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_FONT_FACE, edgeLabelFontMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, labelTrans);
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, edgeSourceArrowShapeMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, edgeTargetArrowShapeMap.get(edgeName));
+			if (edgeView.isValueLocked(BasicVisualLexicon.EDGE_LINE_TYPE)) {
+				edgeView.clearValueLock(BasicVisualLexicon.EDGE_LINE_TYPE);
+			}
+			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_LINE_TYPE, edgeLineTypeMap.get(edgeName));
+		}
+	}
+
+	private void handleNetwork(final CyNetworkView currentView) {
+
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_TITLE)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_TITLE);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_TITLE, title);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, backgroundPaint);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SCALE_FACTOR)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, zoom);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_SIZE)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_SIZE);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_SIZE, size);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_WIDTH)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_WIDTH);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_HEIGHT)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_HEIGHT);
+		}
+		currentView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
+
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, centerPoint.getX());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, centerPoint.getY());
+		if (currentView.isValueLocked(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION)) {
+			currentView.clearValueLock(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
+		}
+		networkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, centerPoint.getZ());
+	}
+
+	private void handleAnnotations(final CyNetworkView currentView) {
 		for(Annotation ann: annotationList){
 			ann.moveAnnotation( annotationPosMap.get( ann.hashCode() ));
 			// System.out.println("Setting zoom to: "+annotationZoomMap.get(ann.hashCode()));
@@ -905,37 +976,7 @@ public class CyFrame {
 				aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, annotationTextColorMap.get(aa.hashCode()));
 			}
 		}
-
-		currentView.updateView();
 	}
-
-  /**
-	 * Removes temporarily added nodes and edges from network.
-	 *
-	 *
-	 */
-   public void clearDisplay(){
-	 Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
-	 Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
-	 for (CyEdge e: recordEdge.values() ){
-	   removeAddedEdges.add(e);
-	   removeAddedEdgesKeys.add(e.getSUID());
-	 }
-
-	 appManager.getCurrentNetworkView().getModel().removeEdges(removeAddedEdges);
-	 appManager.getCurrentNetworkView().getModel().getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
-
-	 Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
-	 Collection<Long> removeAddedKeys = new ArrayList<Long>();
-	 for (CyNode n: record.values() ){
-	   removeAddedNodes.add(n);
-	   removeAddedKeys.add(n.getSUID());
-	 }
-
-	 appManager.getCurrentNetworkView().getModel().removeNodes(removeAddedNodes);
-	 appManager.getCurrentNetworkView().getModel().getDefaultNodeTable().deleteRows(removeAddedKeys);
-	 appManager.getCurrentNetworkView().updateView();
-   }
 
 	/**
 	 * Return the frame ID for this frame

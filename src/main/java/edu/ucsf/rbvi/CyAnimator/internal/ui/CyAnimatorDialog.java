@@ -133,6 +133,7 @@ public class CyAnimatorDialog extends JDialog
 		dragnDrop = new DragAndDropManager();
 		addWindowListener(this);
 
+		filePath = System.getProperty("user.home");	// Set a reasonable default
 		initialize();
 	}
 
@@ -244,7 +245,7 @@ public class CyAnimatorDialog extends JDialog
 			directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 			directorySettingPanel.add(new JLabel("Video location: "));
 			directoryText = new JTextField(30);
-			directoryText.setText("");
+			directoryText.setText(filePath);
 			directorySettingPanel.add(directoryText);
 			directorySettingPanel.add(browseButton);
 		
@@ -344,7 +345,7 @@ public class CyAnimatorDialog extends JDialog
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File file = fc.getSelectedFile();
 				filePath = file.getPath();
-							directoryText.setText(filePath);
+				directoryText.setText(filePath);
 			}
 		} else if (command.startsWith("interpolate")) {
 			//If event is fired from interpolation menu this matches the interpolation count.
