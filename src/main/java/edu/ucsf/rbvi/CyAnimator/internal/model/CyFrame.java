@@ -500,24 +500,14 @@ public class CyFrame {
 		final CyNetworkView currentView = appManager.getCurrentNetworkView();
 
 		// Make sure everything is on the EDT
-		try {
-		SwingUtilities.invokeAndWait( new Runnable () {
-			public void run() {
-				handleMissingEdges(currentView);
-				handleMissingNodes(currentView);
-
-				handleNodes(currentView);
-				handleEdges(currentView);
-
-				handleNetwork(currentView);
-		
-				handleMissingAnnotations(currentView);
-				handleAnnotations(currentView);
-
-				currentView.updateView();
-			}
-		} );
-		} catch (Exception e) {}
+		DisplayFrame displayFrame = new DisplayFrame(currentView);
+		if (SwingUtilities.isEventDispatchThread()) {
+			displayFrame.run();
+		} else {
+			try {
+				SwingUtilities.invokeAndWait( displayFrame );
+			} catch (Exception e) {}
+		}
 	}
 
   /**
@@ -540,19 +530,16 @@ public class CyFrame {
 	   removeAddedKeys.add(n.getSUID());
 	 }
 
-		try {
-		SwingUtilities.invokeAndWait( new Runnable () {
-			public void run() {
-	 			CyNetwork network = appManager.getCurrentNetworkView().getModel();
-				network.removeEdges(removeAddedEdges);
-	 			network.getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
-
-	 			network.removeNodes(removeAddedNodes);
-	 			network.getDefaultNodeTable().deleteRows(removeAddedKeys);
-	 			appManager.getCurrentNetworkView().updateView();
-			}
-		} );
-		} catch(Exception e) {}
+		ClearDisplay clearDisplay = new ClearDisplay(appManager, 
+                                                 removeAddedEdges, removeAddedNodes,
+                                                 removeAddedEdgesKeys, removeAddedKeys);
+		if (SwingUtilities.isEventDispatchThread()) {
+			clearDisplay.run();
+		} else {
+			try {
+				SwingUtilities.invokeAndWait( clearDisplay );
+			} catch(Exception e) {}
+		}
   }
 
 	private void handleMissingNodes(final CyNetworkView currentView) {
@@ -2090,6 +2077,59 @@ public class CyFrame {
 		Dimension d = new Dimension();
 		d.setSize(width, height);
 		annotationSizeMap.put(ann.hashCode(), d);
+	}
+
+	class DisplayFrame implements Runnable {
+			CyNetworkView currentView;
+
+			public DisplayFrame(CyNetworkView view) {
+				currentView = view;
+			}
+
+			public void run() {
+				handleMissingEdges(currentView);
+				handleMissingNodes(currentView);
+
+				handleNodes(currentView);
+				handleEdges(currentView);
+
+				handleNetwork(currentView);
+		
+				handleMissingAnnotations(currentView);
+				handleAnnotations(currentView);
+
+				currentView.updateView();
+			}
+	}
+
+	class ClearDisplay implements Runnable {
+		final CyApplicationManager appManager;
+		final Collection<CyEdge> removeAddedEdges;
+		final Collection<CyNode> removeAddedNodes;
+		final Collection<Long> removeAddedEdgesKeys;
+		final Collection<Long> removeAddedKeys;
+
+		public ClearDisplay(final CyApplicationManager appManager, 
+		                    final Collection<CyEdge> removeAddedEdges,
+												final Collection<CyNode> removeAddedNodes,
+												final Collection<Long> removeAddedEdgesKeys,
+												final Collection<Long> removeAddedKeys) {
+			this.appManager = appManager;
+			this.removeAddedEdges = removeAddedEdges;
+			this.removeAddedEdgesKeys = removeAddedEdgesKeys;
+			this.removeAddedNodes = removeAddedNodes;
+			this.removeAddedKeys = removeAddedKeys;
+		}
+
+		public void run() {
+ 			CyNetwork network = appManager.getCurrentNetworkView().getModel();
+			network.removeEdges(removeAddedEdges);
+ 			network.getDefaultEdgeTable().deleteRows(removeAddedEdgesKeys);
+
+ 			network.removeNodes(removeAddedNodes);
+ 			network.getDefaultNodeTable().deleteRows(removeAddedKeys);
+ 			appManager.getCurrentNetworkView().updateView();
+		}
 	}
 
 }

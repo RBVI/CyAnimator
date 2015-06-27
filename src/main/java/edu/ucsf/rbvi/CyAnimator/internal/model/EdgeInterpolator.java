@@ -110,7 +110,7 @@ class interpolateEdgeColor implements FrameInterpolator {
                                else if (colorTwo == null)
                                        colorTwo = colorOne;
 
-                               if (colorOne == colorTwo) {
+                               if (colorOne.equals(colorTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setEdgeColor(edgeid, colorOne);
                                        }	
@@ -133,7 +133,7 @@ class interpolateEdgeColor implements FrameInterpolator {
                                else if (colorStrokeTwo == null)
                                        colorStrokeTwo = colorStrokeOne;
 
-                               if (colorStrokeOne == colorStrokeTwo) {
+                               if (colorStrokeOne.equals(colorStrokeTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setEdgeStrokeColor(edgeid, colorStrokeOne);
                                        }	
@@ -298,7 +298,7 @@ class interpolateEdgeLabel implements FrameInterpolator {
                         if ( transOne == null) transOne = 0;
                         if ( transTwo == null) transTwo = 0;
 
-                        if ( labelOne == labelTwo){
+                        if ( labelOne.equals(labelTwo)) {
                             for (int k = 1; k < framenum + 1; k++) {
                                     cyFrameArray[start + k].setEdgeLabel(edgeid, labelTwo);
                                 }
@@ -332,7 +332,7 @@ class interpolateEdgeLabel implements FrameInterpolator {
                         Color colorOne = frameOne.getEdgeLabelColor(edgeid);
                         Color colorTwo = frameTwo.getEdgeLabelColor(edgeid);
                         if(colorOne != null || colorTwo != null) {
-                                if (colorOne == colorTwo) {
+                                if (colorOne.equals(colorTwo)) {
                                         for(int k=1; k<framenum+1; k++){
                                                 cyFrameArray[start+k].setEdgeLabelColor(edgeid, colorOne);
                                         }	

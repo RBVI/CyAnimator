@@ -39,7 +39,7 @@ class interpolateNodeBorderColor implements FrameInterpolator {
                        Color colorOne = frameOne.getNodeBorderColor(nodeid);
                        Color colorTwo = frameTwo.getNodeBorderColor(nodeid);
                        if(colorOne != null || colorTwo != null) {
-                               if (colorOne == colorTwo) {
+                               if (colorOne.equals(colorTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setNodeBorderColor(nodeid, colorOne);
                                        }	
@@ -103,7 +103,7 @@ class interpolateNodeLabel implements FrameInterpolator {
                        if ( transOne == null) transOne = 0;
                        if ( transTwo == null) transTwo = 0;
 
-                       if (labelOne == labelTwo){
+                       if (labelOne.equals(labelTwo)){
                            for(int k=1; k<framenum+1; k++){
                                cyFrameArray[start+k].setNodeLabel(nodeid, labelTwo);
                                }
@@ -138,7 +138,7 @@ class interpolateNodeLabel implements FrameInterpolator {
                        Color colorOne = frameOne.getNodeLabelColor(nodeid);
                        Color colorTwo = frameTwo.getNodeLabelColor(nodeid);
                        if(colorOne != null || colorTwo != null) {
-                               if (colorOne == colorTwo) {
+                               if (colorOne.equals(colorTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setNodeLabelColor(nodeid, colorOne);
                                        }	
@@ -292,7 +292,7 @@ class interpolateNodeColor implements FrameInterpolator {
                                else if (colorTwo == null)
                                        colorTwo = colorOne;
 
-                               if (colorOne == colorTwo) {
+                               if (colorOne.equals(colorTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setNodeColor(nodeid, colorOne);
                                        }	
@@ -311,7 +311,7 @@ class interpolateNodeColor implements FrameInterpolator {
                                else if (colorFillTwo == null)
                                        colorFillTwo = colorFillOne;
 
-                               if (colorFillOne == colorFillTwo) {
+                               if (colorFillOne.equals(colorFillTwo)) {
                                        for(int k=1; k<framenum+1; k++){
                                                cyFrameArray[start+k].setNodeFillColor(nodeid, colorFillOne);
                                        }	
@@ -591,7 +591,7 @@ class interpolateNodeShape implements FrameInterpolator {
                        else if (shapeTwo == null)
                                shapeTwo = shapeOne;
 
-                       if (shapeOne == shapeOne) {
+                       if (shapeOne.equals(shapeOne)) {
                                for(int k=1; k<framenum+1; k++){
                                        cyFrameArray[start+k].setNodeShape(nodeid, shapeTwo);
                                }	
