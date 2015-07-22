@@ -359,10 +359,11 @@ public class CyFrame {
 
 			//grab color and opacity
 			Color pStroke = (Color)edgeView.getVisualProperty(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT);
-			Integer transStroke = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY);
+			Number tNumber = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_TRANSPARENCY);
+			
 			//store in respective hashmap
 			edgeStrokeColMap.put(edgeName, pStroke);
-			edgeStrokeOpacityMap.put(edgeName, transStroke);
+			edgeStrokeOpacityMap.put(edgeName, tNumber.intValue());
 
 			// Grab the label information
 			String label = edgeView.getVisualProperty(BasicVisualLexicon.EDGE_LABEL);
