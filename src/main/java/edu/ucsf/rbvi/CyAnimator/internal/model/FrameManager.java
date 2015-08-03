@@ -3,10 +3,14 @@
  * Google Summer of Code
  * Written by Steve Federowicz with help from Scooter Morris
  * 
- * FrameManager is the driving class for the animations which holds the list of key frames, creates and manages the timer, and essentially
- * makes the animation. The primary function is to create a timer ( http://java.sun.com/j2se/1.4.2/docs/api/java/util/Timer.html) which
- * fires an action command at a specified interval displaying each frame in the animation in rapid succession. There is also support
- * for all of the standard, play, stop, pause, step forwards, step backwards commands along with code to set up the exporting of images.
+ * FrameManager is the driving class for the animations which holds the 
+ * list of key frames, creates and manages the timer, and essentially
+ * makes the animation. The primary function is to create a timer 
+ * ( http://java.sun.com/j2se/1.4.2/docs/api/java/util/Timer.html) which
+ * fires an action command at a specified interval displaying each frame 
+ * in the animation in rapid succession. There is also support
+ * for all of the standard, play, stop, pause, step forwards, step 
+ * backwards commands along with code to set up the exporting of images.
  */
 
 
@@ -25,15 +29,39 @@ import javax.swing.Timer;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
 import org.cytoscape.model.subnetwork.CySubNetwork;
+import org.cytoscape.view.model.ContinuousRange;
+import org.cytoscape.view.model.Range;
+import org.cytoscape.view.model.View;
+import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.presentation.property.DoubleVisualProperty;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskManager;
 
+import edu.ucsf.rbvi.CyAnimator.internal.model.AnnotationLexicon;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ColorInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.CrossfadeInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.FrameInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.NoneInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.PositionInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.SizeInterpolator;
+// import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ShapeInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.TransparencyInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.VisibleInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.WriteTask;
+
 public class FrameManager {
+	static final Range<Double> ARBITRARY_DOUBLE_RANGE = 
+					new ContinuousRange<>(Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, true);
+
 	private static Map<CyRootNetwork, FrameManager> networkMap = null;
 
 	//Holds the set of all key frames in order
 	private ArrayList<CyFrame> keyFrameList = null;
+
+	//Holds all of the properties and interpolators
+	private Map<VisualProperty<?>, FrameInterpolator> interpolatorMap;
 
 	//Holds the set of all frames following interpolation of the key frames.
 	CyFrame[] frames = null;
@@ -68,12 +96,21 @@ public class FrameManager {
 		return fm;
 	}
 
+	public int getFrameCount() {
+		return frames.length;
+	}
+
+	public CyFrame getFrame(int i) { return frames[i]; }
+
+	public CyFrame[] getFrames() { return frames; }
+
+	public Map<VisualProperty<?>, FrameInterpolator> getInterpolatorMap() { return interpolatorMap; }
 
 	protected FrameManager(CyServiceRegistrar bc){
 		bundleContext = bc;
 		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
-	
+		interpolatorMap = initializeInterpolators();
 	}
 
 	/**
@@ -84,27 +121,27 @@ public class FrameManager {
 	 */
 	public CyFrame captureCurrentFrame() throws IOException{
 	//	CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
-		CyFrame frame = new CyFrame(bundleContext);
+		CyFrame frame = new CyFrame(bundleContext, this);
 
 	/*	CyApplicationManager appManager = (CyApplicationManager) getService(CyApplicationManager.class);
 		CyNetworkView networkView = appManager.getCurrentNetworkView(); */
-	
+
 		//extract view data to make the frame
 		frame.populate(); 
-	
+
 		//set the interpolation count, or number of frames between this frame and the next to be interpolated
 		frame.setInterCount(fps);
-	
+
 		//frame.setID(networkView.getIdentifier()+"_"+frameid);
 		//System.out.println("Frame ID: "+frameid);
-	
+
 		//capture an image of the frame
 		frame.captureImage();
-	
+
 		//frameid++;
-	
+
 		return frame;
-	
+
 	}
 
 	/**
@@ -116,11 +153,11 @@ public class FrameManager {
 		List<CyFrame>remove = new ArrayList<CyFrame>();
 
 		remove.add(keyFrameList.get(index));
-		
 	
+
 		for (CyFrame frame: remove)
 			keyFrameList.remove(frame);
-		
+	
 
 		updateTimer();
 	}
@@ -133,7 +170,7 @@ public class FrameManager {
 	 */
 	public void addKeyFrame() throws IOException{
 		keyFrameList.add(captureCurrentFrame());
-	
+
 		if(keyFrameList.size() > 1 && timer != null){ 
 			updateTimer();
 		}else{
@@ -148,19 +185,19 @@ public class FrameManager {
 	 * displayed thus animating the array of CyFrames.  
 	 */
 	public void makeTimer(){
-	
+
 		frameIndex = 0;
-	
+
 		//Create a new interpolator
-		Interpolator lint = new Interpolator();
-	
+		InterpolateFrames lint = new InterpolateFrames(this);
+
 		//interpolate between all of the key frames in the list to fill the array
 		frames = lint.makeFrames(keyFrameList);
-	
+
 		//timer delay is set in milliseconds, so 1000/fps gives delay per frame
 		int delay = 1000/fps; 
-	
-	
+
+
 		ActionListener taskPerformer = new ActionListener() {
 
 			public void actionPerformed(ActionEvent evt) {
@@ -172,7 +209,7 @@ public class FrameManager {
 			}
 		};
 
-		timer = new Timer(delay, taskPerformer);	
+		timer = new Timer(delay, taskPerformer);
 	}
 
 
@@ -235,11 +272,11 @@ public class FrameManager {
 	public void stepForward(){
 		if(timer == null){ return; }
 		timer.stop();
-	
+
 		//check to see if we have reached the last frame
 		if(frameIndex == frames.length-1){ frameIndex = 0; }
 		else{ frameIndex++; }
-	
+
 		frames[frameIndex].display();
                 frames[frameIndex].clearDisplay();
 	}
@@ -250,11 +287,11 @@ public class FrameManager {
 	public void stepBackward(){
 		if(timer == null){ return; }
 		timer.stop();
-	
+
 		//check to see if we are back to the first frame
 		if(frameIndex == 0){ frameIndex = frames.length-1; }
 		else{ frameIndex--; }
-	
+
 		frames[frameIndex].display();
                 frames[frameIndex].clearDisplay();
 	}
@@ -300,5 +337,125 @@ public class FrameManager {
 		this.fps = frameCount;
 		this.videoType = videoType;
 		this.videoResolution = videoResolution;
+	}
+
+	Map<VisualProperty<?>, FrameInterpolator> initializeInterpolators() {
+		Map<VisualProperty<?>, FrameInterpolator> iMap = new HashMap<>();
+		// Network properties
+		iMap.put(BasicVisualLexicon.NETWORK_BACKGROUND_PAINT, new ColorInterpolator(false));
+		iMap.put(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, new PositionInterpolator());
+		iMap.put(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, new PositionInterpolator());
+		iMap.put(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, new PositionInterpolator());
+		iMap.put(BasicVisualLexicon.NETWORK_DEPTH, new SizeInterpolator(false));
+		iMap.put(BasicVisualLexicon.NETWORK_HEIGHT, new SizeInterpolator(false));
+		iMap.put(BasicVisualLexicon.NETWORK_SCALE_FACTOR, new SizeInterpolator(false));
+		iMap.put(BasicVisualLexicon.NETWORK_SIZE, new SizeInterpolator(false));
+		// iMap.put(BasicVisualLexicon.NETWORK_TITLE, new TitleInterpolator(false));
+		iMap.put(BasicVisualLexicon.NETWORK_WIDTH, new SizeInterpolator(false));
+
+		// Node properties
+		iMap.put(BasicVisualLexicon.NODE_BORDER_LINE_TYPE, 
+		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.NODE_BORDER_PAINT, new ColorInterpolator(false));
+		iMap.put(BasicVisualLexicon.NODE_BORDER_TRANSPARENCY, new TransparencyInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_BORDER_WIDTH, new SizeInterpolator(false));
+		iMap.put(BasicVisualLexicon.NODE_FILL_COLOR, new ColorInterpolator(false));
+		iMap.put(BasicVisualLexicon.NODE_HEIGHT, new SizeInterpolator(true));
+		iMap.put(BasicVisualLexicon.NODE_LABEL,
+		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.NODE_LABEL_COLOR, new ColorInterpolator(true));
+		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_FACE,
+		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, new SizeInterpolator(true));
+		iMap.put(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
+		// iMap.put(BasicVisualLexicon.NODE_LABEL_WIDTH, new LabelWidthInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_NESTED_NETWORK_IMAGE_VISIBLE, new NoneInterpolator());
+		// iMap.put(BasicVisualLexicon.NODE_PAINT, new PaintInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_SIZE, new SizeInterpolator(true));
+		iMap.put(BasicVisualLexicon.NODE_SHAPE,
+		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_TRANSPARENCY,
+		                                   BasicVisualLexicon.NODE_BORDER_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.NODE_TRANSPARENCY, new TransparencyInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_VISIBLE, 
+		         new VisibleInterpolator(BasicVisualLexicon.NODE_TRANSPARENCY,
+										                 BasicVisualLexicon.NODE_BORDER_TRANSPARENCY,
+																		 BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.NODE_WIDTH, new SizeInterpolator(true));
+		iMap.put(BasicVisualLexicon.NODE_X_LOCATION, new PositionInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_Y_LOCATION, new PositionInterpolator());
+		iMap.put(BasicVisualLexicon.NODE_Z_LOCATION, new PositionInterpolator());
+
+		// Edge properties
+		iMap.put(BasicVisualLexicon.EDGE_LABEL,
+		         new CrossfadeInterpolator(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.EDGE_LABEL_COLOR, new ColorInterpolator(true));
+		iMap.put(BasicVisualLexicon.EDGE_LABEL_FONT_FACE,
+		         new CrossfadeInterpolator(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.EDGE_LABEL_FONT_SIZE, new SizeInterpolator(true));
+		iMap.put(BasicVisualLexicon.EDGE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
+		// iMap.put(BasicVisualLexicon.EDGE_LABEL_WIDTH, new LabelWidthInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_LINE_TYPE,
+		         new CrossfadeInterpolator(BasicVisualLexicon.EDGE_TRANSPARENCY));
+		iMap.put(BasicVisualLexicon.EDGE_PAINT, new ColorInterpolator(false));
+		// iMap.put(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, new ArrowShapeInterpolator());
+		// iMap.put(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, new ArrowShapeInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_TRANSPARENCY, new TransparencyInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_VISIBLE, new VisibleInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_WIDTH, new SizeInterpolator(false));
+
+		// Annotation properties
+		iMap.put(AnnotationLexicon.ANNOTATION_X_LOCATION, new PositionInterpolator());
+		iMap.put(AnnotationLexicon.ANNOTATION_Y_LOCATION, new PositionInterpolator());
+		iMap.put(AnnotationLexicon.ANNOTATION_ZOOM, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_CANVAS, new NoneInterpolator());
+
+		// ShapeAnnotation
+		iMap.put(AnnotationLexicon.ANNOTATION_WIDTH, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_HEIGHT, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_COLOR, new ColorInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_OPACITY, new TransparencyInterpolator());
+
+		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_WIDTH, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_COLOR, new ColorInterpolator(false));
+		// iMap.put(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, new SizeInterpolator(true));
+		iMap.put(AnnotationLexicon.ANNOTATION_SHAPE, 
+		         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,AnnotationLexicon.ANNOTATION_BORDER_COLOR));
+
+		// Text visual properites
+		iMap.put(AnnotationLexicon.ANNOTATION_TEXT, 
+		         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+		iMap.put(AnnotationLexicon.ANNOTATION_FONT_SIZE, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_FONT_COLOR, new ColorInterpolator(true));
+		iMap.put(AnnotationLexicon.ANNOTATION_FONT_STYLE, 
+							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+		iMap.put(AnnotationLexicon.ANNOTATION_FONT_FAMILY, 
+							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+
+		// Image visual properties
+		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_URL, 
+							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
+		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_CONTRAST, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_BRIGHTNESS, new SizeInterpolator(false));
+		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY, new TransparencyInterpolator());
+
+		// Arrow visual properties
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_ANCHOR,
+						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_TYPE,
+						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, new ColorInterpolator(true));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_SIZE, new SizeInterpolator(false));
+
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_WIDTH, new SizeInterpolator(false));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_COLOR, new ColorInterpolator(true));
+
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_ANCHOR,
+						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_TYPE,
+						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, new ColorInterpolator(true));
+  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_SIZE, new SizeInterpolator(false));
+
+		return iMap;
 	}
 }

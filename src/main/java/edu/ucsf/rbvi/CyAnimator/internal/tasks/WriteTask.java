@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.internal.model;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,12 @@ import org.cytoscape.work.TaskMonitor.Level;
 import org.apache.commons.io.FileUtils;
 
 import com.xuggle.xuggler.ICodec;
+
+import edu.ucsf.rbvi.CyAnimator.internal.io.GifSequenceWriter;
+import edu.ucsf.rbvi.CyAnimator.internal.io.VideoCreator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.BooleanWrapper;
+import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
+import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 
 public class WriteTask extends AbstractTask {
 	/**
@@ -57,7 +63,7 @@ public class WriteTask extends AbstractTask {
 		monitor.showMessage(Level.INFO, "Writing frames");
 		monitor.setProgress(0.0);
 
-		for(int i=0; i<this.frameManager.frames.length; i++) {
+		for(int i=0; i<this.frameManager.getFrameCount(); i++) {
 			DecimalFormat frame = new DecimalFormat("#000");
 			
 			//assign the appropriate path and extension
@@ -67,7 +73,7 @@ public class WriteTask extends AbstractTask {
 		
 			try {
 				BooleanWrapper finished = new BooleanWrapper(false);
-				this.frameManager.frames[i].writeImage(name, videoResolution,finished);
+				this.frameManager.getFrame(i).writeImage(name, videoResolution,finished);
 				while (!finished.getValue())
 					try {
 						Thread.sleep(200);
@@ -80,10 +86,10 @@ public class WriteTask extends AbstractTask {
 				monitor.showMessage(Level.ERROR, "Failed to write file "+name);
 				return;
 			}
-			monitor.setProgress(((double)i)/((double)this.frameManager.frames.length));
+			monitor.setProgress(((double)i)/((double)this.frameManager.getFrameCount()));
 		}
 		
-		for (CyFrame frame : this.frameManager.frames) {
+		for (CyFrame frame : this.frameManager.getFrames()) {
 		    frame.clearDisplay();
 		}
 

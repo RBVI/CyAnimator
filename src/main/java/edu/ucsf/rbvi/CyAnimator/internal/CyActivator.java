@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.model.AnnotationLexicon;
 
 public class CyActivator extends AbstractCyActivator {
 	private static Logger logger = LoggerFactory
@@ -31,6 +32,8 @@ public class CyActivator extends AbstractCyActivator {
 		// See if we have a graphics console or not
 		boolean haveGUI = true;
 		CySwingApplication cyApplication = getService(context, CySwingApplication.class);
+		AnnotationLexicon lex = new AnnotationLexicon();
+
 	//	CyApplicationManager cyApplicationManager = getService(context, CyApplicationManager.class);
 	//	CyNetworkManager networkManager = (CyNetworkManager) getService(context, CyNetworkManager.class);
 		

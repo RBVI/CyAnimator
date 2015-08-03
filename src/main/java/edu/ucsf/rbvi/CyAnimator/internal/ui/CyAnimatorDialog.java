@@ -705,9 +705,7 @@ public class CyAnimatorDialog extends JDialog
 			//Matcher fMatch = frameID.matcher(e.getComponent().getName());
 
 			this.currFrameIndex = Integer.parseInt(e.getComponent().getName());
-			//if(fMatch.matches()){
-				frameList.get(currFrameIndex).display();
-			//}
+			frameList.get(currFrameIndex).display();
 		}
 
 		/*
