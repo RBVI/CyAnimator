@@ -365,19 +365,14 @@ class CyAnnotationView implements View<CyAnnotation> {
 				aa.setArrowSize(ArrowAnnotation.ArrowEnd.TARGET, (Double)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					System.out.println("Setting "+annotation+" invisible");
 					savedLineColor = aa.getLineColor();
-					System.out.println(" old color="+savedLineColor+", alpha="+((Color)savedLineColor).getAlpha());
-					System.out.println(" new color="+transparent+", alpha="+transparent.getAlpha());
 					savedArrowTargetColor = aa.getArrowColor(ArrowAnnotation.ArrowEnd.TARGET);
 					savedArrowSourceColor = aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE);
 					aa.setLineColor(transparent);
 					aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, transparent);
 					aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
 				} else if (savedLineColor != null) {
-					System.out.println("Setting "+annotation+" visible");
 					aa.setLineColor(savedLineColor);
-					System.out.println(" color="+savedLineColor+", alpha="+((Color)savedLineColor).getAlpha());
 					aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, savedArrowTargetColor);
 					aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, savedArrowSourceColor);
 					savedLineColor = null;

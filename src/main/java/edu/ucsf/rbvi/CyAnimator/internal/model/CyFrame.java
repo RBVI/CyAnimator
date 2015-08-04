@@ -441,11 +441,11 @@ public class CyFrame {
 			for (Annotation annotation : annotations) {
 				if (!annotationList.contains(annotation)) {
 					CyAnnotationView view = new CyAnnotationView(annotation);
-					System.out.println("Hiding annotation: "+view.getModel().getAnnotation());
+					// System.out.println("Hiding annotation: "+view.getModel().getAnnotation());
 					view.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, false);
 				} else {
 					CyAnnotationView view = new CyAnnotationView(annotation);
-					System.out.println("Showing annotation: "+view.getModel().getAnnotation());
+					// System.out.println("Showing annotation: "+view.getModel().getAnnotation());
 					view.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, true);
 				}
 				annotation.update();

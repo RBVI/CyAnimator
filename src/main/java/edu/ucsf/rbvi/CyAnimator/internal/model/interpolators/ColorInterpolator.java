@@ -31,32 +31,31 @@ public class ColorInterpolator implements FrameInterpolator {
 	                             VisualProperty<?> property, int start, int stop, CyFrame[] cyFrameArray){
 		int framenum = (stop-start) - 1;	
 
-		System.out.println("ColorInterpolator: "+property);
-
 		for(View<? extends CyIdentifiable> id: idList){
 			Color colorOne = (Color) frameOne.getValue(id,property);
 			Color colorTwo = (Color) frameTwo.getValue(id,property);
 			if(colorOne != null || colorTwo != null) {
 				// Handle missing (or appearing) nodes
-				if (colorOne == null) 
-					colorOne = colorTwo;
-				else if (colorTwo == null)
-					colorTwo = colorOne;
+				if (colorOne == null) {
+					if (includeAlpha) 
+						colorOne = new Color(colorTwo.getRed(), colorTwo.getBlue(), colorTwo.getGreen(), 0);
+					else
+						colorOne = colorTwo;
+				} else if (colorTwo == null) {
+					if (includeAlpha) 
+						colorTwo = new Color(colorOne.getRed(), colorOne.getBlue(), colorOne.getGreen(), 0);
+					else
+						colorTwo = colorOne;
+				}
 
 				if (colorOne.equals(colorTwo)) {
-					System.out.println("Colors are the same: "+colorOne+", "+colorTwo);
-					System.out.println("Alphas: "+colorOne.getAlpha()+", "+colorTwo.getAlpha());
-					System.out.println("Id: "+id.getModel());
 					for(int k=1; k<framenum+1; k++){
 						cyFrameArray[start+k].putValue(id, property, colorOne);
 					}	
 				} else {
-					System.out.println("Interpolating colors for "+((CyAnnotation)id.getModel()).getAnnotation());
 					Color[] paints = interpolateColor(colorOne, colorTwo, framenum, includeAlpha);
 
 					for(int k=1; k<framenum+1; k++){
-						System.out.println("Color for "+property+" = "+paints[k]);
-						System.out.println("Alpha for "+property+" = "+paints[k].getAlpha());
 						cyFrameArray[start+k].putValue(id, property, paints[k]);
 					}
 				}
