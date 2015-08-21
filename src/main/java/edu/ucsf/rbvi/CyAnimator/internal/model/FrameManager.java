@@ -26,13 +26,18 @@ import java.util.Map;
 
 import javax.swing.Timer;
 
+import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
 import org.cytoscape.model.subnetwork.CySubNetwork;
 import org.cytoscape.view.model.ContinuousRange;
 import org.cytoscape.view.model.Range;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.model.VisualLexicon;
 import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.presentation.RenderingEngine;
+import org.cytoscape.view.presentation.RenderingEngineManager;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.view.presentation.property.DoubleVisualProperty;
 import org.cytoscape.service.util.CyServiceRegistrar;
@@ -43,7 +48,9 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.AnnotationLexicon;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ColorInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.CrossfadeInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.FrameInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ImageCrossfadeInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.NoneInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ObjectPositionInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.PositionInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.SizeInterpolator;
 // import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ShapeInterpolator;
@@ -78,6 +85,8 @@ public class FrameManager {
 	//keeps track of the current frame being displayed during animation
 	int frameIndex = 0;
 
+	private VisualLexicon dingVisualLexicon;
+
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
 		CyRootNetwork rootNetwork = ((CySubNetwork)network).getRootNetwork();
@@ -110,6 +119,16 @@ public class FrameManager {
 		bundleContext = bc;
 		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
+
+		RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
+		// Get the Ding Visual Lexicon
+		for (RenderingEngine engine: rem.getAllRenderingEngines()) {
+			if (engine.getRendererId().equals("org.cytoscape.ding")) {
+				dingVisualLexicon = engine.getVisualLexicon();
+				break;
+			}
+		}
+
 		interpolatorMap = initializeInterpolators();
 	}
 
@@ -368,6 +387,7 @@ public class FrameManager {
 		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, new SizeInterpolator(true));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
+		// iMap.put(getDingProperty("NODE_LABEL_POSTION", new ObjectPositionInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_LABEL_WIDTH, new LabelWidthInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_NESTED_NETWORK_IMAGE_VISIBLE, new NoneInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_PAINT, new PaintInterpolator());
@@ -384,6 +404,34 @@ public class FrameManager {
 		iMap.put(BasicVisualLexicon.NODE_X_LOCATION, new PositionInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_Y_LOCATION, new PositionInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_Z_LOCATION, new PositionInterpolator());
+
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_1"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_2"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_3"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_4"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_5"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_6"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_7"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_8"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_9"), new ImageCrossfadeInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_1"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_2"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_3"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_4"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_5"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_6"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_7"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_8"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_9"), new SizeInterpolator(true));
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_1"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_2"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_3"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_4"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_5"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_6"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_7"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_8"), new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_9"), new ObjectPositionInterpolator());
 
 		// Edge properties
 		iMap.put(BasicVisualLexicon.EDGE_LABEL,
@@ -457,5 +505,9 @@ public class FrameManager {
   	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_SIZE, new SizeInterpolator(false));
 
 		return iMap;
+	}
+
+	VisualProperty<?> getDingProperty(Class <?> type, String propertyName) {
+		return dingVisualLexicon.lookup(type, propertyName);
 	}
 }
