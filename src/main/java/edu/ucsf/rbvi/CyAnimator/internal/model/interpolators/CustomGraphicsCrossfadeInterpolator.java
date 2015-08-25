@@ -35,9 +35,9 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
  * actually just fadeout/fadein, which is why we need the appropriate
  * transparency property...
  */
-public class ImageCrossfadeInterpolator implements FrameInterpolator {
+public class CustomGraphicsCrossfadeInterpolator implements FrameInterpolator {
 
-	public ImageCrossfadeInterpolator(){
+	public CustomGraphicsCrossfadeInterpolator(){
 	}
 
 	public int passNumber() { return 1; }
@@ -87,23 +87,21 @@ public class ImageCrossfadeInterpolator implements FrameInterpolator {
 						/*
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new ImageCrossfadeCustomGraphicsProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CustomGraphicsCrossfadeCustomGraphicsProxy(cgOne, cgTwo, step));
 						}
 						*/
 					} else if (PaintedShape.class.isAssignableFrom(layerClass)) {
 						System.out.println("PaintedShape");
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new CrossfadePaintedShapeProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step));
 						}
 					} else if (Cy2DGraphicLayer.class.isAssignableFrom(layerClass)) {
 						System.out.println("2D Graphic layer");
-						/*
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new Cy2DCrossfadeCustomGraphicsProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step));
 						}
-						*/
 					} else {
 						System.out.println("Base Custom Graphic layer");
 						for (int k = 1; k < framenum; k++) {
