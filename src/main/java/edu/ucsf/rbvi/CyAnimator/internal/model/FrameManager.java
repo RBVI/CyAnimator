@@ -387,7 +387,7 @@ public class FrameManager {
 		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, new SizeInterpolator(true));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
-		// iMap.put(getDingProperty("NODE_LABEL_POSTION", new ObjectPositionInterpolator());
+		iMap.put(getDingProperty(CyNode.class, "NODE_LABEL_POSITION"), new ObjectPositionInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_LABEL_WIDTH, new LabelWidthInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_NESTED_NETWORK_IMAGE_VISIBLE, new NoneInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_PAINT, new PaintInterpolator());
