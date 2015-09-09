@@ -12,6 +12,7 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 
+import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 import edu.ucsf.rbvi.CyAnimator.internal.ui.CyAnimatorDialog;
 
 public class CyAnimatorDialogTask extends AbstractTask {
@@ -24,6 +25,7 @@ public class CyAnimatorDialogTask extends AbstractTask {
 	public CyAnimatorDialogTask(CyServiceRegistrar bundleContext, CyNetworkView view) {
 		bc = bundleContext;
 		network = view.getModel();
+		FrameManager.registerDialogTask(this);
 	}
 	
 	@Override
@@ -39,6 +41,15 @@ public class CyAnimatorDialogTask extends AbstractTask {
 		CyAnimatorDialog dialog = new CyAnimatorDialog(bc, network, swingApplication.getJFrame());
 		networkMap.put(root, dialog);
 		dialog.setVisible(true);
+	}
+
+	public void resetDialog(CyRootNetwork root) {
+		if (networkMap.containsKey(root)) {
+			CyAnimatorDialog dialog = networkMap.get(root);
+			dialog.setVisible(false);
+			dialog.dispose();
+			networkMap.remove(root);
+		}
 	}
 
 }

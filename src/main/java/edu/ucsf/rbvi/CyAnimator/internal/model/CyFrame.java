@@ -22,6 +22,7 @@ import java.awt.Font;
 import java.awt.image.*;
 import java.awt.Paint;
 import java.awt.Point;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +36,9 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
@@ -42,10 +46,14 @@ import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.session.CySession;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.model.VisualLexicon;
 import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.presentation.RenderingEngine;
+import org.cytoscape.view.presentation.RenderingEngineManager;
 import org.cytoscape.view.presentation.annotations.Annotation;
 import org.cytoscape.view.presentation.annotations.ArrowAnnotation;
 import org.cytoscape.view.presentation.annotations.BoundedTextAnnotation;
@@ -110,13 +118,21 @@ public class CyFrame {
 	 * @param currentNetwork
 	 */
 	public CyFrame(CyServiceRegistrar bc, FrameManager frameManager){
+		this(bc, frameManager, null);
+	}
+
+	public CyFrame(CyServiceRegistrar bc, FrameManager frameManager, CyNetworkView networkView) {
 		bundleContext = bc;
 		this.frameManager = frameManager;
+		this.networkView = networkView;
+
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
 		annotationManager = bundleContext.getService(AnnotationManager.class);
 		annotationFactory = bundleContext.getService(AnnotationFactory.class);
-		networkView = appManager.getCurrentNetworkView();
+
+		if (networkView == null)
+			this.networkView = appManager.getCurrentNetworkView();
 
 		recordNode = new HashMap<CyNode, CyNode>();
 		recordEdge = new HashMap<CyEdge, CyEdge>();
@@ -131,8 +147,7 @@ public class CyFrame {
 		nodeList = new HashSet<CyNode>(networkView.getModel().getNodeList());
 		edgeList = new HashSet<CyEdge>(networkView.getModel().getEdgeList());
 
-		this.currentNetwork = appManager.getCurrentNetwork();
-		networkView = appManager.getCurrentNetworkView();
+		currentNetwork = networkView.getModel();
 
 		// Now get all of our annotations
 		annotationList = annotationManager.getAnnotations(networkView);
@@ -756,7 +771,8 @@ public class CyFrame {
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
 
-		NetworkViewTaskFactory exportImageTaskFactory = (NetworkViewTaskFactory) bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
+		NetworkViewTaskFactory exportImageTaskFactory = 
+					bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
 			Map<String, Object> tunables = new HashMap<String, Object>();
 			List<String> fileTypeList = new ArrayList<String>();
@@ -779,6 +795,115 @@ public class CyFrame {
 	 */
 	public CyServiceRegistrar getBundleContext() {
 		return bundleContext;
+	}
+
+	public void loadFrame(CySession session, VisualLexicon lex, JSONObject frameObject) {
+		int frameNumber = ((Integer) frameObject.get("frameNumber")).intValue();
+		frameid = (String) frameObject.get("frameId");
+
+		// Create property maps
+		for (Object nodeEntry: (JSONArray)frameObject.get("nodes")) {
+			JSONObject jsonNode = (JSONObject) nodeEntry;
+			CyNode node = session.getObject((String)jsonNode.get("suid"), CyNode.class);
+			nodePropertyMap.put(node, new HashMap<VisualProperty<?>, Object>());
+			populatePropertyMap((JSONArray)jsonNode.get("properties"), nodePropertyMap.get(node), lex, CyNode.class);
+		}
+
+		for (Object edgeEntry: (JSONArray)frameObject.get("edges")) {
+			JSONObject jsonEdge = (JSONObject) edgeEntry;
+			CyEdge edge = session.getObject((String)jsonEdge.get("suid"), CyEdge.class);
+			edgePropertyMap.put(edge, new HashMap<VisualProperty<?>, Object>());
+			populatePropertyMap((JSONArray)jsonEdge.get("properties"), edgePropertyMap.get(edge), lex, CyEdge.class);
+		}
+
+		JSONArray networkArray = (JSONArray)frameObject.get("networks");
+		for (Object networkEntry: (JSONArray)frameObject.get("networks")) {
+			JSONObject jsonNetwork = (JSONObject) networkEntry;
+			CyNetwork network = session.getObject((String)jsonNetwork.get("suid"), CyNetwork.class);
+			networkPropertyMap.put(network, new HashMap<VisualProperty<?>, Object>());
+			populatePropertyMap((JSONArray)jsonNetwork.get("properties"), networkPropertyMap.get(network), lex, CyNetwork.class);
+		}
+
+		// Need a different lexicon for annotations
+		JSONArray annotationsArray = (JSONArray)frameObject.get("annotations");
+
+	}
+
+	private void populatePropertyMap(JSONArray array, Map<VisualProperty<?>, Object> propertyMap, VisualLexicon visualLexicon, Class<?> type) {
+		for (Object entry: array) {
+			JSONObject property = (JSONObject) entry;
+			for (Object key: property.keySet()) {
+				VisualProperty p = visualLexicon.lookup(type, (String) key);
+				Object v = p.parseSerializableString((String)property.get(key));
+				propertyMap.put(p, v);
+			}
+		}
+	}
+
+	public void writeFrame(BufferedWriter writer, int frameNumber) throws IOException {
+		writer.write("\t\t{\n");
+		writer.write("\t\t\t\"frameNumber\": "+frameNumber+",\n");
+		writer.write("\t\t\t\"frameID\": \""+frameid+"\",\n");
+
+		// Write out our node data
+		writer.write("\t\t\t\"nodes\": [\n");
+		boolean first = true;
+		for (CyNode node: nodeList) {
+			writeProperties(writer, node.getSUID().toString(), nodePropertyMap.get(node), first);
+			first = false;
+		}
+		writer.write("\t\t\t],\n");
+
+		// Write out our edge data
+		writer.write("\t\t\t\"edges\": [\n");
+		first = true;
+		for (CyEdge edge: edgeList) {
+			writeProperties(writer, edge.getSUID().toString(), edgePropertyMap.get(edge), first);
+			first = false;
+		}
+		writer.write("\t\t\t],\n");
+
+		// Write out our network data
+		writer.write("\t\t\t\"networks\": [\n");
+		first = true;
+		// Only have one network
+		writeProperties(writer, currentNetwork.getSUID().toString(), networkPropertyMap.get(currentNetwork), first);
+
+		writer.write("\t\t\t],\n");
+
+		// Write out our annotation data
+		writer.write("\t\t\t\"annotations\": [\n");
+		first = true;
+		for (Annotation annotation: annotationList) {
+			writeProperties(writer, annotation.getUUID().toString(), annotationPropertyMap.get(annotation), first);
+			first = false;
+		}
+		writer.write("\t\t\t]\n");
+		writer.write("\t\t}\n");
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private void writeProperties(BufferedWriter writer, String id, 
+	                             Map<VisualProperty<?>, Object> vpMap, boolean first) throws IOException {
+		if (vpMap == null || vpMap.size() == 0) return;
+
+		if (!first)
+			writer.write(",\n");
+
+		writer.write("\t\t\t\t{ \"suid\": \""+id+"\",\n");
+		writer.write("\t\t\t\t  \"properties\": [\n");
+		boolean vFirst = true;
+		for (VisualProperty property: vpMap.keySet()) {
+			Object value = vpMap.get(property);
+			if (value != null) {
+				if (!vFirst)
+					writer.write(",\n");
+				writer.write("\t\t\t\t\t\t{ \""+property.getIdString()+"\": \""+property.toSerializableString(value)+"\" }");
+				vFirst = false;
+			}
+		}
+		writer.write("\t\t\t\t  ]\n");
+		writer.write("\t\t\t\t}");
 	}
 
 	class DisplayFrame implements Runnable {

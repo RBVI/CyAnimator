@@ -18,20 +18,31 @@ package edu.ucsf.rbvi.CyAnimator.internal.model;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.Timer;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
 import org.cytoscape.model.subnetwork.CySubNetwork;
+import org.cytoscape.session.CySession;
 import org.cytoscape.view.model.ContinuousRange;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.Range;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.model.VisualLexicon;
@@ -56,6 +67,7 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.SizeInterpolator;
 // import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ShapeInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.TransparencyInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.VisibleInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTask;
 import edu.ucsf.rbvi.CyAnimator.internal.tasks.WriteTask;
 
 public class FrameManager {
@@ -63,6 +75,8 @@ public class FrameManager {
 					new ContinuousRange<>(Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, true);
 
 	private static Map<CyRootNetwork, FrameManager> networkMap = null;
+
+	private static CyAnimatorDialogTask dialogTask = null;
 
 	//Holds the set of all key frames in order
 	private ArrayList<CyFrame> keyFrameList = null;
@@ -82,10 +96,11 @@ public class FrameManager {
 	private int videoResolution = 100;
 	private CyServiceRegistrar bundleContext;
 	private TaskManager<?,?> taskManager;
+	private CyRootNetwork rootNetwork;
 	//keeps track of the current frame being displayed during animation
 	int frameIndex = 0;
 
-	private VisualLexicon dingVisualLexicon;
+	private static VisualLexicon dingVisualLexicon;
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
@@ -100,9 +115,64 @@ public class FrameManager {
 		}
 
 		// Create a new frame manager for this root network
-		FrameManager fm = new FrameManager(bc);
+		FrameManager fm = new FrameManager(bc, rootNetwork);
 		networkMap.put(rootNetwork, fm);
 		return fm;
+	}
+
+	static public Collection<FrameManager> getAllFrameManagers() {
+		if (networkMap == null) return null;
+		return networkMap.values();
+	}
+
+	static public void reset() {
+		networkMap.clear();
+		if (dialogTask != null) {
+			for (CyRootNetwork rootNetwork: networkMap.keySet()) {
+				dialogTask.resetDialog(rootNetwork);
+			}
+		}
+	}
+
+	static public void registerDialogTask(CyAnimatorDialogTask dialogTask) {
+		FrameManager.dialogTask = dialogTask;
+	}
+
+	static public void restoreFramesFromSession(CyServiceRegistrar bc, CySession session, JSONObject frame) {
+		// Get the RootNetwork
+		String oldSUID = (String)frame.get("rootNetwork");
+		CyNetwork rootNetwork = session.getObject(Long.parseLong(oldSUID), CyNetwork.class);
+
+		// Create a FrameManager for this network
+		FrameManager manager = FrameManager.getFrameManager(bc, rootNetwork);
+
+		// Now, get each of the frames
+		for (Object frameObject: (JSONArray)frame.get("frames")) {
+			JSONObject jsonObject = (JSONObject) frameObject;
+			JSONArray networkArray = (JSONArray) jsonObject.get("networks");
+			String networkSuid = (String)((JSONObject)networkArray.get(0)).get("suid");
+			CyNetwork network = session.getObject(networkSuid, CyNetwork.class);
+			if (network == null)
+				continue;
+
+			CyNetworkView networkView = getNetworkView(bc, network);
+			if (networkView == null)
+				continue;
+
+			CyFrame cyFrame = new CyFrame(bc, manager, networkView);
+			cyFrame.loadFrame(session, dingVisualLexicon, jsonObject);
+		}
+
+	}
+
+	static private CyNetworkView getNetworkView(CyServiceRegistrar bc, CyNetwork network) {
+		CyNetworkViewManager viewManager = bc.getService(CyNetworkViewManager.class);
+		if (viewManager.viewExists(network)) {
+			for (CyNetworkView v: viewManager.getNetworkViews(network)) {
+				return v;
+			}
+		}
+		return null;
 	}
 
 	public int getFrameCount() {
@@ -115,17 +185,20 @@ public class FrameManager {
 
 	public Map<VisualProperty<?>, FrameInterpolator> getInterpolatorMap() { return interpolatorMap; }
 
-	protected FrameManager(CyServiceRegistrar bc){
+	protected FrameManager(CyServiceRegistrar bc, CyRootNetwork rootNetwork){
 		bundleContext = bc;
+		this.rootNetwork = rootNetwork;
 		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
 
-		RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
-		// Get the Ding Visual Lexicon
-		for (RenderingEngine engine: rem.getAllRenderingEngines()) {
-			if (engine.getRendererId().equals("org.cytoscape.ding")) {
-				dingVisualLexicon = engine.getVisualLexicon();
-				break;
+		if (dingVisualLexicon == null) {
+			RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
+			// Get the Ding Visual Lexicon
+			for (RenderingEngine engine: rem.getAllRenderingEngines()) {
+				if (engine.getRendererId().equals("org.cytoscape.ding")) {
+					dingVisualLexicon = engine.getVisualLexicon();
+					break;
+				}
 			}
 		}
 
@@ -356,6 +429,29 @@ public class FrameManager {
 		this.fps = frameCount;
 		this.videoType = videoType;
 		this.videoResolution = videoResolution;
+	}
+
+	/**
+	 * Write out the current frame list
+	 *
+	 * @param file the File to write the list to
+	 */
+	public void writeFrames(BufferedWriter output, boolean first) throws IOException {
+		if (first)
+			output.write(" {\n");
+		else
+			output.write("\n ,{\n");
+		output.write("\t\"rootNetwork\": "+rootNetwork.getSUID()+",\n");
+		output.write("\t\"frames\": [\n");
+		int frameNumber = 0;
+		for (CyFrame frame: keyFrameList) {
+			if (frameNumber > 0)
+				output.write(",\n");
+			frame.writeFrame(output, frameNumber);
+			frameNumber++;
+		}
+		output.write("\t]\n");
+		output.write(" }");
 	}
 
 	Map<VisualProperty<?>, FrameInterpolator> initializeInterpolators() {

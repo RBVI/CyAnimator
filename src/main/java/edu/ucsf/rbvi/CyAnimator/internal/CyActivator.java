@@ -12,11 +12,15 @@ import java.util.Properties;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.session.events.SessionAboutToBeSavedListener;
+import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.ucsf.rbvi.CyAnimator.internal.io.SaveSessionListener;
+import edu.ucsf.rbvi.CyAnimator.internal.io.LoadSessionListener;
 import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTaskFactory;
 import edu.ucsf.rbvi.CyAnimator.internal.model.AnnotationLexicon;
 
@@ -36,16 +40,22 @@ public class CyActivator extends AbstractCyActivator {
 
 	//	CyApplicationManager cyApplicationManager = getService(context, CyApplicationManager.class);
 	//	CyNetworkManager networkManager = (CyNetworkManager) getService(context, CyNetworkManager.class);
+		CyServiceRegistrar registrar = getService(context, CyServiceRegistrar.class);
 		
 		if (cyApplication == null) {
 			haveGUI = false;
-		}
-		else {
-			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(getService(context, CyServiceRegistrar.class));
+		} else {
+			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(registrar);
 			Properties dialogTaskProperties = new Properties();
 			setStandardProperties(dialogTaskProperties, "CyAnimator", null, "1.0");
 			registerService(context, dialogTaskFactory, NetworkViewTaskFactory.class, dialogTaskProperties);
 		}
+
+		SaveSessionListener ssl = new SaveSessionListener();
+		registerService(context, ssl, SessionAboutToBeSavedListener.class, new Properties());
+
+		LoadSessionListener lsl = new LoadSessionListener(registrar);
+		registerService(context, lsl, SessionLoadedListener.class, new Properties());
 	}
 	
 	private void setStandardProperties(Properties p, String title, String command, String gravity) {
