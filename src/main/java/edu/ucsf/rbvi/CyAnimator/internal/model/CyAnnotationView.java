@@ -40,7 +40,7 @@ class CyAnnotationView implements View<CyAnnotation> {
 	Paint savedArrowSourceColor = null;
 	Float savedImageOpacity = null;
 
-	static public List<CyAnnotationView> wrapViews(List<Annotation> annotations) {
+	static public List<CyAnnotationView> wrapViews(Set<Annotation> annotations) {
 		List<CyAnnotationView> views = new ArrayList<>();
 		if (annotations != null && annotations.size() > 0) {
 			for (Annotation a: annotations) {

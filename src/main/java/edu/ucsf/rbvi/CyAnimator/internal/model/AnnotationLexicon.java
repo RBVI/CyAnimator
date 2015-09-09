@@ -4,14 +4,20 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.cytoscape.view.model.ContinuousRange;
 import org.cytoscape.view.model.DiscreteRange;
 import org.cytoscape.view.model.NullDataType;
 import org.cytoscape.view.model.Range;
+import org.cytoscape.view.model.VisualLexicon;
+import org.cytoscape.view.model.VisualLexiconNode;
 import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.presentation.annotations.Annotation;
 import org.cytoscape.view.presentation.property.BooleanVisualProperty;
 import org.cytoscape.view.presentation.property.DoubleVisualProperty;
 import org.cytoscape.view.presentation.property.IntegerVisualProperty;
@@ -22,7 +28,7 @@ import org.cytoscape.view.presentation.property.StringVisualProperty;
  * A wrapper class that allows Annotations to be
  * CyIdentifiables
  */
-public class AnnotationLexicon {
+public class AnnotationLexicon implements VisualLexicon {
 	static final Range<Double> ARBITRARY_DOUBLE_RANGE = 
 					new ContinuousRange<>(Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, true);
 
@@ -37,6 +43,9 @@ public class AnnotationLexicon {
 	static final Color MIN_COLOR = new Color(0, 0, 0);
 	static final Color MAX_COLOR = new Color(0xFF, 0xFF, 0xFF);
 	static final Range<Paint> PAINT_RANGE = new ContinuousRange<>(Paint.class, MIN_COLOR, MAX_COLOR, true, true);
+
+	private final Map<String, VisualProperty<?>> identifierLookup;
+	private final Set<VisualProperty<?>> visualPropertySet;
 
 
 	// Define our visual properties
@@ -157,5 +166,86 @@ public class AnnotationLexicon {
 						           new DoubleVisualProperty(1.0, ARBITRARY_DOUBLE_RANGE,
 																			          "ANNOTATION_ARROW_TARGET_SIZE", "Annotation Target Arrow Size", CyAnnotation.class);
 
-	public AnnotationLexicon() { } 
+	public AnnotationLexicon() { 
+		visualPropertySet = new HashSet<>();
+		identifierLookup = new HashMap<>();
+		addVisualProperties();
+	}
+
+	private void addVisualProperties() {
+		addProperty(ANNOTATION_X_LOCATION);
+		addProperty(ANNOTATION_X_LOCATION);
+		addProperty(ANNOTATION_Y_LOCATION);
+		addProperty(ANNOTATION_ZOOM);
+		addProperty(ANNOTATION_CANVAS);
+		addProperty(ANNOTATION_WIDTH);
+		addProperty(ANNOTATION_HEIGHT);
+		addProperty(ANNOTATION_COLOR);
+		addProperty(ANNOTATION_OPACITY);
+
+		addProperty(ANNOTATION_BORDER_WIDTH);
+		addProperty(ANNOTATION_BORDER_COLOR);
+		addProperty(ANNOTATION_SHAPE); 
+		addProperty(ANNOTATION_TEXT); 
+		addProperty(ANNOTATION_FONT_SIZE);
+		addProperty(ANNOTATION_FONT_COLOR);
+		addProperty(ANNOTATION_FONT_STYLE);
+		addProperty(ANNOTATION_FONT_FAMILY);
+		addProperty(ANNOTATION_IMAGE_URL);
+		addProperty(ANNOTATION_IMAGE_CONTRAST);
+		addProperty(ANNOTATION_IMAGE_BRIGHTNESS);
+		addProperty(ANNOTATION_IMAGE_OPACITY);
+  	addProperty(ANNOTATION_ARROW_SOURCE_ANCHOR);
+  	addProperty(ANNOTATION_ARROW_SOURCE_TYPE);
+  	addProperty(ANNOTATION_ARROW_SOURCE_COLOR);
+  	addProperty(ANNOTATION_ARROW_SOURCE_SIZE);
+
+  	addProperty(ANNOTATION_ARROW_WIDTH);
+  	addProperty(ANNOTATION_ARROW_COLOR);
+
+  	addProperty(ANNOTATION_ARROW_TARGET_ANCHOR);
+  	addProperty(ANNOTATION_ARROW_TARGET_TYPE);
+  	addProperty(ANNOTATION_ARROW_TARGET_COLOR);
+  	addProperty(ANNOTATION_ARROW_TARGET_SIZE);
+	}
+
+	@Override
+	public Collection<VisualProperty<?>> getAllDescendants(VisualProperty<?> vp) {
+		return visualPropertySet;
+	}
+
+	@Override
+	public Set<VisualProperty<?>> getAllVisualProperties() {
+		return visualPropertySet;
+	}
+
+	@Override
+	public VisualProperty<NullDataType> getRootVisualProperty() {
+		return null;
+	}
+
+	public <T> Set<T> getSupportedValueRange(VisualProperty<T> vp) {
+		return null;
+	}
+
+	@Override
+	public VisualLexiconNode getVisualLexiconNode(VisualProperty<?> vp) { return null; }
+
+	@Override
+	public boolean isSupported(VisualProperty<?> vp) {
+		return visualPropertySet.contains(vp);
+	}
+
+	@Override
+	public VisualProperty<?> lookup(Class<?> type, String identifier) {
+		if (!type.isAssignableFrom(Annotation.class))
+			return null;
+		return identifierLookup.get(identifier);
+	}
+
+	private void addProperty(VisualProperty<?> prop) {
+		identifierLookup.put(prop.getIdString(), prop);
+		visualPropertySet.add(prop);
+	}
+
 }

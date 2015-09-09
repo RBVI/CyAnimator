@@ -104,7 +104,12 @@ public class FrameManager {
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
-		CyRootNetwork rootNetwork = ((CySubNetwork)network).getRootNetwork();
+		CyRootNetwork rootNetwork;
+		if (CyRootNetwork.class.isAssignableFrom(network.getClass())) 
+			rootNetwork = (CyRootNetwork) network;
+		else
+			rootNetwork = ((CySubNetwork)network).getRootNetwork();
+
 		if (networkMap == null)
 			networkMap = new HashMap<CyRootNetwork, FrameManager>();
 
@@ -126,7 +131,8 @@ public class FrameManager {
 	}
 
 	static public void reset() {
-		networkMap.clear();
+		if (networkMap != null)
+			networkMap.clear();
 		if (dialogTask != null) {
 			for (CyRootNetwork rootNetwork: networkMap.keySet()) {
 				dialogTask.resetDialog(rootNetwork);
@@ -140,8 +146,8 @@ public class FrameManager {
 
 	static public void restoreFramesFromSession(CyServiceRegistrar bc, CySession session, JSONObject frame) {
 		// Get the RootNetwork
-		String oldSUID = (String)frame.get("rootNetwork");
-		CyNetwork rootNetwork = session.getObject(Long.parseLong(oldSUID), CyNetwork.class);
+		Long oldSUID = (Long)frame.get("rootNetwork");
+		CyNetwork rootNetwork = session.getObject(oldSUID, CyNetwork.class);
 
 		// Create a FrameManager for this network
 		FrameManager manager = FrameManager.getFrameManager(bc, rootNetwork);
@@ -151,7 +157,8 @@ public class FrameManager {
 			JSONObject jsonObject = (JSONObject) frameObject;
 			JSONArray networkArray = (JSONArray) jsonObject.get("networks");
 			String networkSuid = (String)((JSONObject)networkArray.get(0)).get("suid");
-			CyNetwork network = session.getObject(networkSuid, CyNetwork.class);
+			// CyNetwork network = session.getObject(networkSuid, CyNetwork.class);
+			CyNetwork network = session.getObject(Long.parseLong(networkSuid), CyNetwork.class);
 			if (network == null)
 				continue;
 
@@ -161,6 +168,7 @@ public class FrameManager {
 
 			CyFrame cyFrame = new CyFrame(bc, manager, networkView);
 			cyFrame.loadFrame(session, dingVisualLexicon, jsonObject);
+			manager.addKeyFrame(cyFrame);
 		}
 
 	}
@@ -228,7 +236,7 @@ public class FrameManager {
 		//System.out.println("Frame ID: "+frameid);
 
 		//capture an image of the frame
-		frame.captureImage();
+		frame.captureImage(null);
 
 		//frameid++;
 
@@ -262,6 +270,20 @@ public class FrameManager {
 	 */
 	public void addKeyFrame() throws IOException{
 		keyFrameList.add(captureCurrentFrame());
+
+		if(keyFrameList.size() > 1 && timer != null){ 
+			updateTimer();
+		}else{
+			makeTimer(); 
+		}
+	}
+
+	/**
+	 * Adds the current frame to the keyFrameList and creates a new timer or
+	 * updates the existing timer.
+	 */
+	public void addKeyFrame(CyFrame frame) {
+		keyFrameList.add(frame);
 
 		if(keyFrameList.size() > 1 && timer != null){ 
 			updateTimer();

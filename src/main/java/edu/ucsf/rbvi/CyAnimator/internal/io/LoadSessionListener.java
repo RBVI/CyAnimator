@@ -37,7 +37,6 @@ public class LoadSessionListener implements SessionLoadedListener {
 	public void handleEvent(SessionLoadedEvent e) {
 		// Reset CyAnimator
 		FrameManager.reset();
-		// dialog.reset(); // Not sure what the right thing to do is here...
 
 		// Get the session
 		CySession session = e.getLoadedSession();
@@ -56,7 +55,9 @@ public class LoadSessionListener implements SessionLoadedListener {
 			// For each root network, get the 
 			if (jsonObject instanceof JSONArray) {
 				for (Object obj: (JSONArray)jsonObject) {
-					FrameManager.restoreFramesFromSession(registrar, session, (JSONObject)obj);
+					try {
+						FrameManager.restoreFramesFromSession(registrar, session, (JSONObject)obj);
+					} catch (Exception ex) { ex.printStackTrace(); }
 				}
 			}
 			bReader.close();

@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
@@ -102,13 +103,14 @@ public class CyFrame {
 	private Set<CyAnnotationView> annotationViewList = null;
 	private Set<CyNode> nodeList = null;
 	private Set<CyEdge> edgeList = null;
-	private List<Annotation> annotationList = null;
+	private Set<Annotation> annotationList = null;
 	private VisualStyle vizStyle = null;
 	private int intercount = 0;
 	private SynchronousTaskManager<?> taskManager;
 	private FrameManager frameManager;
 	private AnnotationFactory<?> annotationFactory;
 	private AnnotationManager annotationManager;
+	private AnnotationLexicon annotationLexicon;
 
 	private static final int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
 
@@ -121,18 +123,19 @@ public class CyFrame {
 		this(bc, frameManager, null);
 	}
 
-	public CyFrame(CyServiceRegistrar bc, FrameManager frameManager, CyNetworkView networkView) {
+	public CyFrame(CyServiceRegistrar bc, FrameManager frameManager, CyNetworkView view) {
 		bundleContext = bc;
 		this.frameManager = frameManager;
-		this.networkView = networkView;
+		networkView = view;
 
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
 		annotationManager = bundleContext.getService(AnnotationManager.class);
 		annotationFactory = bundleContext.getService(AnnotationFactory.class);
+		annotationLexicon = new AnnotationLexicon();
 
 		if (networkView == null)
-			this.networkView = appManager.getCurrentNetworkView();
+			networkView = appManager.getCurrentNetworkView();
 
 		recordNode = new HashMap<CyNode, CyNode>();
 		recordEdge = new HashMap<CyEdge, CyEdge>();
@@ -150,9 +153,11 @@ public class CyFrame {
 		currentNetwork = networkView.getModel();
 
 		// Now get all of our annotations
-		annotationList = annotationManager.getAnnotations(networkView);
-		if (annotationList == null)
-			annotationList = new ArrayList<>();
+		if (annotationManager.getAnnotations(networkView) == null) {
+			annotationList = new HashSet<>();
+		} else {
+			annotationList = new HashSet<>(annotationManager.getAnnotations(networkView));
+		}
 		annotationViewList = new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(annotationList));
 
 		// Remember the visual style
@@ -305,12 +310,13 @@ public class CyFrame {
 	 * this frame.
 	 * @throws IOException throws exception if cannot create or read temporary file
 	 */
-	public void captureImage() throws IOException {
+	public void captureImage(CyNetworkView view) throws IOException {
 
 	/*	double scale = .35;
 		double wscale = .25; */
 
-		CyNetworkView view = appManager.getCurrentNetworkView();
+		if (view == null)
+			view = appManager.getCurrentNetworkView();
 
 		NetworkViewTaskFactory exportImageTaskFactory = bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
 		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
@@ -688,7 +694,7 @@ public class CyFrame {
 	 * @return the list of annotations
 	 */
 	public List<Annotation> getAnnotationList() {
-		return annotationList;
+		return new ArrayList<>(annotationList);
 	}
 
 	/**
@@ -742,7 +748,7 @@ public class CyFrame {
 	 * @param annotationList the list of annotations
 	 */
 	public void setAnnotationList(List<Annotation> annotationList) {
-		this.annotationList = annotationList;
+		this.annotationList = new HashSet<>(annotationList);
 	}
 
 	/**
@@ -798,38 +804,75 @@ public class CyFrame {
 	}
 
 	public void loadFrame(CySession session, VisualLexicon lex, JSONObject frameObject) {
-		int frameNumber = ((Integer) frameObject.get("frameNumber")).intValue();
+		int frameNumber = ((Long) frameObject.get("frameNumber")).intValue();
 		frameid = (String) frameObject.get("frameId");
+		intercount = ((Long) frameObject.get("interCount")).intValue();
+
+		// We need to reset to get the right nodes and node views
+		nodeViewList = new HashSet<View<? extends CyIdentifiable>>();
+		nodeList = new HashSet<CyNode>();
 
 		// Create property maps
 		for (Object nodeEntry: (JSONArray)frameObject.get("nodes")) {
 			JSONObject jsonNode = (JSONObject) nodeEntry;
-			CyNode node = session.getObject((String)jsonNode.get("suid"), CyNode.class);
+			CyNode node = session.getObject(Long.parseLong((String)jsonNode.get("suid")), CyNode.class);
+			if (networkView.getNodeView(node) == null)
+				continue;
+			nodeList.add(node);
+			nodeViewList.add(networkView.getNodeView(node));
 			nodePropertyMap.put(node, new HashMap<VisualProperty<?>, Object>());
 			populatePropertyMap((JSONArray)jsonNode.get("properties"), nodePropertyMap.get(node), lex, CyNode.class);
 		}
 
+		// We need to reset to get the right nodes and node views
+		edgeViewList = new HashSet<View<? extends CyIdentifiable>>();
+		edgeList = new HashSet<CyEdge>();
+
 		for (Object edgeEntry: (JSONArray)frameObject.get("edges")) {
 			JSONObject jsonEdge = (JSONObject) edgeEntry;
-			CyEdge edge = session.getObject((String)jsonEdge.get("suid"), CyEdge.class);
+			CyEdge edge = session.getObject(Long.parseLong((String)jsonEdge.get("suid")), CyEdge.class);
+			if (networkView.getEdgeView(edge) == null)
+				continue;
+			edgeList.add(edge);
+			edgeViewList.add(networkView.getEdgeView(edge));
 			edgePropertyMap.put(edge, new HashMap<VisualProperty<?>, Object>());
 			populatePropertyMap((JSONArray)jsonEdge.get("properties"), edgePropertyMap.get(edge), lex, CyEdge.class);
 		}
 
-		JSONArray networkArray = (JSONArray)frameObject.get("networks");
 		for (Object networkEntry: (JSONArray)frameObject.get("networks")) {
 			JSONObject jsonNetwork = (JSONObject) networkEntry;
-			CyNetwork network = session.getObject((String)jsonNetwork.get("suid"), CyNetwork.class);
+			CyNetwork network = session.getObject(Long.parseLong((String)jsonNetwork.get("suid")), CyNetwork.class);
 			networkPropertyMap.put(network, new HashMap<VisualProperty<?>, Object>());
 			populatePropertyMap((JSONArray)jsonNetwork.get("properties"), networkPropertyMap.get(network), lex, CyNetwork.class);
 		}
 
-		// Need a different lexicon for annotations
-		JSONArray annotationsArray = (JSONArray)frameObject.get("annotations");
+		annotationList = new HashSet<>();
+		List<Annotation> allAnnotations = annotationManager.getAnnotations(networkView);
+		for (Object annotationEntry: (JSONArray)frameObject.get("annotations")) {
+			JSONObject jsonAnnotation = (JSONObject) annotationEntry;
+			Annotation annotation = getAnnotationFromList((String)jsonAnnotation.get("suid"), allAnnotations);
+			if (annotation == null) {
+				System.out.println("Can't find annotation: "+(String)jsonAnnotation.get("suid"));
+				continue;
+			}
+			annotationList.add(annotation);
+			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>()); 
+			populatePropertyMap((JSONArray)jsonAnnotation.get("properties"), annotationPropertyMap.get(annotation), 
+			                     annotationLexicon, Annotation.class);
+		}
+		annotationViewList = new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(annotationList));
+
+		try {
+			// Finally, update our image
+			display();
+			captureImage(networkView);
+		} catch (IOException ioe) {
+		}
 
 	}
 
-	private void populatePropertyMap(JSONArray array, Map<VisualProperty<?>, Object> propertyMap, VisualLexicon visualLexicon, Class<?> type) {
+	private void populatePropertyMap(JSONArray array, Map<VisualProperty<?>, Object> propertyMap, 
+	                                 VisualLexicon visualLexicon, Class<?> type) {
 		for (Object entry: array) {
 			JSONObject property = (JSONObject) entry;
 			for (Object key: property.keySet()) {
@@ -840,10 +883,20 @@ public class CyFrame {
 		}
 	}
 
+	private Annotation getAnnotationFromList(String uuid, List<Annotation> annotations) {
+		UUID annotationID = UUID.fromString(uuid);
+		for (Annotation a: annotations) {
+			if (a.getUUID().equals(annotationID))
+				return a;
+		}
+		return null;
+	}
+
 	public void writeFrame(BufferedWriter writer, int frameNumber) throws IOException {
 		writer.write("\t\t{\n");
 		writer.write("\t\t\t\"frameNumber\": "+frameNumber+",\n");
 		writer.write("\t\t\t\"frameID\": \""+frameid+"\",\n");
+		writer.write("\t\t\t\"interCount\": "+intercount+",\n");
 
 		// Write out our node data
 		writer.write("\t\t\t\"nodes\": [\n");
@@ -852,7 +905,7 @@ public class CyFrame {
 			writeProperties(writer, node.getSUID().toString(), nodePropertyMap.get(node), first);
 			first = false;
 		}
-		writer.write("\t\t\t],\n");
+		writer.write("\n\t\t\t],\n");
 
 		// Write out our edge data
 		writer.write("\t\t\t\"edges\": [\n");
@@ -861,7 +914,7 @@ public class CyFrame {
 			writeProperties(writer, edge.getSUID().toString(), edgePropertyMap.get(edge), first);
 			first = false;
 		}
-		writer.write("\t\t\t],\n");
+		writer.write("\n\t\t\t],\n");
 
 		// Write out our network data
 		writer.write("\t\t\t\"networks\": [\n");
@@ -869,7 +922,7 @@ public class CyFrame {
 		// Only have one network
 		writeProperties(writer, currentNetwork.getSUID().toString(), networkPropertyMap.get(currentNetwork), first);
 
-		writer.write("\t\t\t],\n");
+		writer.write("\n\t\t\t],\n");
 
 		// Write out our annotation data
 		writer.write("\t\t\t\"annotations\": [\n");
@@ -878,7 +931,7 @@ public class CyFrame {
 			writeProperties(writer, annotation.getUUID().toString(), annotationPropertyMap.get(annotation), first);
 			first = false;
 		}
-		writer.write("\t\t\t]\n");
+		writer.write("\n\t\t\t]\n");
 		writer.write("\t\t}\n");
 	}
 
