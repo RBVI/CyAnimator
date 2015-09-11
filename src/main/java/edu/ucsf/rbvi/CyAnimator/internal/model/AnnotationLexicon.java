@@ -185,6 +185,7 @@ public class AnnotationLexicon implements VisualLexicon {
 
 		addProperty(ANNOTATION_BORDER_WIDTH);
 		addProperty(ANNOTATION_BORDER_COLOR);
+		addProperty(ANNOTATION_BORDER_OPACITY);
 		addProperty(ANNOTATION_SHAPE); 
 		addProperty(ANNOTATION_TEXT); 
 		addProperty(ANNOTATION_FONT_SIZE);

@@ -108,7 +108,6 @@ public class CyFrame {
 	private int intercount = 0;
 	private SynchronousTaskManager<?> taskManager;
 	private FrameManager frameManager;
-	private AnnotationFactory<?> annotationFactory;
 	private AnnotationManager annotationManager;
 	private AnnotationLexicon annotationLexicon;
 
@@ -131,7 +130,6 @@ public class CyFrame {
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
 		annotationManager = bundleContext.getService(AnnotationManager.class);
-		annotationFactory = bundleContext.getService(AnnotationFactory.class);
 		annotationLexicon = new AnnotationLexicon();
 
 		if (networkView == null)
@@ -158,7 +156,7 @@ public class CyFrame {
 		} else {
 			annotationList = new HashSet<>(annotationManager.getAnnotations(networkView));
 		}
-		annotationViewList = new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(annotationList));
+		annotationViewList = new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(networkView, annotationList));
 
 		// Remember the visual style
 		VisualMappingManager visualManager = bundleContext.getService(VisualMappingManager.class);
@@ -204,6 +202,7 @@ public class CyFrame {
 			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>());
 			CyAnnotationView view = CyAnnotationView.getAnnotationView(annotation, annotationViewList);
 			if (view != null) {
+				// System.out.println("Adding annotation: "+printArgMap(annotation.getArgMap()));
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyAnnotation.class)) {
 						annotationPropertyMap.get(annotation).put(property, view.getVisualProperty(property));
@@ -211,6 +210,20 @@ public class CyFrame {
 				}
 			}
 		}
+	}
+
+	private String printArgMap(Map<String,String> argMap) {
+		boolean first = true;
+		String result = "";
+		for (String key: argMap.keySet()) {
+			if (!first)
+				result += "|"+key+"="+argMap.get(key);
+			else {
+				result = key+"="+argMap.get(key);
+				first = false;
+			}
+		}
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -461,16 +474,15 @@ public class CyFrame {
 		if (annotations != null) {
 			for (Annotation annotation : annotations) {
 				if (!annotationList.contains(annotation)) {
-					CyAnnotationView view = new CyAnnotationView(annotation);
-					// System.out.println("Hiding annotation: "+view.getModel().getAnnotation());
-					view.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, false);
-				} else {
-					CyAnnotationView view = new CyAnnotationView(annotation);
-					// System.out.println("Showing annotation: "+view.getModel().getAnnotation());
-					view.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, true);
+					removeAnnotations.add(annotation);
 				}
-				annotation.update();
 			}
+		}
+
+		for (Annotation ann: removeAnnotations) {
+			CyAnnotationView annView = CyAnnotationView.getAnnotationView(currentView, ann);
+			annView.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, false);
+			ann.update();
 		}
 	}
 
@@ -546,52 +558,78 @@ public class CyFrame {
 	
 	private void handleAnnotations(final CyNetworkView currentView) {
 		for (Annotation annotation: annotationPropertyMap.keySet()) {
+			// debug("looking at annotation: "+annotation);
 			CyAnnotationView view = CyAnnotationView.getAnnotationView(annotation, annotationViewList);
-			if (view == null) {
-				// Add temporary node to view for viewing the annotation which is removed from current network
+			if (view == null || !annotationPresent(currentView, annotation)) {
+				// debug("view is null");
+				// Add temporary annotation to view for viewing the annotation which is removed from current network
 				if (!recordAnnotation.containsKey(annotation)) {
-					CyAnnotation artAnnotation = copyAnnotation(currentView, annotation);
+					// debug("Making copy");
+					CyAnnotation artAnnotation = copyAnnotation(currentView, 
+					                                            annotation.getClass(), 
+																			                annotation.getArgMap());
+					// debug("new annotation: "+artAnnotation.toString());
 					recordAnnotation.put(annotation, artAnnotation.getAnnotation());
 					annotationManager.addAnnotation(artAnnotation.getAnnotation());
-					view = new CyAnnotationView(artAnnotation);
+					view = CyAnnotationView.getAnnotationView(currentView, artAnnotation.getAnnotation());
+					artAnnotation.getAnnotation().update();
 					currentView.updateView();
 				} else {
-					view = new CyAnnotationView(annotation);
+					// debug("not making copy");
+					view = CyAnnotationView.getAnnotationView(currentView, recordAnnotation.get(annotation));
 				}
 			}
+			// debug("getting property map");
 			Map<VisualProperty<?>, Object> propertyValues = annotationPropertyMap.get(annotation);
 			for (VisualProperty<?> vp: propertyValues.keySet()) {
 				if (view.isValueLocked(vp))
 					view.clearValueLock(vp);
+				// if (propertyValues.get(vp) != null)
+					// debug("setting visual property "+vp+" to "+propertyValues.get(vp));
 				view.setVisualProperty(vp, propertyValues.get(vp));
 			}
-			annotation.update();
+			// debug("updating annotation");
+			view.getModel().getAnnotation().update();
 		}
+		// debug("updating view");
 		currentView.updateView();
 	}
 
+	private boolean annotationPresent(CyNetworkView networkView, Annotation annotation) {
+		List<Annotation> annList = annotationManager.getAnnotations(networkView);
+		if (annList == null) 
+			return false;
+		return annList.contains(annotation);
+	}
+
 	@SuppressWarnings("unchecked")
-	private CyAnnotation copyAnnotation(final CyNetworkView networkView, Annotation annotation) {
-		Map<String, String> argMap = annotation.getArgMap();
+	private CyAnnotation copyAnnotation(final CyNetworkView networkView, 
+											                Class<?> annClass,
+	                                    Map<String, String> argMap) { 
 		argMap.remove("uuid"); // Generate a new UUID
-		if (annotation instanceof BoundedTextAnnotation)  {
-			AnnotationFactory<BoundedTextAnnotation> factory = (AnnotationFactory<BoundedTextAnnotation>)annotationFactory;
+		if (BoundedTextAnnotation.class.isAssignableFrom(annClass))  {
+			AnnotationFactory<BoundedTextAnnotation> factory = 
+					bundleContext.getService(AnnotationFactory.class, "(type=BoundedTextAnnotation.class)");
 			BoundedTextAnnotation bt = factory.createAnnotation(BoundedTextAnnotation.class, networkView, argMap);
 			return new CyAnnotationImpl(bt);
-		} else if (annotation instanceof ShapeAnnotation)  {
-			AnnotationFactory<ShapeAnnotation> factory = (AnnotationFactory<ShapeAnnotation>)annotationFactory;
+		} else if (ShapeAnnotation.class.isAssignableFrom(annClass))  {
+			AnnotationFactory<ShapeAnnotation> factory = 
+					bundleContext.getService(AnnotationFactory.class, "(type=ShapeAnnotation.class)");
 			ShapeAnnotation sa = factory.createAnnotation(ShapeAnnotation.class, networkView, argMap);
 			return new CyAnnotationImpl(sa);
-		} else if (annotation instanceof TextAnnotation)  {
-			AnnotationFactory<TextAnnotation> factory = (AnnotationFactory<TextAnnotation>)annotationFactory;
+		} else if (TextAnnotation.class.isAssignableFrom(annClass))  {
+			AnnotationFactory<TextAnnotation> factory = 
+					bundleContext.getService(AnnotationFactory.class, "(type=TextAnnotation.class)");
 			TextAnnotation ta = factory.createAnnotation(TextAnnotation.class, networkView, argMap);
 			return new CyAnnotationImpl(ta);
-		} else if (annotation instanceof ImageAnnotation)  {
-			AnnotationFactory<ImageAnnotation> factory = (AnnotationFactory<ImageAnnotation>)annotationFactory;
+		} else if (ImageAnnotation.class.isAssignableFrom(annClass))  {
+			AnnotationFactory<ImageAnnotation> factory = 
+					bundleContext.getService(AnnotationFactory.class, "(type=ImageAnnotation.class)");
 			ImageAnnotation ia = factory.createAnnotation(ImageAnnotation.class, networkView, argMap);
 			return new CyAnnotationImpl(ia);
-		} else if (annotation instanceof ArrowAnnotation)  {
-			AnnotationFactory<ArrowAnnotation> factory = (AnnotationFactory<ArrowAnnotation>)annotationFactory;
+		} else if (ArrowAnnotation.class.isAssignableFrom(annClass))  {
+			AnnotationFactory<ArrowAnnotation> factory = 
+					bundleContext.getService(AnnotationFactory.class, "(type=ArrowAnnotation.class)");
 			ArrowAnnotation aa = factory.createAnnotation(ArrowAnnotation.class, networkView, argMap);
 			return new CyAnnotationImpl(aa);
 		}
@@ -815,13 +853,14 @@ public class CyFrame {
 		// Create property maps
 		for (Object nodeEntry: (JSONArray)frameObject.get("nodes")) {
 			JSONObject jsonNode = (JSONObject) nodeEntry;
-			CyNode node = session.getObject(Long.parseLong((String)jsonNode.get("suid")), CyNode.class);
+			CyNode node = session.getObject((Long)jsonNode.get("suid"), CyNode.class);
 			if (networkView.getNodeView(node) == null)
 				continue;
 			nodeList.add(node);
 			nodeViewList.add(networkView.getNodeView(node));
 			nodePropertyMap.put(node, new HashMap<VisualProperty<?>, Object>());
-			populatePropertyMap((JSONArray)jsonNode.get("properties"), nodePropertyMap.get(node), lex, CyNode.class);
+			populatePropertyMap((JSONArray)jsonNode.get("properties"), 
+			                    nodePropertyMap.get(node), lex, CyNode.class);
 		}
 
 		// We need to reset to get the right nodes and node views
@@ -830,37 +869,55 @@ public class CyFrame {
 
 		for (Object edgeEntry: (JSONArray)frameObject.get("edges")) {
 			JSONObject jsonEdge = (JSONObject) edgeEntry;
-			CyEdge edge = session.getObject(Long.parseLong((String)jsonEdge.get("suid")), CyEdge.class);
+			CyEdge edge = session.getObject((Long)jsonEdge.get("suid"), CyEdge.class);
 			if (networkView.getEdgeView(edge) == null)
 				continue;
 			edgeList.add(edge);
 			edgeViewList.add(networkView.getEdgeView(edge));
 			edgePropertyMap.put(edge, new HashMap<VisualProperty<?>, Object>());
-			populatePropertyMap((JSONArray)jsonEdge.get("properties"), edgePropertyMap.get(edge), lex, CyEdge.class);
+			populatePropertyMap((JSONArray)jsonEdge.get("properties"), 
+			                    edgePropertyMap.get(edge), lex, CyEdge.class);
 		}
 
 		for (Object networkEntry: (JSONArray)frameObject.get("networks")) {
 			JSONObject jsonNetwork = (JSONObject) networkEntry;
-			CyNetwork network = session.getObject(Long.parseLong((String)jsonNetwork.get("suid")), CyNetwork.class);
+			CyNetwork network = session.getObject((Long)jsonNetwork.get("suid"), CyNetwork.class);
 			networkPropertyMap.put(network, new HashMap<VisualProperty<?>, Object>());
-			populatePropertyMap((JSONArray)jsonNetwork.get("properties"), networkPropertyMap.get(network), lex, CyNetwork.class);
+			populatePropertyMap((JSONArray)jsonNetwork.get("properties"), 
+			                    networkPropertyMap.get(network), lex, CyNetwork.class);
 		}
 
 		annotationList = new HashSet<>();
 		List<Annotation> allAnnotations = annotationManager.getAnnotations(networkView);
 		for (Object annotationEntry: (JSONArray)frameObject.get("annotations")) {
 			JSONObject jsonAnnotation = (JSONObject) annotationEntry;
-			Annotation annotation = getAnnotationFromList((String)jsonAnnotation.get("suid"), allAnnotations);
+			Annotation annotation = getAnnotationFromList((String)jsonAnnotation.get("uuid"), 
+			                                              allAnnotations);
 			if (annotation == null) {
-				System.out.println("Can't find annotation: "+(String)jsonAnnotation.get("suid"));
-				continue;
+				// OK, the annotation didn't get saved, so we need to re-created it.
+				Map<String, String> annMap = 
+								createArgMap((String)jsonAnnotation.get("annotation"));
+				if (annMap != null && annMap.size() > 0) {
+					try {
+						Class<?> annClass = Class.forName(annMap.get("type"));
+						CyAnnotation cyAnn = copyAnnotation(networkView, annClass, annMap);
+						annotation = cyAnn.getAnnotation();
+					} catch (ClassNotFoundException cnfe) {
+						continue;
+					}
+				} else {
+					System.out.println("Can't find annotation: "+(String)jsonAnnotation.get("suid"));
+					continue;
+				}
 			}
 			annotationList.add(annotation);
 			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>()); 
-			populatePropertyMap((JSONArray)jsonAnnotation.get("properties"), annotationPropertyMap.get(annotation), 
+			populatePropertyMap((JSONArray)jsonAnnotation.get("properties"), 
+			                     annotationPropertyMap.get(annotation), 
 			                     annotationLexicon, Annotation.class);
 		}
-		annotationViewList = new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(annotationList));
+		annotationViewList = 
+					new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(networkView, annotationList));
 
 		try {
 			// Finally, update our image
@@ -871,24 +928,33 @@ public class CyFrame {
 
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void populatePropertyMap(JSONArray array, Map<VisualProperty<?>, Object> propertyMap, 
 	                                 VisualLexicon visualLexicon, Class<?> type) {
 		for (Object entry: array) {
 			JSONObject property = (JSONObject) entry;
 			for (Object key: property.keySet()) {
+				try {
 				VisualProperty p = visualLexicon.lookup(type, (String) key);
 				Object v = p.parseSerializableString((String)property.get(key));
 				propertyMap.put(p, v);
+				} catch (Exception e) {
+					System.out.println("Exception: "+key+"="+(String)property.get(key));
+					System.out.println("Type = "+type);
+					System.out.println("Property = "+visualLexicon.lookup(type, (String) key));
+				}
 			}
 		}
 	}
 
-	private Annotation getAnnotationFromList(String uuid, List<Annotation> annotations) {
+	private Annotation getAnnotationFromList(String uuid, 
+	                                         List<Annotation> annotations) {
 		UUID annotationID = UUID.fromString(uuid);
 		for (Annotation a: annotations) {
 			if (a.getUUID().equals(annotationID))
 				return a;
 		}
+
 		return null;
 	}
 
@@ -902,7 +968,7 @@ public class CyFrame {
 		writer.write("\t\t\t\"nodes\": [\n");
 		boolean first = true;
 		for (CyNode node: nodeList) {
-			writeProperties(writer, node.getSUID().toString(), nodePropertyMap.get(node), first);
+			writeCyIdentifiable(writer, node.getSUID(), nodePropertyMap.get(node), first);
 			first = false;
 		}
 		writer.write("\n\t\t\t],\n");
@@ -911,7 +977,7 @@ public class CyFrame {
 		writer.write("\t\t\t\"edges\": [\n");
 		first = true;
 		for (CyEdge edge: edgeList) {
-			writeProperties(writer, edge.getSUID().toString(), edgePropertyMap.get(edge), first);
+			writeCyIdentifiable(writer, edge.getSUID(), edgePropertyMap.get(edge), first);
 			first = false;
 		}
 		writer.write("\n\t\t\t],\n");
@@ -920,7 +986,8 @@ public class CyFrame {
 		writer.write("\t\t\t\"networks\": [\n");
 		first = true;
 		// Only have one network
-		writeProperties(writer, currentNetwork.getSUID().toString(), networkPropertyMap.get(currentNetwork), first);
+		writeCyIdentifiable(writer, currentNetwork.getSUID(), 
+		                    networkPropertyMap.get(currentNetwork), first);
 
 		writer.write("\n\t\t\t],\n");
 
@@ -928,22 +995,46 @@ public class CyFrame {
 		writer.write("\t\t\t\"annotations\": [\n");
 		first = true;
 		for (Annotation annotation: annotationList) {
-			writeProperties(writer, annotation.getUUID().toString(), annotationPropertyMap.get(annotation), first);
+			writeAnnotation(writer, annotation, 
+			                annotationPropertyMap.get(annotation), first);
 			first = false;
 		}
 		writer.write("\n\t\t\t]\n");
-		writer.write("\t\t}\n");
+		writer.write("\t\t}");
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private void writeProperties(BufferedWriter writer, String id, 
-	                             Map<VisualProperty<?>, Object> vpMap, boolean first) throws IOException {
+	private void writeCyIdentifiable(BufferedWriter writer, Long id, 
+	                                 Map<VisualProperty<?>, Object> vpMap, 
+														    	 boolean first) throws IOException {
 		if (vpMap == null || vpMap.size() == 0) return;
 
 		if (!first)
 			writer.write(",\n");
 
-		writer.write("\t\t\t\t{ \"suid\": \""+id+"\",\n");
+		writer.write("\t\t\t\t{ \"suid\": "+id+",\n");
+		writeProperties(writer, vpMap);
+		writer.write("\t\t\t\t}");
+	}
+
+	private void writeAnnotation(BufferedWriter writer, Annotation ann,
+	                             Map<VisualProperty<?>, Object> vpMap, 
+														   boolean first) throws IOException {
+		if (vpMap == null || vpMap.size() == 0) return;
+
+		if (!first)
+			writer.write(",\n");
+
+		writer.write("\t\t\t\t{ \"uuid\": \""+ann.getUUID().toString()+"\",\n");
+		// We need to serialize the annotation since it may not be present 
+		// in the session file, so we'll need to restore it
+		writer.write("\t\t\t\t  \"annotation\": \""+serializeAnnotation(ann)+"\",\n");
+		writeProperties(writer, vpMap);
+		writer.write("\t\t\t\t}");
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private void writeProperties(BufferedWriter writer, Map<VisualProperty<?>, Object> vpMap) 
+	                             throws IOException {
 		writer.write("\t\t\t\t  \"properties\": [\n");
 		boolean vFirst = true;
 		for (VisualProperty property: vpMap.keySet()) {
@@ -951,12 +1042,40 @@ public class CyFrame {
 			if (value != null) {
 				if (!vFirst)
 					writer.write(",\n");
-				writer.write("\t\t\t\t\t\t{ \""+property.getIdString()+"\": \""+property.toSerializableString(value)+"\" }");
+				writer.write("\t\t\t\t\t\t{ \""+property.getIdString()+"\": \""+
+				             property.toSerializableString(value)+"\" }");
 				vFirst = false;
 			}
 		}
 		writer.write("\t\t\t\t  ]\n");
-		writer.write("\t\t\t\t}");
+	}
+
+	private String serializeAnnotation(Annotation annotation) {
+		Map<String,String> argMap = annotation.getArgMap();
+		String result = null;
+		for (String arg: argMap.keySet()) {
+			if (result == null) 
+				result = arg+"="+argMap.get(arg);
+			else
+				result += "|"+arg+"="+argMap.get(arg);
+		}
+		return result;
+	}
+
+	private Map<String, String> createArgMap(String annString) {
+		Map<String,String> argMap = new HashMap<>();
+		String[] tokens = annString.split("|");
+		for (String token: tokens) {
+			String[] pair = token.split("=");
+			argMap.put(pair[0], pair[1]);
+		}
+		return argMap;
+	}
+
+	private void debug(String str) {
+		if (frameid != null && frameid.length() > 0) {
+			System.out.println("Annotation "+frameid+": "+str);
+		}
 	}
 
 	class DisplayFrame implements Runnable {

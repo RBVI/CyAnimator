@@ -27,4 +27,8 @@ class CyAnnotationImpl implements CyAnnotation {
 	public Long getSUID() {
 		return suid;
 	}
+
+	public String toString() {
+		return "CyAnnotation "+suid+": "+annotation.toString();
+	}
 }

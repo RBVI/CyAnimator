@@ -36,6 +36,7 @@ public class VisibleInterpolator implements FrameInterpolator {
 		for(View<? extends CyIdentifiable> id: idList){
 			Boolean valueOne = (Boolean)frameOne.getValue(id,property);
 			Boolean valueTwo = (Boolean)frameTwo.getValue(id,property);
+
 			if (valueOne == null && valueTwo == null)
 				continue;
 
@@ -89,6 +90,9 @@ public class VisibleInterpolator implements FrameInterpolator {
 	void updateTransparencies(int index, View<? extends CyIdentifiable> id, CyFrame[] cyFrameArray, float transFactor) {
 		for (VisualProperty<?> transProp: transparencyProperties) {
 			Number trans = (Number)cyFrameArray[index].getValue(id, transProp);
+			if (trans == null)
+				continue;
+
 			float newTrans = trans.floatValue()*transFactor;
 			if (transProp.getRange().getType().equals(Integer.class))
 				cyFrameArray[index].putValue(id, transProp, (int)newTrans);

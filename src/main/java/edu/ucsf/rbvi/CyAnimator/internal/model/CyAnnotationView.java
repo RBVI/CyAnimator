@@ -7,11 +7,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.SUIDFactory;
+import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.model.VisualProperty;
 import org.cytoscape.view.presentation.annotations.Annotation;
@@ -27,6 +30,7 @@ import org.cytoscape.view.presentation.annotations.TextAnnotation;
  */
 // class CyAnnotationView<CyAnnotation extends CyIdentifiable> implements View<CyAnnotation> {
 class CyAnnotationView implements View<CyAnnotation> {
+	static Map<CyNetworkView,Map<Annotation, CyAnnotationView>> viewMap;
 	final CyAnnotation cyAnnotation;
 	final Annotation annotation;
 	final long suid;
@@ -34,22 +38,42 @@ class CyAnnotationView implements View<CyAnnotation> {
 
 	Paint savedTextColor = null;
 	Paint savedFillColor = null;
-	Paint savedBorderColor = null;
+	double savedBorderOpacity = 100.0;
 	Paint savedLineColor = null;
 	Paint savedArrowTargetColor = null;
 	Paint savedArrowSourceColor = null;
 	Float savedImageOpacity = null;
 
-	static public List<CyAnnotationView> wrapViews(Set<Annotation> annotations) {
+	static public List<CyAnnotationView> wrapViews(CyNetworkView networkView, Set<Annotation> annotations) {
+		if (viewMap == null) viewMap = new HashMap<>();
+
+		if (!viewMap.containsKey(networkView))
+			viewMap.put(networkView, new HashMap<Annotation, CyAnnotationView>());
+
+		Map<Annotation, CyAnnotationView> annMap = viewMap.get(networkView);
+
 		List<CyAnnotationView> views = new ArrayList<>();
 		if (annotations != null && annotations.size() > 0) {
 			for (Annotation a: annotations) {
 				CyAnnotation cyA = new CyAnnotationImpl(a);
 				CyAnnotationView cyAView = new CyAnnotationView(cyA);
 				views.add(cyAView);
+				annMap.put(a, cyAView);
 			}
 		}
 		return views;
+	}
+
+	static public CyAnnotationView getAnnotationView(CyNetworkView networkView, Annotation ann) {
+		if (viewMap == null) viewMap = new HashMap<>();
+
+		if (!viewMap.containsKey(networkView))
+			viewMap.put(networkView, new HashMap<Annotation, CyAnnotationView>());
+
+		if (!viewMap.get(networkView).containsKey(ann)) {
+			viewMap.get(networkView).put(ann, new CyAnnotationView(ann));
+		}
+		return viewMap.get(networkView).get(ann);
 	}
 
 	static public CyAnnotationView getAnnotationView(Annotation ann, Set<CyAnnotationView> viewList) {
@@ -129,10 +153,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 				return (T)(new Double(sa.getBorderWidth()));
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_SHAPE)) {
 				return (T)sa.getShapeType();
-			/*
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_BORDER_OPACITY)) {
-				return (T)(new Double(sa.getBorderWidth()));
-			*/
+				return (T)(new Double(sa.getBorderOpacity()));
 			}
 		}
 
@@ -273,25 +295,15 @@ class CyAnnotationView implements View<CyAnnotation> {
 				sa.setBorderColor((Paint)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_BORDER_WIDTH)) {
 				sa.setBorderWidth((Double)value);
+			} else if (vp.equals(AnnotationLexicon.ANNOTATION_BORDER_OPACITY)) {
+				sa.setBorderOpacity((Double)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_SHAPE)) {
 				sa.setShapeType((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if	(!visible) {
-					savedFillColor = sa.getFillColor();
-					savedBorderColor = sa.getBorderColor();
-					sa.setFillColor(transparent);
-					sa.setBorderColor(transparent);
-				} else if (savedFillColor != null) {
-					sa.setFillColor(savedFillColor);
-					sa.setBorderColor(savedBorderColor);
-					savedFillColor = null;
-					savedBorderColor = null;
+					setVisualProperty(AnnotationLexicon.ANNOTATION_OPACITY, 0.0);
+					setVisualProperty(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, 0.0);
 				}
-
-			/*
-			} else if (vp.equals(AnnotationLexicon.ANNOTATION_BORDER_OPACITY)) {
-				return (T)(new Double(sa.getBorderWidth()));
-			*/
 			}
 		}
 
@@ -307,12 +319,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 				ta.setFontFamily((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					savedTextColor = ta.getTextColor();
-					ta.setTextColor(transparent);
-				} else if (savedTextColor != null) {
-					ta.setTextColor((Color)savedTextColor);
-					savedTextColor = null;
-				}
+					ta.setTextColor(null);
+				} 
 			}
 		}
 
@@ -330,11 +338,7 @@ class CyAnnotationView implements View<CyAnnotation> {
 				ia.setImageOpacity(((Double)value).floatValue());
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					savedImageOpacity = ia.getImageOpacity();
-					ia.setImageOpacity(0.0f);
-				} else if (savedImageOpacity != null) {
-					ia.setImageOpacity(savedImageOpacity);
-					savedImageOpacity = null;
+					setVisualProperty(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY, 0.0);
 				}
 			}
 		}
@@ -365,19 +369,9 @@ class CyAnnotationView implements View<CyAnnotation> {
 				aa.setArrowSize(ArrowAnnotation.ArrowEnd.TARGET, (Double)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					savedLineColor = aa.getLineColor();
-					savedArrowTargetColor = aa.getArrowColor(ArrowAnnotation.ArrowEnd.TARGET);
-					savedArrowSourceColor = aa.getArrowColor(ArrowAnnotation.ArrowEnd.SOURCE);
-					aa.setLineColor(transparent);
-					aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, transparent);
-					aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, transparent);
-				} else if (savedLineColor != null) {
-					aa.setLineColor(savedLineColor);
-					aa.setArrowColor(ArrowAnnotation.ArrowEnd.TARGET, savedArrowTargetColor);
-					aa.setArrowColor(ArrowAnnotation.ArrowEnd.SOURCE, savedArrowSourceColor);
-					savedLineColor = null;
-					savedArrowTargetColor = null;
-					savedArrowSourceColor = null;
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_COLOR, null);
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, null);
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, null);
 				}
 			}
 		}

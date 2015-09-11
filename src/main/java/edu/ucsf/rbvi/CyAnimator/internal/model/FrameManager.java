@@ -147,7 +147,9 @@ public class FrameManager {
 	static public void restoreFramesFromSession(CyServiceRegistrar bc, CySession session, JSONObject frame) {
 		// Get the RootNetwork
 		Long oldSUID = (Long)frame.get("rootNetwork");
+		// System.out.println("Root network suid: "+oldSUID);
 		CyNetwork rootNetwork = session.getObject(oldSUID, CyNetwork.class);
+		// System.out.println("Found root network: "+rootNetwork);
 
 		// Create a FrameManager for this network
 		FrameManager manager = FrameManager.getFrameManager(bc, rootNetwork);
@@ -156,9 +158,9 @@ public class FrameManager {
 		for (Object frameObject: (JSONArray)frame.get("frames")) {
 			JSONObject jsonObject = (JSONObject) frameObject;
 			JSONArray networkArray = (JSONArray) jsonObject.get("networks");
-			String networkSuid = (String)((JSONObject)networkArray.get(0)).get("suid");
+			Long networkSuid = (Long)((JSONObject)networkArray.get(0)).get("suid");
 			// CyNetwork network = session.getObject(networkSuid, CyNetwork.class);
-			CyNetwork network = session.getObject(Long.parseLong(networkSuid), CyNetwork.class);
+			CyNetwork network = session.getObject(networkSuid, CyNetwork.class);
 			if (network == null)
 				continue;
 
@@ -269,13 +271,7 @@ public class FrameManager {
 	 * @throws IOException throws exception if cannot export image
 	 */
 	public void addKeyFrame() throws IOException{
-		keyFrameList.add(captureCurrentFrame());
-
-		if(keyFrameList.size() > 1 && timer != null){ 
-			updateTimer();
-		}else{
-			makeTimer(); 
-		}
+		addKeyFrame(captureCurrentFrame());
 	}
 
 	/**
@@ -284,6 +280,7 @@ public class FrameManager {
 	 */
 	public void addKeyFrame(CyFrame frame) {
 		keyFrameList.add(frame);
+		frame.setID(""+(keyFrameList.size()-1));
 
 		if(keyFrameList.size() > 1 && timer != null){ 
 			updateTimer();
@@ -583,9 +580,16 @@ public class FrameManager {
 
 		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_WIDTH, new SizeInterpolator(false));
 		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_COLOR, new ColorInterpolator(false));
-		// iMap.put(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, new SizeInterpolator(true));
+		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, new TransparencyInterpolator());
 		iMap.put(AnnotationLexicon.ANNOTATION_SHAPE, 
 		         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,AnnotationLexicon.ANNOTATION_BORDER_COLOR));
+
+		/*
+		iMap.put(AnnotationLexicon.ANNOTATION_VISIBLE, 
+		         new VisibleInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,
+										                 AnnotationLexicon.ANNOTATION_BORDER_OPACITY,
+																		 AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
+		*/
 
 		// Text visual properites
 		iMap.put(AnnotationLexicon.ANNOTATION_TEXT, 

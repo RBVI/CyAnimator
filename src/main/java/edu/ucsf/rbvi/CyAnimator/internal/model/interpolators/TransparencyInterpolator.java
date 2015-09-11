@@ -33,15 +33,22 @@ public class TransparencyInterpolator implements FrameInterpolator {
 		int framenum = stop-start;
 
 		for(View<? extends CyIdentifiable> id: idList){
+			// System.out.println("id: "+id.toString());
+
 			Number transOne = (Number) frameOne.getValue(id,property);
 			Number transTwo = (Number) frameTwo.getValue(id,property);
+			Class<?> clazz = null;
 			if (transOne == null && transTwo == null)
 				continue;
 
 			if (transOne == null && transTwo != null) {
 				transOne = Float.valueOf(0);
+				clazz = transTwo.getClass();
 			} else if (transOne != null && transTwo == null) {
 				transTwo = Float.valueOf(0);
+				clazz = transOne.getClass();
+			} else {
+				clazz = transOne.getClass();
 			}
 
 			if (transOne.equals(transTwo)) {
@@ -51,14 +58,19 @@ public class TransparencyInterpolator implements FrameInterpolator {
 				continue;
 			}
 
+			// System.out.println("transOne = "+transOne);
+			// System.out.println("transTwo = "+transTwo);
+
 			double sizeIncrement = (transTwo.doubleValue() - transOne.doubleValue())/(double)framenum;
 			double size = transOne.doubleValue();
+			// System.out.println("increment = "+sizeIncrement);
+			// System.out.println("size = "+size);
 			for (int k=1; k < framenum; k++) {
-				if (transOne instanceof Double)
+				if (clazz.equals(Double.class))
 					cyFrameArray[start+k].putValue(id, property, size);
-				else if (transOne instanceof Integer)
+				else if (clazz.equals(Integer.class))
 					cyFrameArray[start+k].putValue(id, property, (int)size);
-				else if (transOne instanceof Float)
+				else if (clazz.equals(Float.class))
 					cyFrameArray[start+k].putValue(id, property, (float)size);
 				size += sizeIncrement;
 			}
