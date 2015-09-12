@@ -186,6 +186,7 @@ public class FrameManager {
 	}
 
 	public int getFrameCount() {
+		if (frames == null) return 0;
 		return frames.length;
 	}
 

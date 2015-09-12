@@ -15,14 +15,22 @@ import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.events.SessionAboutToBeSavedListener;
 import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.task.NetworkViewTaskFactory;
+import org.cytoscape.work.TaskFactory;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.ucsf.rbvi.CyAnimator.internal.io.SaveSessionListener;
 import edu.ucsf.rbvi.CyAnimator.internal.io.LoadSessionListener;
-import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTaskFactory;
 import edu.ucsf.rbvi.CyAnimator.internal.model.AnnotationLexicon;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.CaptureTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTaskFactory;
+// import edu.ucsf.rbvi.CyAnimator.internal.tasks.DeleteTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.ListTaskFactory;
+// import edu.ucsf.rbvi.CyAnimator.internal.tasks.ModifyTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.PlayTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.RecordTaskFactory;
+import edu.ucsf.rbvi.CyAnimator.internal.tasks.StopTaskFactory;
 
 public class CyActivator extends AbstractCyActivator {
 	private static Logger logger = LoggerFactory
@@ -56,6 +64,37 @@ public class CyActivator extends AbstractCyActivator {
 
 		LoadSessionListener lsl = new LoadSessionListener(registrar);
 		registerService(context, lsl, SessionLoadedListener.class, new Properties());
+
+		// Commands
+
+		// cyanimator capture frame interpolate=nnn network=[current]
+		registerCommand(context, "capture frame", new CaptureTaskFactory(registrar));
+
+		// cyanimator modify frame frameNumber=nnn interpolate=nnn
+		// registerCommand(context, "modify frame", new ModifyTaskFactory(registrar));
+
+		// cyanimator list frames
+		registerCommand(context, "list frames", new ListTaskFactory(registrar));
+
+		// cyanimator play
+		registerCommand(context, "play", new PlayTaskFactory(registrar));
+
+		// cyanimator stop
+		registerCommand(context, "stop", new StopTaskFactory(registrar));
+
+		// cyanimator record location=/path fps=nnn resolution=res% type=GIF|Frames|MP4|MOV/H264
+		registerCommand(context, "record", new RecordTaskFactory(registrar));
+
+		// cyanimator delete frame frameNumber=nnn
+		// registerCommand(context, "delete frame", new DeleteTaskFactory(registrar));
+	}
+
+	private void registerCommand(BundleContext bc, String command, TaskFactory factory) {
+		Properties p = new Properties();
+		p.setProperty(COMMAND_NAMESPACE, "cyanimator");
+		p.setProperty(COMMAND, command);
+		p.setProperty(IN_MENU_BAR, "false");
+		registerService(bc, factory, TaskFactory.class, p);
 	}
 	
 	private void setStandardProperties(Properties p, String title, String command, String gravity) {

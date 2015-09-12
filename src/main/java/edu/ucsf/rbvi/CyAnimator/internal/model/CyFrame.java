@@ -399,24 +399,24 @@ public class CyFrame {
 	 *
 	 *
 	 */
-   public void clearDisplay(){
-	 final Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
-	 final Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
-	 for (CyEdge e: recordEdge.values() ){
-	   removeAddedEdges.add(e);
-	   removeAddedEdgesKeys.add(e.getSUID());
-	 }
-
-	 final Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
-	 final Collection<Long> removeAddedKeys = new ArrayList<Long>();
-	 for (CyNode n: recordNode.values() ){
-	   removeAddedNodes.add(n);
-	   removeAddedKeys.add(n.getSUID());
-	 }
-
+	public void clearDisplay(){
+		final Collection<CyEdge> removeAddedEdges = new ArrayList<CyEdge>();
+		final Collection<Long> removeAddedEdgesKeys = new ArrayList<Long>();
+		for (CyEdge e: recordEdge.values() ){
+			removeAddedEdges.add(e);
+			removeAddedEdgesKeys.add(e.getSUID());
+		}
+	
+		final Collection<CyNode> removeAddedNodes = new ArrayList<CyNode>();
+		final Collection<Long> removeAddedKeys = new ArrayList<Long>();
+		for (CyNode n: recordNode.values() ){
+			removeAddedNodes.add(n);
+			removeAddedKeys.add(n.getSUID());
+		}
+	
 		ClearDisplay clearDisplay = new ClearDisplay(appManager,
-                                                 removeAddedEdges, removeAddedNodes,
-                                                 removeAddedEdgesKeys, removeAddedKeys);
+		                                             removeAddedEdges, removeAddedNodes,
+		                                             removeAddedEdgesKeys, removeAddedKeys);
 		if (SwingUtilities.isEventDispatchThread()) {
 			clearDisplay.run();
 		} else {
@@ -424,7 +424,14 @@ public class CyFrame {
 				SwingUtilities.invokeAndWait( clearDisplay );
 			} catch(Exception e) {}
 		}
-  }
+	}
+
+	public String toString() {
+		return "CyFrame: '"+frameid+"' with "+
+		        nodePropertyMap.size()+" nodes, "+
+		        edgePropertyMap.size()+" edges, and "+
+		        annotationPropertyMap.size()+" annotations";
+	}
 
 	private void handleMissingNodes(final CyNetworkView currentView) {
 		// Initialize our edge view maps
