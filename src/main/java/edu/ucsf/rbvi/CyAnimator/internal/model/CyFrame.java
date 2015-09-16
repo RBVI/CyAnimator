@@ -212,6 +212,26 @@ public class CyFrame {
 		}
 	}
 
+	/**
+	 * Inits all of our property maps without actually populating.  This is used by the
+	 * frame interpolator to create all of the empty frames that we'll eventually interpolate
+	 */
+	public void initMaps() {
+		networkPropertyMap.put(currentNetwork, new HashMap<VisualProperty<?>, Object>());
+
+		for (CyNode node: nodeList) {
+			nodePropertyMap.put(node, new HashMap<VisualProperty<?>, Object>());
+		}
+
+		for (CyEdge edge: edgeList) {
+			edgePropertyMap.put(edge, new HashMap<VisualProperty<?>, Object>());
+		}
+
+		for (Annotation annotation: annotationList) {
+			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>());
+		}
+	}
+
 	private String printArgMap(Map<String,String> argMap) {
 		boolean first = true;
 		String result = "";
@@ -512,6 +532,11 @@ public class CyFrame {
 				if (view.isValueLocked(vp))
 					view.clearValueLock(vp);
 				view.setVisualProperty(vp, propertyValues.get(vp));
+				/*
+				if (vp.getIdString().equals("NODE_CUSTOMGRAPHICS_1")) {
+					System.out.println("Node "+node+" custom graphics = "+propertyValues.get(vp));
+				}
+				*/
 			}
 		}
 		currentView.updateView();
@@ -1050,7 +1075,7 @@ public class CyFrame {
 				if (!vFirst)
 					writer.write(",\n");
 				writer.write("\t\t\t\t\t\t{ \""+property.getIdString()+"\": \""+
-				             property.toSerializableString(value)+"\" }");
+				             stringify(property.toSerializableString(value))+"\" }");
 				vFirst = false;
 			}
 		}
@@ -1067,6 +1092,17 @@ public class CyFrame {
 				result += "|"+arg+"="+argMap.get(arg);
 		}
 		return result;
+	}
+
+	private String stringify(String str) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < str.length(); i++) {
+			char c = str.charAt(i);
+			if (c == '"')
+				sb.append('\\');
+			sb.append(c);
+		}
+		return sb.toString();
 	}
 
 	private Map<String, String> createArgMap(String annString) {

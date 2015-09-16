@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
@@ -30,10 +31,12 @@ import org.cytoscape.view.presentation.customgraphics.Cy2DGraphicLayer;
 import org.cytoscape.view.presentation.customgraphics.CyCustomGraphics;
 import org.cytoscape.view.presentation.customgraphics.PaintedShape;
 import org.cytoscape.view.presentation.customgraphics.ImageCustomGraphicLayer;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 
 
 public class Cy2DLayer implements Cy2DGraphicLayer {
 	float step;
+	Boolean fadeIn;
 	Long id = null;
 	float fitRatio = 1.0f;
 	int width;
@@ -42,10 +45,11 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 	List<?> layersTwo;
 	protected Rectangle2D rectangle = null;
 
-	public Cy2DLayer(List<?> layersOne, List<?> layersTwo, float step) {
+	public Cy2DLayer(List<?> layersOne, List<?> layersTwo, float step, Boolean fadeIn) {
 		this.layersOne = layersOne;
 		this.layersTwo = layersTwo;
 		this.step = step;
+		this.fadeIn = fadeIn;
 		rectangle = new Rectangle2D.Double(0.0, 0.0, 1.0, 1.0);
 		// System.out.println("LayerOne has "+layersOne.size()+" layers and LayerTwo has "+layersTwo.size()+" layers");
 		for (Object l: layersOne) {
@@ -87,14 +91,23 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 	@Override
 	public void draw(Graphics2D g2, Shape shape, CyNetworkView networkView, View<? extends CyIdentifiable> view) {
 		Composite original = g2.getComposite();
-		if (step <= 0.5)  {
+		if (fadeIn != null) {
+			if (fadeIn) {
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, step));
+			} else {
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1-step));
+			}
 			renderShapes(layersOne, g2, shape, networkView, view);
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, step));
-			renderShapes(layersTwo, g2, shape, networkView, view);
 		} else {
-			renderShapes(layersTwo, g2, shape, networkView, view);
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1-step));
-			renderShapes(layersOne, g2, shape, networkView, view);
+			if (step <= 0.5)  {
+				renderShapes(layersOne, g2, shape, networkView, view);
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, step));
+				renderShapes(layersTwo, g2, shape, networkView, view);
+			} else {
+				renderShapes(layersTwo, g2, shape, networkView, view);
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1-step));
+				renderShapes(layersOne, g2, shape, networkView, view);
+			}
 		}
 		g2.setComposite(original);
 	}
@@ -112,7 +125,7 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 			newLayersTwo.add((CustomGraphicLayer)layer.transform(xform));
 		}
 		// Rectangle2D rect = xform.createTransformedShape(rectangle).getBounds2D();
-		Cy2DLayer newLayer = new Cy2DLayer(layersOne, layersTwo, step);
+		Cy2DLayer newLayer = new Cy2DLayer(layersOne, layersTwo, step, fadeIn);
 		return newLayer;
 	}
 
@@ -139,6 +152,30 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 			} else if (obj instanceof Cy2DGraphicLayer) {
 				Cy2DGraphicLayer l = (Cy2DGraphicLayer)obj;
 				l.draw(g2, shape, networkView, view); 
+			} else if (obj instanceof ImageCustomGraphicLayer) {
+				// Get the image
+				Rectangle2D bounds = ((ImageCustomGraphicLayer)obj).getBounds2D();
+				final BufferedImage bImg = ((ImageCustomGraphicLayer)obj).getPaint(bounds.getBounds()).getImage();
+
+				// Adjust the bounds to fit our node
+				double width = view.getVisualProperty(BasicVisualLexicon.NODE_WIDTH);
+				double height = view.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
+				double widthRatio = bounds.getWidth()/width;
+				double heightRatio = bounds.getHeight()/height;
+				double ratio;
+				if (widthRatio > heightRatio) {
+					ratio = widthRatio;
+				} else {
+					ratio = heightRatio;
+				}
+
+				int w = (int) (bounds.getWidth()/ratio);
+				int h = (int) (bounds.getHeight()/ratio);
+				int x = -w/2;
+				int y = -h/2;
+				// draw it
+				g2.drawImage(bImg, x, y, w, h, null);
+
 			}
 		}
 	}

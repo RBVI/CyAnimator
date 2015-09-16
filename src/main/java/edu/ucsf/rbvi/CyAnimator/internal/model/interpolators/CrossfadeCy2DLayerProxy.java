@@ -28,6 +28,7 @@ import org.cytoscape.view.presentation.customgraphics.PaintedShape;
 
 public class CrossfadeCy2DLayerProxy implements CyCustomGraphics<Cy2DLayer> {
 	float step;
+	Boolean fadeIn;
 	Long id = null;
 	float fitRatio = 1.0f;
 	int width;
@@ -36,10 +37,11 @@ public class CrossfadeCy2DLayerProxy implements CyCustomGraphics<Cy2DLayer> {
 	CyCustomGraphics<?> cgTwo;
 
 	public CrossfadeCy2DLayerProxy(CyCustomGraphics<?> cgOne, 
-	                               CyCustomGraphics<?> cgTwo, float step) {
+	                               CyCustomGraphics<?> cgTwo, float step, Boolean fadeIn) {
 		this.cgOne = cgOne;
 		this.cgTwo = cgTwo;
 		this.step = step;
+		this.fadeIn = fadeIn;
 	}
 
 	@Override
@@ -81,9 +83,7 @@ public class CrossfadeCy2DLayerProxy implements CyCustomGraphics<Cy2DLayer> {
 		if (layersOne == null || layersOne.size() == 0 || layersTwo == null || layersTwo.size() == 0)
 			return null;
 
-		System.out.println("layersOne has "+layersOne.size()+" layers");
-
-		return Collections.singletonList(new Cy2DLayer(layersOne, layersTwo, step));
+		return Collections.singletonList(new Cy2DLayer(layersOne, layersTwo, step, fadeIn));
 	}
 
 	@Override

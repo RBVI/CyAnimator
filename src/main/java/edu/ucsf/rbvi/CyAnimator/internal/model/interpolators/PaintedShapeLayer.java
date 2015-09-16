@@ -54,7 +54,6 @@ public class PaintedShapeLayer implements PaintedShape {
 			totalArea.add(new Area(ps.getShape()));
 		}
 		rectangle = totalArea.getBounds2D();
-		System.out.println("Computed bounds = "+rectangle);
 	}
 
 	@Override
@@ -73,7 +72,6 @@ public class PaintedShapeLayer implements PaintedShape {
 
 	@Override
 	public Paint getPaint(Rectangle2D bounds) {
-		System.out.println("Bounds = "+bounds);
 		if (bounds.getWidth() == 0.0 || bounds.getHeight() == 0.0)  {
 			return Color.BLACK;
 		}

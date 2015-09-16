@@ -54,13 +54,26 @@ public class CustomGraphicsCrossfadeInterpolator implements FrameInterpolator {
 		for(View<? extends CyIdentifiable> id: idList){
 			Object valueOne = frameOne.getValue(id,property);
 			Object valueTwo = frameTwo.getValue(id,property);
-			if (valueOne == null && valueTwo == null)
+
+			// In fact, the values pretty much can't be null because
+			// of the way custom graphics works.  Fix it up now to make
+			// things consistent with our other interpolators
+			
+			if ((valueOne == null || valueOne.toString().equals("None")) &&
+			    (valueTwo == null || valueTwo.toString().equals("None")))
 				continue;
 
-			if (valueOne == null && valueTwo != null) {
+			// If valueOne and valueTwo are the same, we need to
+			// tell the underlying route whether we're fadeing in or fadeing out
+			Boolean fadeIn = null;
+
+			// We've separately taken care of the case where they are both null or None
+			if (valueOne == null || valueOne.toString().equals("None")) {
 				valueOne = valueTwo;
-			} else if (valueOne != null && valueTwo == null) {
+				fadeIn = Boolean.TRUE;
+			} else if (valueTwo == null || valueTwo.toString().equals("None")) {
 				valueTwo = valueOne;
+				fadeIn = Boolean.FALSE;
 			}
 
 			if (!CyCustomGraphics.class.isAssignableFrom(valueOne.getClass()) ||
@@ -71,54 +84,48 @@ public class CustomGraphicsCrossfadeInterpolator implements FrameInterpolator {
 			CyCustomGraphics<?> cgOne = (CyCustomGraphics)valueOne;
 			CyCustomGraphics<?> cgTwo = (CyCustomGraphics)valueTwo;
 
+			/*
 			if ((cgOne.getDisplayName() != null && cgOne.getDisplayName().equals("[ Remove Graphics ]")) ||
 			    (cgTwo.getDisplayName() != null && cgTwo.getDisplayName().equals("[ Remove Graphics ]")))
 				continue;
-
-			CyCustomGraphics<?> cg = null;
+			*/
 
 			Type type = cgOne.getClass().getGenericSuperclass();
+
 			if (type instanceof ParameterizedType) {
 				Type actualType = ((ParameterizedType) type).getActualTypeArguments()[0];
 				if (actualType instanceof Class) {
 					Class layerClass = (Class)actualType;
 					if (ImageCustomGraphicLayer.class.isAssignableFrom(layerClass)) {
-						System.out.println("Image custom graphic");
-						/*
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new CustomGraphicsCrossfadeCustomGraphicsProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step, fadeIn));
 						}
-						*/
 					} else if (PaintedShape.class.isAssignableFrom(layerClass)) {
-						System.out.println("PaintedShape");
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step, fadeIn));
 						}
 					} else if (Cy2DGraphicLayer.class.isAssignableFrom(layerClass)) {
-						System.out.println("2D Graphic layer");
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step, fadeIn));
 						}
 					} else {
-						System.out.println("Base Custom Graphic layer");
 						for (int k = 1; k < framenum; k++) {
 							float step = (float)k/(float)framenum;
-							cyFrameArray[start+k].putValue(id, property, new CrossfadeCustomGraphicsProxy(cgOne, cgTwo, step));
+							cyFrameArray[start+k].putValue(id, property, new CrossfadeCustomGraphicsProxy(cgOne, cgTwo, step, fadeIn));
 						}
 					}
 				}
+			} else { 
+				// Might be an internal type.  Just do an image crossfade
+				for (int k = 1; k < framenum; k++) {
+					float step = (float)k/(float)framenum;
+					cyFrameArray[start+k].putValue(id, property, new CrossfadeCy2DLayerProxy(cgOne, cgTwo, step, fadeIn));
+				}
 			}
 
-			/*
-			for (int k=1; k< framenum; k++) {
-				float step = (float)k/(float)framenum;
-				CyCustomGraphics<?> cg = new CrossfadeCustomGraphicsProxy(cgOne, cgTwo, step);
-				cyFrameArray[start+k].putValue(id, property, cg);
-			}
-			*/
 		}
 		return cyFrameArray;
 	}
