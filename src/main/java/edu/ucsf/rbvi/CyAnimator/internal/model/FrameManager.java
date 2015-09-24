@@ -101,6 +101,7 @@ public class FrameManager {
 	int frameIndex = 0;
 
 	private static VisualLexicon dingVisualLexicon;
+	private static RenderingEngine<?> dingRenderingEngine;
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
@@ -205,8 +206,9 @@ public class FrameManager {
 		if (dingVisualLexicon == null) {
 			RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
 			// Get the Ding Visual Lexicon
-			for (RenderingEngine engine: rem.getAllRenderingEngines()) {
+			for (RenderingEngine<?> engine: rem.getAllRenderingEngines()) {
 				if (engine.getRendererId().equals("org.cytoscape.ding")) {
+					dingRenderingEngine = engine;
 					dingVisualLexicon = engine.getVisualLexicon();
 					break;
 				}
@@ -226,22 +228,14 @@ public class FrameManager {
 	//	CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
 		CyFrame frame = new CyFrame(bundleContext, this);
 
-	/*	CyApplicationManager appManager = (CyApplicationManager) getService(CyApplicationManager.class);
-		CyNetworkView networkView = appManager.getCurrentNetworkView(); */
-
 		//extract view data to make the frame
 		frame.populate(); 
 
 		//set the interpolation count, or number of frames between this frame and the next to be interpolated
 		frame.setInterCount(fps);
 
-		//frame.setID(networkView.getIdentifier()+"_"+frameid);
-		//System.out.println("Frame ID: "+frameid);
-
 		//capture an image of the frame
 		frame.captureImage(null);
-
-		//frameid++;
 
 		return frame;
 
@@ -630,7 +624,13 @@ public class FrameManager {
 		return iMap;
 	}
 
+	public RenderingEngine<?> getRenderingEngine() {
+		return dingRenderingEngine;
+	}
+
 	VisualProperty<?> getDingProperty(Class <?> type, String propertyName) {
 		return dingVisualLexicon.lookup(type, propertyName);
 	}
+
+
 }

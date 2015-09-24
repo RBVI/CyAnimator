@@ -74,16 +74,15 @@
 			<url>http://code.cytoscape.org/nexus/content/repositories/releases/</url>
 		</repository>
 		<repository>
-			<id>local_cdk_release</id>
-			<name>CDK Release</name>
-			<url>file://${basedir}/cdk-repo</url>
-		</repository>
-		<repository>
 			<id>apache-repo-releases</id>
 			<url>https://repository.apache.org/content/repositories/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
+		</repository>
+		<repository>
+			<id>maven-central</id>
+			<url>https://repo1.maven.org/maven2</url>
 		</repository>
                 <repository>
                         <id>xuggle repo</id>
@@ -175,10 +174,16 @@
 			<artifactId>org.osgi.core</artifactId>
 			<version>${osgi.api.version}</version>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>xuggle</groupId>
 			<artifactId>xuggle-xuggler</artifactId>
 			<version>5.4</version>
+			<optional>true</optional>
+		</dependency-->
+		<dependency>
+			<groupId>org.jcodec</groupId>
+			<artifactId>jcodec</artifactId>
+			<version>0.1.9</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

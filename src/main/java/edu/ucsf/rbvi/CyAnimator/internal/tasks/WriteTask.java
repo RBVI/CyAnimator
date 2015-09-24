@@ -1,5 +1,6 @@
 package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -9,10 +10,13 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.TaskMonitor.Level;
 import org.apache.commons.io.FileUtils;
 
-import com.xuggle.xuggler.ICodec;
+// import com.xuggle.xuggler.ICodec;
+import org.jcodec.api.SequenceEncoder;
+import static org.jcodec.common.model.ColorSpace.RGB;
+import org.jcodec.common.model.Picture;
 
-import edu.ucsf.rbvi.CyAnimator.internal.io.GifSequenceWriter;
-import edu.ucsf.rbvi.CyAnimator.internal.io.VideoCreator;
+import edu.ucsf.rbvi.CyAnimator.internal.io.GifSequenceEncoder;
+// import edu.ucsf.rbvi.CyAnimator.internal.io.VideoCreator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.BooleanWrapper;
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
@@ -44,15 +48,52 @@ public class WriteTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor monitor) throws Exception {
+		// If we're writing frames, we want
+		// to write each frame as a PNG.  
+		// Otherwise, we're going 
+		// to create the movie directly.
+		if (videoType == 0) {
+			writeFrames(monitor);
+			return;
+		}
+
+		// Get the right file/extension
+		File movieFile = createFile();
+		SequenceEncoder enc = null;
+		if (videoType == 1)
+			enc = new GifSequenceEncoder(movieFile, frameManager.fps, true);
+		else
+			enc = new SequenceEncoder(movieFile);
+
+		monitor.showMessage(Level.INFO, "Creating movie");
+		monitor.setProgress(0.0);
+
+		int frameCount = frameManager.getFrameCount();
+		double scale = videoResolution/100.0;
+
+		for(int i=0; i<frameCount; i++) {
+			BufferedImage image = 
+					frameManager.getFrame(i).getNetworkImage(scale);
+			if (videoType == 1)
+				((GifSequenceEncoder)enc).encodeImage(image);
+			else
+				encodeImage(enc, image);
+			monitor.setProgress(((double)i)/((double)frameCount));
+		}
+		enc.finish();
+	}
+
+	private void writeFrames(TaskMonitor monitor) throws Exception {
 		//gets the directory from which cytoscape is running
 		String curDir = System.getProperty("user.dir");
-		curDir = directory;
+		if (directory != null) {
+			curDir = directory;
+		}
 
 		if(videoType != 0){
 		    curDir += "/.CyAnimator";
 		}
 
-		//assigns the output directory, for now it is by default cytoscape/outputImgs
 		File file = new File(curDir); //+"/outputImgs");
 
 		//make the directory
@@ -90,26 +131,51 @@ public class WriteTask extends AbstractTask {
 		}
 		
 		for (CyFrame frame : this.frameManager.getFrames()) {
-		    frame.clearDisplay();
+			frame.clearDisplay();
 		}
 
-		if(videoType == 1){
-				monitor.showMessage(Level.INFO, "Creating animated GIF");
-		    GifSequenceWriter wr = new GifSequenceWriter();
-		    wr.createGIF(curDir, directory, this.frameManager.fps);
-		    FileUtils.deleteDirectory(file);
-		}else if ( videoType == 2 ){
-				monitor.showMessage(Level.INFO, "Creating MP4 Video");
-		    VideoCreator vc = new VideoCreator(ICodec.ID.CODEC_ID_MPEG4, curDir, 
-				                                   directory+"/video.mp4", this.frameManager.fps);
-		    vc.CreateVideo();
-		    FileUtils.deleteDirectory(file);
-		}else if ( videoType == 3 ){
-				monitor.showMessage(Level.INFO, "Creating H.264 Video");
-		    VideoCreator vc = new VideoCreator(ICodec.ID.CODEC_ID_H264, curDir, 
-				                                   directory+"/video.mov", this.frameManager.fps);
-		    vc.CreateVideo();
-		    FileUtils.deleteDirectory(file);
-		}
 	}
+
+	private File createFile() {
+		String extension = null;
+		// Actually, both of these are H.264/MPEG4
+		if (videoType == 1) 
+			extension = ".gif";
+		else if (videoType == 2) 
+			extension = ".mp4";
+		else if (videoType == 3)
+			extension = ".mov";
+		else
+			return null;
+
+		if (directory == null || directory.length() == 0) {
+			return new File(System.getProperty("user.dir")+"video"+extension);
+		}
+
+		File dir = new File(directory);
+		if (dir.isFile()) return dir;
+
+		return new File(dir, "video"+extension);
+	}
+
+	private void encodeImage(SequenceEncoder enc, BufferedImage bi) throws IOException {
+		enc.encodeNativeFrame(fromBufferedImage(bi));
+	}
+
+	private Picture fromBufferedImage(BufferedImage src) {
+		Picture dst = Picture.create(src.getWidth(), src.getHeight(), RGB);
+		int[] dstData = dst.getPlaneData(0);
+
+		int off = 0;
+		for (int i = 0; i < src.getHeight(); i++) {
+			for (int j = 0; j < src.getWidth(); j++) {
+				int rgb1 = src.getRGB(j, i);
+				dstData[off++] = (rgb1 >> 16) & 0xff;
+				dstData[off++] = (rgb1 >> 8) & 0xff;
+				dstData[off++] = rgb1 & 0xff;
+			}
+		}
+		return dst;
+	}
+
 }

@@ -12,7 +12,9 @@ import java.util.Properties;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.session.CySessionManager;
 import org.cytoscape.session.events.SessionAboutToBeSavedListener;
+import org.cytoscape.session.events.SessionLoadedEvent;
 import org.cytoscape.session.events.SessionLoadedListener;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.work.TaskFactory;
@@ -87,6 +89,12 @@ public class CyActivator extends AbstractCyActivator {
 
 		// cyanimator delete frame frameNumber=nnn
 		// registerCommand(context, "delete frame", new DeleteTaskFactory(registrar));
+		
+		// Finally, get the session manager and load any session data
+		// This doesn't work -- not sure why, but the session that's loaded from the command
+		// line doesn't include the CyAnimator information...
+		CySessionManager sessionManager = getService(context, CySessionManager.class);
+		lsl.handleEvent(new SessionLoadedEvent(sessionManager, sessionManager.getCurrentSession(), null));
 	}
 
 	private void registerCommand(BundleContext bc, String command, TaskFactory factory) {

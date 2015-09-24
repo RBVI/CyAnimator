@@ -331,44 +331,12 @@ public class CyFrame {
 		if (view == null)
 			view = appManager.getCurrentNetworkView();
 
-		NetworkViewTaskFactory exportImageTaskFactory = bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
-		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
-			TunableSetter tunableSetter = bundleContext.getService(TunableSetter.class);
-			Map<String, Object> tunables = new HashMap<String, Object>();
-			List<String> fileTypeList = new ArrayList<String>();
-			fileTypeList.add(PNG);
-			ListSingleSelection<String> fileType = new ListSingleSelection<String>(fileTypeList);
-			fileType.setSelectedValue(PNG);
-			tunables.put("options", fileType);
-			final File temporaryImageFile = File.createTempFile("temporaryCytoscapeImage", ".png");
-			tunables.put("OutputFile", temporaryImageFile);
-			taskManager.execute(tunableSetter.createTaskIterator(
-					exportImageTaskFactory.createTaskIterator(view), tunables),
-					new TaskObserver() {
-
-						public void taskFinished(ObservableTask arg0) {
-							// TODO Auto-generated method stub
-						}
-
-						public void allFinished(FinishStatus arg0) {
-							BufferedImage image = null, scaledImage = null;
-							try {
-								image = ImageIO.read(temporaryImageFile);
-								int type = image.getType() == 0? BufferedImage.TYPE_INT_ARGB : image.getType();
-								scaledImage = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, type);
-								Graphics2D g = scaledImage.createGraphics();
-								g.drawImage(image, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, null);
-								g.dispose();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							networkImage = scaledImage;
-						//	temporaryImageFile.delete();
-						}
-					});
-		}
-
+		double width = view.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
+		double height = view.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
+		double scale = (double)IMAGE_WIDTH/width;
+		if (width < height)
+			scale = (double)IMAGE_HEIGHT/height;
+		networkImage = getNetworkImage(view, scale);
 	}
 
 	/*
@@ -805,6 +773,19 @@ public class CyFrame {
 		return this.networkImage;
 	}
 
+	public BufferedImage getNetworkImage(double scale) {
+		display();
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		CyNetworkView view = appManager.getCurrentNetworkView();
+		return getNetworkImage(view, scale);
+	}
+
 	/**
  	 * Export a graphic image for this frame
  	 *
@@ -821,22 +802,9 @@ public class CyFrame {
 		}
 
 		CyNetworkView view = appManager.getCurrentNetworkView();
+		BufferedImage image = getNetworkImage(view, (double)videoResolution/100.0);
+		ImageIO.write(image, "PNG", new File(fileName));
 
-		NetworkViewTaskFactory exportImageTaskFactory = 
-					bundleContext.getService(NetworkViewTaskFactory.class, "(&(commandNamespace=view)(command=export))");
-		if (exportImageTaskFactory != null && exportImageTaskFactory.isReady(view)) {
-			Map<String, Object> tunables = new HashMap<String, Object>();
-			List<String> fileTypeList = new ArrayList<String>();
-			fileTypeList.add(PNG);
-			ListSingleSelection<String> fileType = new ListSingleSelection<String>(fileTypeList);
-			fileType.setSelectedValue(PNG);
-			tunables.put("options", fileType);
-			tunables.put("OutputFile", new File(fileName));
-			tunables.put("Zoom", new BoundedDouble(0.0, (double) videoResolution, (double) videoResolution,true,false));
-			taskManager.setExecutionContext(tunables);
-			taskManager.execute(exportImageTaskFactory.createTaskIterator(view));
-			finished.setValue(true);
-		}
 		clearDisplay();
 	}
 
@@ -1084,6 +1052,19 @@ public class CyFrame {
 			System.out.println("Annotation "+frameid+": "+str);
 		}
 	}
+
+	private BufferedImage getNetworkImage(CyNetworkView view, double scale) {
+		double width = view.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
+		double height = view.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
+		BufferedImage image = new BufferedImage((int)(width*scale), (int)(height*scale), BufferedImage.TYPE_INT_RGB);
+		view.updateView();
+		Graphics2D g2d = (Graphics2D) image.getGraphics();
+		g2d.scale(scale, scale);
+		frameManager.getRenderingEngine().printCanvas(g2d);
+		g2d.dispose();
+		return image;
+	}
+
 
 	class DisplayFrame implements Runnable {
 			CyNetworkView currentView;

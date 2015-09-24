@@ -82,9 +82,9 @@ public class CyAnimatorDialog extends JDialog
 	private JButton recordButton;
 	private JButton browseButton;
 
-	private JComboBox choicesList;
-	private JComboBox resolutionsList;
-	private JComboBox frameCountList;
+	private JComboBox<String> choicesList;
+	private JComboBox<String> resolutionsList;
+	private JComboBox<String> frameCountList;
 
 	private JMenuItem menuItem;
 	private JTabbedPane tabbedPane;
@@ -134,6 +134,7 @@ public class CyAnimatorDialog extends JDialog
 		addWindowListener(this);
 
 		filePath = System.getProperty("user.home");	// Set a reasonable default
+		filePath += System.getProperty("file.separator")+"video.mov";	// Set a reasonable default
 		initialize();
 	}
 
@@ -187,12 +188,12 @@ public class CyAnimatorDialog extends JDialog
 		recordButton.setActionCommand("record");
 		recordButton.setToolTipText("Record Animation");
 
-			browseButton = new JButton("Browse");
-			browseButton.setSize(new Dimension(100, 30));
+		browseButton = new JButton("Browse");
+		browseButton.setSize(new Dimension(100, 30));
 		browseButton.addActionListener(this);
 		browseButton.setActionCommand("browse");
-		browseButton.setToolTipText("Browse Directory to Save Video");
-		
+		browseButton.setToolTipText("Select output file (or directory)");
+
 		speedSlider = new JSlider(1,60);
 
 		speedSlider.addChangeListener(new SliderListener());
@@ -214,74 +215,72 @@ public class CyAnimatorDialog extends JDialog
 
 		updateThumbnails(); 
 		mainPanel.add(framePane);
-						
-			String[] choices = { "Frames" , "GIF", "MP4", "MOV/H264"};
-			String[] resolutions = { "100", "200", "300", "400", "500"};
-			String[] frameCount = { "10", "20", "30", "40", "50"};
 
-			choicesList = new JComboBox(choices);
-			resolutionsList = new JComboBox(resolutions);
-			frameCountList = new JComboBox(frameCount);
-			choicesList.setSelectedIndex(1);
-			resolutionsList.setSelectedIndex(0);
-			frameCountList.setSelectedIndex(2);
+		String[] choices = { "Frames" , "GIF", "MP4", "MOV/H264"};
+		String[] resolutions = { "100", "200", "300", "400", "500"};
+		String[] frameCount = { "10", "20", "30", "40", "50"};
 
-			choicesList.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					int type = choicesList.getSelectedIndex();
-					// No frames/second in just images
-					if (type == 0)
-						frameCountList.setEnabled(false);
-					else
-						frameCountList.setEnabled(true);
-				}
-			});
+		choicesList = new JComboBox<>(choices);
+		resolutionsList = new JComboBox<>(resolutions);
+		frameCountList = new JComboBox<>(frameCount);
+		choicesList.setSelectedIndex(3);
+		resolutionsList.setSelectedIndex(0);
+		frameCountList.setSelectedIndex(2);
 
-		
-			settingPanel = new JPanel();
-		
-			directorySettingPanel = new JPanel();
-			directorySettingPanel.setPreferredSize(new Dimension(600, 50));
-			directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-			directorySettingPanel.add(new JLabel("Video location: "));
-			directoryText = new JTextField(30);
-			directoryText.setText(filePath);
-			directorySettingPanel.add(directoryText);
-			directorySettingPanel.add(browseButton);
-		
-			outputSettingPanel = new JPanel();
-			outputSettingPanel.setPreferredSize(new Dimension(600, 100));
-			outputSettingPanel.setBorder(BorderFactory.createTitledBorder("Video Options"));
-			outputSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-			outputSettingPanel.add(new JLabel("Video Type: "));
-			outputSettingPanel.add(choicesList);
-		
-			frameSettingPanel = new JPanel();
-			frameSettingPanel.setPreferredSize(new Dimension(600, 100));
-			frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
-			frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-			frameSettingPanel.add(new JLabel("Frames Per Second: "));
-			frameSettingPanel.add(frameCountList);
-			frameSettingPanel.add(new JLabel("Resolution: "));
-			frameSettingPanel.add(resolutionsList);
-		
-			settingButtonPanel = new JPanel();
-			settingButtonPanel.setPreferredSize(new Dimension(600, 50));
-			settingButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-		
-			settingPanel.setPreferredSize(new Dimension(600, 200));
-			settingPanel.setLayout(new BoxLayout(settingPanel, BoxLayout.Y_AXIS));
-			settingPanel.add(directorySettingPanel);
-			settingPanel.add(outputSettingPanel);
-			settingPanel.add(frameSettingPanel);
-			settingPanel.add(settingButtonPanel);
+		choicesList.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int type = choicesList.getSelectedIndex();
+				// No frames/second in just images
+				if (type == 0)
+					frameCountList.setEnabled(false);
+				else
+					frameCountList.setEnabled(true);
+			}
+		});
+
+
+		settingPanel = new JPanel();
+
+		directorySettingPanel = new JPanel();
+		directorySettingPanel.setPreferredSize(new Dimension(600, 50));
+		directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		directorySettingPanel.add(new JLabel("Video location: "));
+		directoryText = new JTextField(30);
+		directoryText.setText(filePath);
+		directorySettingPanel.add(directoryText);
+		directorySettingPanel.add(browseButton);
+
+		outputSettingPanel = new JPanel();
+		outputSettingPanel.setPreferredSize(new Dimension(600, 100));
+		outputSettingPanel.setBorder(BorderFactory.createTitledBorder("Video Options"));
+		outputSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		outputSettingPanel.add(new JLabel("Video Type: "));
+		outputSettingPanel.add(choicesList);
+
+		frameSettingPanel = new JPanel();
+		frameSettingPanel.setPreferredSize(new Dimension(600, 100));
+		frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
+		frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		frameSettingPanel.add(new JLabel("Frames Per Second: "));
+		frameSettingPanel.add(frameCountList);
+		frameSettingPanel.add(new JLabel("Resolution: "));
+		frameSettingPanel.add(resolutionsList);
+		frameSettingPanel.add(new JLabel("%"));
+
+		settingButtonPanel = new JPanel();
+		settingButtonPanel.setPreferredSize(new Dimension(600, 50));
+		settingButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+		settingPanel.setPreferredSize(new Dimension(600, 200));
+		settingPanel.setLayout(new BoxLayout(settingPanel, BoxLayout.Y_AXIS));
+		settingPanel.add(directorySettingPanel);
+		settingPanel.add(outputSettingPanel);
+		settingPanel.add(frameSettingPanel);
+		settingPanel.add(settingButtonPanel);
 		this.setSize(new Dimension(600,300));
 		this.setLocation(900, 100);
 
 		setContentPane(mainPanel);
-		// tabbedPane.addTab("Home",mainPanel);
-		// tabbedPane.addTab("Settings", settingPanel);
-		// setContentPane(tabbedPane);
 	}
 
 
@@ -319,12 +318,13 @@ public class CyAnimatorDialog extends JDialog
 											 JOptionPane.OK_CANCEL_OPTION,
 											 JOptionPane.PLAIN_MESSAGE);
 			if (result != JOptionPane.OK_OPTION) return;
-				
+
 			int choice = choicesList.getSelectedIndex();
 			int resolution = (resolutionsList.getSelectedIndex() + 1)*100;
 			int frameCount = (frameCountList.getSelectedIndex() + 1)*10;
 			frameManager.updateSettings(frameCount, choice, resolution);
-			
+
+			/*
 			if( ! new File(filePath).exists() ){
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
 				int returnVal = fc.showSaveDialog(new JPanel());
@@ -334,13 +334,14 @@ public class CyAnimatorDialog extends JDialog
 					directoryText.setText(filePath);
 				}
 			}
+			*/
 			try {
 				frameManager.recordAnimation(filePath);
 			} catch (Exception excp) {
 					//	logger.error("Record of animation failed",excp);
 			}
 		} else if(command.equals("browse")){
-			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY );
+			fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			int returnVal = fc.showSaveDialog(new JPanel());
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File file = fc.getSelectedFile();

@@ -1,32 +1,33 @@
-// 
-//  GifSequenceWriter.java
-//  
-//  Created by Elliot Kroo on 2009-04-25.
-//  Modified by Vijay Dhameliya 0n 2014-12-05
-//
-// This work is licensed under the Creative Commons Attribution 3.0 Unported
-// License. To view a copy of this license, visit
-// http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative
-// Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
-
 package edu.ucsf.rbvi.CyAnimator.internal.io;
 
-import javax.imageio.*;
-import javax.imageio.metadata.*;
-import javax.imageio.stream.*;
-import java.awt.image.*;
-import java.io.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
+import static java.awt.image.BufferedImage.TYPE_INT_RGB;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileOutputStream;
 import java.util.Iterator;
-import java.text.DecimalFormat;
 
-public class GifSequenceWriter {
+import javax.imageio.IIOException;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriter;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.FileImageOutputStream;
+
+import org.jcodec.api.SequenceEncoder;
+
+public class GifSequenceEncoder extends SequenceEncoder {
   protected ImageWriter gifWriter;
   protected ImageWriteParam imageWriteParam;
   protected IIOMetadata imageMetaData;
   
-  public GifSequenceWriter(){}
   /**
-   * Creates a new GifSequenceWriter
+   * Creates a new GifSequenceEncoder
    * 
    * @param outputStream the ImageOutputStream to be written to
    * @param imageType one of the imageTypes specified in BufferedImage
@@ -36,16 +37,15 @@ public class GifSequenceWriter {
    *
    * @author Elliot Kroo (elliot[at]kroo[dot]net)
    */
-  public GifSequenceWriter(
-      ImageOutputStream outputStream,
-      int imageType,
-      int timeBetweenFramesMS,
-      boolean loopContinuously) throws IIOException, IOException {
+  public GifSequenceEncoder(File outputFile, int rate, boolean loopContinuously) 
+					throws IIOException, IOException {
+		super(outputFile);
+
     // my method to create a writer
     gifWriter = getWriter(); 
     imageWriteParam = gifWriter.getDefaultWriteParam();
     ImageTypeSpecifier imageTypeSpecifier =
-      ImageTypeSpecifier.createFromBufferedImageType(imageType);
+      ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_INT_RGB);
 
     imageMetaData =
       gifWriter.getDefaultImageMetadata(imageTypeSpecifier,
@@ -67,7 +67,7 @@ public class GifSequenceWriter {
       "TRUE");
     graphicsControlExtensionNode.setAttribute(
       "delayTime",
-      Integer.toString(timeBetweenFramesMS / 10));
+      Integer.toString(rate / 10));
     graphicsControlExtensionNode.setAttribute(
       "transparentColorIndex",
       "0");
@@ -92,12 +92,12 @@ public class GifSequenceWriter {
 
     imageMetaData.setFromTree(metaFormatName, root);
 
-    gifWriter.setOutput(outputStream);
+    gifWriter.setOutput(new FileImageOutputStream(outputFile));
 
     gifWriter.prepareWriteSequence(null);
   }
   
-  public void writeToSequence(RenderedImage img) throws IOException {
+  public void encodeImage(RenderedImage img) throws IOException {
     gifWriter.writeToSequence(
       new IIOImage(
         img,
@@ -110,7 +110,7 @@ public class GifSequenceWriter {
    * Close this GifSequenceWriter object. This does not close the underlying
    * stream, just finishes off the GIF.
    */
-  public void close() throws IOException {
+  public void finish() throws IOException {
     gifWriter.endWriteSequence();    
   }
 
@@ -154,51 +154,4 @@ public class GifSequenceWriter {
     return(node);
   }
   
-  /**
-  public GifSequenceWriter(
-       BufferedOutputStream outputStream,
-       int imageType,
-       int timeBetweenFramesMS,
-       boolean loopContinuously) {
-   
-   */
-  
-  public void createGIF(String inputImgDirPath, String outputDirPath, int rate) throws Exception {
-    int filesCount = new File( inputImgDirPath ).list().length;
-    DecimalFormat frame = new DecimalFormat("#000");
-    
-    if (filesCount > 1) {
-      // grab the output image type from the first image in the sequence
-      BufferedImage firstImage = ImageIO.read(new File( inputImgDirPath +"/Frame_"+frame.format(0)+".png" ));
-
-      // create a new BufferedOutputStream with the last argument
-      ImageOutputStream output = 
-        new FileImageOutputStream(new File( outputDirPath + "/video.gif" ));
-      
-      // create a gif sequence with the type of the first image, 1 second
-      // between frames, which loops continuously
-      GifSequenceWriter writer = 
-        new GifSequenceWriter(output, firstImage.getType(), rate, true);
-      
-      // write out the first image to our sequence...
-      writer.writeToSequence(firstImage);
-      
-      for(int index = 1; index < filesCount - 1; index++) {
-        BufferedImage nextImage = null;
-        try {
-		nextImage = ImageIO.read(new File(inputImgDirPath +"/Frame_"+frame.format(index)+".png"));
-		writer.writeToSequence(nextImage);
-            } catch (IOException e) {
-                System.out.println("Could not read image");
-                continue;
-            }
-      }
-      
-      writer.close();
-      output.close();
-    } else {
-      System.out.println(
-        "Usage: java GifSequenceWriter [list of gif files] [output file]");
-    }
-  }
 }

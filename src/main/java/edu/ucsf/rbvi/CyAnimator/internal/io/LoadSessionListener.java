@@ -40,8 +40,19 @@ public class LoadSessionListener implements SessionLoadedListener {
 
 		// Get the session
 		CySession session = e.getLoadedSession();
+		/*
+		System.out.println("Session: "+session);
+		for (String s: session.getAppFileListMap().keySet()) {
+			System.out.println(s+":");
+			for (File f: session.getAppFileListMap().get(s)) {
+				System.out.println("File: "+f);
+			}
+		}
+		*/
 		if (!session.getAppFileListMap().containsKey("CyAnimator"))
 			return;
+
+		// System.out.println("We have animation information!");
 
 		// Ask the user if they want to load the frames?
 		//
