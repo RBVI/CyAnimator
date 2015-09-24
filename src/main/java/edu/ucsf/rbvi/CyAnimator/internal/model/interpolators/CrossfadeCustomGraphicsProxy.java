@@ -29,6 +29,7 @@ import org.cytoscape.view.presentation.customgraphics.ImageCustomGraphicLayer;
 
 public class CrossfadeCustomGraphicsProxy implements CyCustomGraphics<BaseCustomGraphicsLayer> {
 	float step;
+	Boolean fadeIn;
 	Long id = null;
 	float fitRatio = 1.0f;
 	int width;
@@ -37,10 +38,11 @@ public class CrossfadeCustomGraphicsProxy implements CyCustomGraphics<BaseCustom
 	CyCustomGraphics<?> cgTwo;
 
 	public CrossfadeCustomGraphicsProxy(CyCustomGraphics<?>  cgOne, 
-	                                    CyCustomGraphics<?> cgTwo, float step) {
+	                                    CyCustomGraphics<?> cgTwo, float step, Boolean fadeIn) {
 		this.cgOne = cgOne;
 		this.cgTwo = cgTwo;
 		this.step = step;
+		this.fadeIn = fadeIn;
 	}
 
 	@Override
@@ -84,7 +86,7 @@ public class CrossfadeCustomGraphicsProxy implements CyCustomGraphics<BaseCustom
 
 		CustomGraphicLayer l1 = (CustomGraphicLayer)layersOne.get(0);
 		CustomGraphicLayer l2 = (CustomGraphicLayer)layersTwo.get(0);
-		return Collections.singletonList(new BaseCustomGraphicsLayer(l1, l2, step));
+		return Collections.singletonList(new BaseCustomGraphicsLayer(l1, l2, step, fadeIn));
 	}
 
 	@Override

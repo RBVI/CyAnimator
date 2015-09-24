@@ -79,6 +79,7 @@ public class LoadSessionListener implements SessionLoadedListener {
 			System.out.println("IO exception: "+ioe.getMessage());
 		} catch(ParseException pe) {
 			System.out.println("Unable to parse JSON file: "+pe.getMessage());
+			pe.printStackTrace();
 		}
 
 

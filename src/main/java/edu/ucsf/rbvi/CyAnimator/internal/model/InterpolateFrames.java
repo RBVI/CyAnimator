@@ -77,7 +77,7 @@ public class InterpolateFrames {
 		//initialize the CyFrame array
 		for(int i=0; i<cyFrameArray.length; i++){
 			cyFrameArray[i] = new CyFrame(frameList.get(0).getBundleContext(), frameManager);
-			cyFrameArray[i].populate();
+			cyFrameArray[i].initMaps();
 		}
 
 		int start = 0;
