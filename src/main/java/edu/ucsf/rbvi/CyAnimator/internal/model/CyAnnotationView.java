@@ -128,6 +128,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 			BoundedTextAnnotation ta = (BoundedTextAnnotation) annotation;
 			if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_SIZE)) {
 				return (T)(new Double(ta.getFontSize()));
+			} else if (vp.equals(AnnotationLexicon.ANNOTATION_TEXT)) {
+				return (T)ta.getText();
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_COLOR)) {
 				return (T)ta.getTextColor();
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_STYLE)) {
@@ -162,6 +164,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 			TextAnnotation ta = (TextAnnotation) annotation;
 			if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_SIZE)) {
 				return (T)(new Double(ta.getFontSize()));
+			} else if (vp.equals(AnnotationLexicon.ANNOTATION_TEXT)) {
+				return (T)ta.getText();
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_COLOR)) {
 				return (T)ta.getTextColor();
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_STYLE)) {
@@ -260,6 +264,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 			BoundedTextAnnotation bta = (BoundedTextAnnotation) annotation;
 			if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_SIZE)) {
 				bta.setFontSize((Double)value);
+			} else if (vp.equals(AnnotationLexicon.ANNOTATION_TEXT)) {
+				bta.setText((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_COLOR)) {
 				bta.setTextColor((Color)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_STYLE)) {
@@ -268,12 +274,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 				bta.setFontFamily((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					savedTextColor = bta.getTextColor();
 					bta.setTextColor(transparent);
-				} else if (savedTextColor != null) {
-					bta.setTextColor((Color)savedTextColor);
-					savedTextColor = null;
-				}
+				} 
 			}
 		}
 
@@ -311,6 +313,8 @@ class CyAnnotationView implements View<CyAnnotation> {
 			TextAnnotation ta = (TextAnnotation) annotation;
 			if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_SIZE)) {
 				ta.setFontSize((Double)value);
+			} else if (vp.equals(AnnotationLexicon.ANNOTATION_TEXT)) {
+				ta.setText((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_COLOR)) {
 				ta.setTextColor((Color)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_FONT_STYLE)) {
@@ -319,7 +323,7 @@ class CyAnnotationView implements View<CyAnnotation> {
 				ta.setFontFamily((String)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					ta.setTextColor(null);
+					ta.setTextColor(transparent);
 				} 
 			}
 		}
