@@ -438,6 +438,11 @@ public class CyFrame {
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
 			}
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SIZE, 0.0);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, 0.0);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, 0.0);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 0);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, 0);
 			currentView.updateView();
 		}
 	}
@@ -459,6 +464,7 @@ public class CyFrame {
 				edgeView.clearValueLock(BasicVisualLexicon.EDGE_VISIBLE);
 			}
 			edgeView.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, false);
+			// edgeView.setVisualProperty(BasicVisualLexicon.EDGE_WIDTH, 0.0);
 			currentView.updateView();
 		}
 	}

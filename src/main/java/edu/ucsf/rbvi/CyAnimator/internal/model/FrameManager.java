@@ -558,7 +558,7 @@ public class FrameManager {
 		// iMap.put(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, new ArrowShapeInterpolator());
 		// iMap.put(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, new ArrowShapeInterpolator());
 		iMap.put(BasicVisualLexicon.EDGE_TRANSPARENCY, new TransparencyInterpolator());
-		iMap.put(BasicVisualLexicon.EDGE_VISIBLE, new VisibleInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_VISIBLE, new VisibleInterpolator(BasicVisualLexicon.EDGE_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.EDGE_WIDTH, new SizeInterpolator(false));
 
 		// Annotation properties

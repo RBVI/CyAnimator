@@ -55,12 +55,18 @@ public class CustomGraphicsCrossfadeInterpolator implements FrameInterpolator {
 			Object valueOne = frameOne.getValue(id,property);
 			Object valueTwo = frameTwo.getValue(id,property);
 
+			/*
+			System.out.println("   node "+id);
+			System.out.println("   valueOne: "+valueOne);
+			System.out.println("   valueTwo: "+valueTwo);
+			*/
+
 			// In fact, the values pretty much can't be null because
 			// of the way custom graphics works.  Fix it up now to make
 			// things consistent with our other interpolators
 			
-			if ((valueOne == null || valueOne.toString().equals("None")) &&
-			    (valueTwo == null || valueTwo.toString().equals("None")))
+			if ((valueOne == null || valueOne.toString() == null || valueOne.toString().equals("None")) &&
+			    (valueTwo == null || valueTwo.toString() == null || valueTwo.toString().equals("None")))
 				continue;
 
 			// If valueOne and valueTwo are the same, we need to
