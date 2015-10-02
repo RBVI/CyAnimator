@@ -24,8 +24,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.Timer;
 
@@ -47,6 +50,8 @@ import org.cytoscape.view.model.Range;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.model.VisualLexicon;
 import org.cytoscape.view.model.VisualProperty;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedEvent;
+import org.cytoscape.view.model.events.NetworkViewAboutToBeDestroyedListener;
 import org.cytoscape.view.presentation.RenderingEngine;
 import org.cytoscape.view.presentation.RenderingEngineManager;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
@@ -70,7 +75,7 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.VisibleInterpolator
 import edu.ucsf.rbvi.CyAnimator.internal.tasks.CyAnimatorDialogTask;
 import edu.ucsf.rbvi.CyAnimator.internal.tasks.WriteTask;
 
-public class FrameManager {
+public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	static final Range<Double> ARBITRARY_DOUBLE_RANGE = 
 					new ContinuousRange<>(Double.class, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, true);
 
@@ -101,7 +106,7 @@ public class FrameManager {
 	int frameIndex = 0;
 
 	private static VisualLexicon dingVisualLexicon;
-	private static RenderingEngine<?> dingRenderingEngine;
+	private RenderingEngine<?> dingRenderingEngine;
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
@@ -122,6 +127,7 @@ public class FrameManager {
 
 		// Create a new frame manager for this root network
 		FrameManager fm = new FrameManager(bc, rootNetwork);
+		bc.registerService(fm, NetworkViewAboutToBeDestroyedListener.class, new Properties());
 		networkMap.put(rootNetwork, fm);
 		return fm;
 	}
@@ -131,14 +137,36 @@ public class FrameManager {
 		return networkMap.values();
 	}
 
+	static public void removeFrameManager(FrameManager manager) {
+		for (CyRootNetwork rootNetwork: networkMap.keySet()) {
+			if (networkMap.get(rootNetwork).equals(manager)) {
+				networkMap.remove(rootNetwork);
+				return;
+			}
+		}
+	}
+
+	static public void removeFrameManager(CyNetwork network) {
+		CyRootNetwork rootNetwork;
+		if (CyRootNetwork.class.isAssignableFrom(network.getClass())) 
+			rootNetwork = (CyRootNetwork) network;
+		else
+			rootNetwork = ((CySubNetwork)network).getRootNetwork();
+
+		if (networkMap.containsKey(rootNetwork))
+			networkMap.remove(rootNetwork);
+	}
+
 	static public void reset() {
-		if (networkMap != null)
-			networkMap.clear();
 		if (dialogTask != null) {
 			for (CyRootNetwork rootNetwork: networkMap.keySet()) {
 				dialogTask.resetDialog(rootNetwork);
 			}
 		}
+		if (networkMap != null)
+			networkMap.clear();
+
+		dialogTask = null;
 	}
 
 	static public void registerDialogTask(CyAnimatorDialogTask dialogTask) {
@@ -203,19 +231,63 @@ public class FrameManager {
 		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
 
-		if (dingVisualLexicon == null) {
-			RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
-			// Get the Ding Visual Lexicon
-			for (RenderingEngine<?> engine: rem.getAllRenderingEngines()) {
-				if (engine.getRendererId().equals("org.cytoscape.ding")) {
-					dingRenderingEngine = engine;
+		RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
+		// Get the Ding Visual Lexicon
+		for (RenderingEngine<?> engine: rem.getAllRenderingEngines()) {
+			if (engine.getRendererId().equals("org.cytoscape.ding")) {
+				dingRenderingEngine = engine;
+				if (dingVisualLexicon == null)
 					dingVisualLexicon = engine.getVisualLexicon();
-					break;
-				}
+				break;
 			}
 		}
 
 		interpolatorMap = initializeInterpolators();
+	}
+
+	/**
+	 * If we're destroying a network view, we need to destroy
+	 * our corresponding CyFrames
+	 */
+	public void handleEvent(NetworkViewAboutToBeDestroyedEvent ev) {
+		CyNetworkView view = ev.getNetworkView();
+		CyNetwork net = view.getModel();
+		CyRootNetwork rootNet = ((CySubNetwork)net).getRootNetwork();
+		// Is this network part of our root?
+		if (!rootNet.equals(rootNetwork))
+			return;
+
+		// Yes.  Now we need to see if we're using this network view for
+		// any of our frames
+		List<CyFrame> removeFrame = new ArrayList<>();
+
+		for (CyFrame frame: keyFrameList) {
+			if (frame.getNetworkView().equals(view)) {
+				// Yes, remove this frame
+				removeFrame.add(frame);
+			}
+		}
+
+		if (removeFrame.size() == 0)
+			return;
+
+		if (removeFrame.size() == keyFrameList.size()) {
+			// OK, need to do a full reset
+			if (FrameManager.dialogTask != null) {
+				FrameManager.dialogTask.resetDialog(rootNet);
+				FrameManager.dialogTask = null;
+			} else
+				FrameManager.removeFrameManager(this); // Remove ourselves from the list
+			// bundleContext.unregisterService(this, NetworkViewAboutToBeDestroyedListener.class);
+			return;
+		}
+
+		// Remove the implicated frames
+		for (CyFrame frame: removeFrame) {
+			keyFrameList.remove(frame);
+		}
+
+		updateTimer();
 	}
 
 	/**

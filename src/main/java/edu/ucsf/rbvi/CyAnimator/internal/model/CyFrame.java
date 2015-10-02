@@ -438,9 +438,9 @@ public class CyFrame {
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
 			}
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SIZE, 0.0);
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, 0.0);
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, 0.0);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SIZE, 0.5);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, 0.5);
+			nodeView.setVisualProperty(BasicVisualLexicon.NODE_HEIGHT, 0.5);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, 0);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, 0);
 			currentView.updateView();
