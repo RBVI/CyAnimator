@@ -407,6 +407,14 @@ public class CyAnimatorDialog extends JDialog
 		setVisible(true);
 	}
 
+	/**
+	 * Clear all of our data structures and release our frame manager
+	 */
+	public void clear() {
+		frameList = new ArrayList<>();
+		frameManager = null;
+	}
+
 
 	/**
 	 * Takes the current frameList and cycles through it to create a JButton

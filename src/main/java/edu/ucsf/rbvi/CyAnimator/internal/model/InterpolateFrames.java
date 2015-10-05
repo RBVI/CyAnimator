@@ -110,13 +110,22 @@ public class InterpolateFrames {
 
       //reset the nodeLists once the unionizer has updated them
 			for (int k = start+1; k < end; k++) {
+				cyFrameArray[k] = new CyFrame(frameList.get(0).getBundleContext(), frameManager);
 				cyFrameArray[k].setNodeViewList(nodeList);
 				cyFrameArray[k].setNodeList(nodeSet);
 				cyFrameArray[k].setEdgeViewList(edgeList);
 				cyFrameArray[k].setEdgeList(edgeSet);
 				cyFrameArray[k].setAnnotationViewList(annotationViewList);
 				cyFrameArray[k].setAnnotationList(new ArrayList<Annotation>(annotationList));
+				cyFrameArray[k].setID(""+i+"."+k);
+				cyFrameArray[k].initMaps();
 			}
+
+			/*
+			for (int k = start+1; k < end; k++) {
+				System.out.println("Before interpolation: frame: "+cyFrameArray[k]);
+			}
+			*/
 
 			/*
 			 * Interpolates all of the node, edge, and network visual properties, this happens by 
@@ -128,6 +137,12 @@ public class InterpolateFrames {
 			Map<VisualProperty<?>, FrameInterpolator> iMap = frameManager.getInterpolatorMap();
 			interpolate(1, iMap, i, nodeList, edgeList, annotationViewList, frameList, start, end, cyFrameArray);
 			interpolate(2, iMap, i, nodeList, edgeList, annotationViewList, frameList, start, end, cyFrameArray);
+
+			/*
+			for (int k = start+1; k < end; k++) {
+				System.out.println("Frame: "+cyFrameArray[k]);
+			}
+			*/
 
 			start = end;
 		}
@@ -168,6 +183,7 @@ public class InterpolateFrames {
 			}
 
 			if (viewSet == null) continue;
+			// System.out.println("Interpolating "+vp+" for frame "+i+" with "+viewSet.size()+" views");
 			fi.interpolate(viewSet, frameList.get(i), frameList.get(i+1), vp, start, end, cyFrameArray);
 		}
 		return cyFrameArray;

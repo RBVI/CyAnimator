@@ -41,11 +41,13 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.event.CyEventHelper;
 import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.model.subnetwork.CySubNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.session.CySession;
 import org.cytoscape.task.NetworkViewTaskFactory;
@@ -95,6 +97,7 @@ public class CyFrame {
 
 	private CyServiceRegistrar bundleContext;
 	private CyApplicationManager appManager;
+	private CyEventHelper eventHelper;
 	private CyNetworkView networkView = null;
 	private CyNetwork currentNetwork = null;
 	private BufferedImage networkImage = null;
@@ -110,6 +113,7 @@ public class CyFrame {
 	private FrameManager frameManager;
 	private AnnotationManager annotationManager;
 	private AnnotationLexicon annotationLexicon;
+	private boolean keyFrame = false;
 
 	private static final int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
 
@@ -130,6 +134,7 @@ public class CyFrame {
 		appManager = bundleContext.getService(CyApplicationManager.class);
 		taskManager = bundleContext.getService(SynchronousTaskManager.class);
 		annotationManager = bundleContext.getService(AnnotationManager.class);
+		eventHelper = bundleContext.getService(CyEventHelper.class);
 		annotationLexicon = new AnnotationLexicon();
 
 		if (networkView == null)
@@ -210,6 +215,7 @@ public class CyFrame {
 				}
 			}
 		}
+		keyFrame = true;
 	}
 
 	/**
@@ -372,13 +378,15 @@ public class CyFrame {
 		final CyNetworkView currentView = appManager.getCurrentNetworkView();
 
 		// Make sure everything is on the EDT
-		DisplayFrame displayFrame = new DisplayFrame(currentView);
+		DisplayFrame displayFrame = new DisplayFrame(currentView, this);
 		if (SwingUtilities.isEventDispatchThread()) {
 			displayFrame.run();
 		} else {
 			try {
 				SwingUtilities.invokeAndWait( displayFrame );
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -410,7 +418,9 @@ public class CyFrame {
 		} else {
 			try {
 				SwingUtilities.invokeAndWait( clearDisplay );
-			} catch(Exception e) {}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -418,10 +428,15 @@ public class CyFrame {
 		return "CyFrame: '"+frameid+"' with "+
 		        nodePropertyMap.size()+" nodes, "+
 		        edgePropertyMap.size()+" edges, and "+
-		        annotationPropertyMap.size()+" annotations";
+		        annotationPropertyMap.size()+" annotations.  "+
+						"nodeViewList has "+nodeViewList.size()+" entries, and nodeList has "+
+						nodeList.size()+" entries";
 	}
 
 	private void handleMissingNodes(final CyNetworkView currentView) {
+		if (!keyFrame)
+			return;
+
 		// Initialize our edge view maps
 		List<View<CyNode>> removeNodes = new ArrayList<View<CyNode>>();
 		for (View<CyNode> nv : currentView.getNodeViews()) {
@@ -437,6 +452,8 @@ public class CyFrame {
 			if (nodeView.isValueLocked(BasicVisualLexicon.NODE_VISIBLE)) {
 				nodeView.clearValueLock(BasicVisualLexicon.NODE_VISIBLE);
 			}
+
+			// System.out.println("Setting node "+nodeView.getModel()+" to invisible");
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, false);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_SIZE, 0.5);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_WIDTH, 0.5);
@@ -494,14 +511,22 @@ public class CyFrame {
 			if (view == null) {
 				// Add temporary node to network for viewing the node which is removed from current network
 				if (!recordNode.containsKey(node)) {
-					CyNode artNode = currentView.getModel().addNode();
-					recordNode.put(node, artNode);
-					currentView.updateView();
-					view = currentView.getNodeView(artNode);
+					((CySubNetwork)currentView.getModel()).addNode(node);
+					eventHelper.flushPayloadEvents();
+					// recordNode.put(node, node);
+					view = currentView.getNodeView(node);
+					// nodeViewList.add(view);
+					eventHelper.flushPayloadEvents();
 				} else {
 					view = currentView.getNodeView(recordNode.get(node));
 				}
+			} else if (!nodeViewList.contains(view)) {
+				// Make sure we know about this view
+				if (!view.getVisualProperty(BasicVisualLexicon.NODE_VISIBLE)) {
+					view.setVisualProperty(BasicVisualLexicon.NODE_VISIBLE, true);
+				}
 			}
+
 			for (VisualProperty<?> vp: propertyValues.keySet()) {
 				if (view.isValueLocked(vp))
 					view.clearValueLock(vp);
@@ -523,34 +548,31 @@ public class CyFrame {
 			if (view == null) {
 				// Add temporary edge to network for viewing the edge which is removed from current network
 				if (!recordEdge.containsKey(edge)) {
-					CyEdge artEdge = null;
-					if (recordNode.containsKey(edge.getSource()) &&
-					    nodeList.contains(edge.getTarget()) &&
-							!recordNode.containsKey(edge.getTarget())) {
-						artEdge = currentView.getModel().addEdge(recordNode.get(edge.getSource()), edge.getTarget(), true);
-					} else if (nodeList.contains(edge.getSource()) &&
-					           !recordNode.containsKey(edge.getSource()) &&
-										 recordNode.containsKey(edge.getTarget())) {
-						artEdge = currentView.getModel().addEdge(edge.getSource(), recordNode.get(edge.getTarget()), true);
-					} else if (recordNode.containsKey(edge.getSource()) &&
-					           recordNode.containsKey(edge.getTarget())) {
-						artEdge = currentView.getModel().addEdge(recordNode.get(edge.getSource()), recordNode.get(edge.getTarget()), true);
-					} else {
-						continue;
+					CyNetwork net = currentView.getModel();
+					if (net.containsNode(edge.getSource()) && net.containsNode(edge.getTarget())) {
+						((CySubNetwork)net).addEdge(edge);
+						eventHelper.flushPayloadEvents();
+						view = currentView.getEdgeView(edge);
+						eventHelper.flushPayloadEvents();
 					}
-					currentView.updateView();
-					view = currentView.getEdgeView(artEdge);
-					recordEdge.put(edge, artEdge);
 				} else {
 					view = currentView.getEdgeView(recordEdge.get(edge));
 				}
+			} else if (!edgeViewList.contains(view)) {
+				if (!view.getVisualProperty(BasicVisualLexicon.EDGE_VISIBLE)) {
+					view.setVisualProperty(BasicVisualLexicon.EDGE_VISIBLE, true);
+				}
 			}
-			for (VisualProperty<?> vp: propertyValues.keySet()) {
-				if (view.isValueLocked(vp))
-					view.clearValueLock(vp);
-				view.setVisualProperty(vp, propertyValues.get(vp));
+
+			if (view != null) {
+				for (VisualProperty<?> vp: propertyValues.keySet()) {
+					if (view.isValueLocked(vp))
+						view.clearValueLock(vp);
+					view.setVisualProperty(vp, propertyValues.get(vp));
+				}
 			}
 		}
+		currentView.updateView();
 	}
 
 	private void handleNetwork(final CyNetworkView currentView) {
@@ -1110,12 +1132,15 @@ public class CyFrame {
 
 	class DisplayFrame implements Runnable {
 			CyNetworkView currentView;
+			CyFrame frame;
 
-			public DisplayFrame(CyNetworkView view) {
+			public DisplayFrame(CyNetworkView view, CyFrame frame) {
 				currentView = view;
+				this.frame = frame;
 			}
 
 			public void run() {
+				// System.out.println("Displaying frame: "+frame.toString());
 				handleMissingEdges(currentView);
 				handleMissingNodes(currentView);
 				handleMissingAnnotations(currentView);
@@ -1125,6 +1150,7 @@ public class CyFrame {
 				handleNetwork(currentView);
 				handleAnnotations(currentView);
 
+				eventHelper.flushPayloadEvents();
 				currentView.updateView();
 			}
 	}

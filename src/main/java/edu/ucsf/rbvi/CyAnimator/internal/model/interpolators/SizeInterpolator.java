@@ -52,7 +52,7 @@ public class SizeInterpolator implements FrameInterpolator {
 				else
 					sizeOne = sizeTwo;
 			} else if (nSizeOne != null && nSizeTwo == null) {
-				sizeOne = nSizeOne.doubleValue()/100.0;
+				sizeOne = nSizeOne.doubleValue();
 				if (growIn)
 					sizeTwo = sizeOne/100.0;
 				else

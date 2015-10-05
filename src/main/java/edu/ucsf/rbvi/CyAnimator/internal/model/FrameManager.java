@@ -268,16 +268,13 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 			}
 		}
 
-		if (removeFrame.size() == 0)
-			return;
-
 		if (removeFrame.size() == keyFrameList.size()) {
 			// OK, need to do a full reset
 			if (FrameManager.dialogTask != null) {
 				FrameManager.dialogTask.resetDialog(rootNet);
 				FrameManager.dialogTask = null;
-			} else
-				FrameManager.removeFrameManager(this); // Remove ourselves from the list
+			}
+			FrameManager.removeFrameManager(this); // Remove ourselves from the list
 			// bundleContext.unregisterService(this, NetworkViewAboutToBeDestroyedListener.class);
 			return;
 		}
@@ -456,7 +453,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		else{ frameIndex++; }
 
 		frames[frameIndex].display();
-                frames[frameIndex].clearDisplay();
+		frames[frameIndex].clearDisplay();
 	}
 
 	/**
@@ -471,7 +468,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		else{ frameIndex--; }
 
 		frames[frameIndex].display();
-                frames[frameIndex].clearDisplay();
+		frames[frameIndex].clearDisplay();
 	}
 
 	/**

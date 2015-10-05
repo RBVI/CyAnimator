@@ -46,6 +46,7 @@ public class CyAnimatorDialogTask extends AbstractTask {
 	public void resetDialog(CyRootNetwork root) {
 		if (networkMap.containsKey(root)) {
 			CyAnimatorDialog dialog = networkMap.get(root);
+			dialog.clear();
 			dialog.setVisible(false);
 			// dialog.dispose();
 			networkMap.remove(root);
