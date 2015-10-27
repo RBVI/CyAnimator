@@ -107,6 +107,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 
 	private static VisualLexicon dingVisualLexicon;
 	private RenderingEngine<?> dingRenderingEngine;
+	private Scrubber currentScrubber = null;
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
 		// Get the root network
@@ -245,6 +246,10 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		interpolatorMap = initializeInterpolators();
 	}
 
+	public <S> S getService(Class<S> serviceClass) {
+		return bundleContext.getService(serviceClass);
+	}
+
 	/**
 	 * If we're destroying a network view, we need to destroy
 	 * our corresponding CyFrames
@@ -316,14 +321,16 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * @param index in keyFrameList of frame to be deleted
 	 */
 	public void deleteKeyFrame(int index){
-		List<CyFrame>remove = new ArrayList<CyFrame>();
+		deleteKeyFrame(keyFrameList.get(index));
+	}
 
-		remove.add(keyFrameList.get(index));
-	
-
-		for (CyFrame frame: remove)
-			keyFrameList.remove(frame);
-	
+	/**
+	 * Deletes a key frame from the key frame list.
+	 * 
+	 * @param key frame to remove
+	 */
+	public void deleteKeyFrame(CyFrame frame){
+		keyFrameList.remove(frame);
 
 		updateTimer();
 	}
@@ -372,7 +379,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		//timer delay is set in milliseconds, so 1000/fps gives delay per frame
 		int delay = 1000/fps; 
 
-
 		ActionListener taskPerformer = new ActionListener() {
 
 			public void actionPerformed(ActionEvent evt) {
@@ -380,6 +386,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 
 				frames[frameIndex].display();
 				frames[frameIndex].clearDisplay();
+				updateScrubber(currentScrubber, frameIndex);
 				frameIndex++;
 			}
 		};
@@ -417,10 +424,11 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	/**
 	 * Starts the the timer and plays the animation.
 	 */
-	public void play(){
+	public void play(Scrubber scrubber){
 		if(timer == null){ return; }
 		//1000ms in a second, so divided by frames per second gives ms interval 
 		timer.setDelay(1000/fps);
+		currentScrubber = scrubber;
 		timer.start();
 	}
 
@@ -444,7 +452,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	/**
 	 * Steps forward one frame in the animation.
 	 */
-	public void stepForward(){
+	public void stepForward(Scrubber scrubber){
 		if(timer == null){ return; }
 		timer.stop();
 
@@ -454,12 +462,13 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 
 		frames[frameIndex].display();
 		frames[frameIndex].clearDisplay();
+		updateScrubber(scrubber, frameIndex);
 	}
 
 	/**
 	 * Steps backwards one frame in the animation.
 	 */
-	public void stepBackward(){
+	public void stepBackward(Scrubber scrubber){
 		if(timer == null){ return; }
 		timer.stop();
 
@@ -469,6 +478,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 
 		frames[frameIndex].display();
 		frames[frameIndex].clearDisplay();
+		updateScrubber(scrubber, frameIndex);
 	}
 
 	/**
@@ -478,6 +488,19 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 */
 	public ArrayList<CyFrame> getKeyFrameList(){
 		return keyFrameList;
+	}
+
+	/**
+	 * Swaps two frames in the key frame list
+	 *
+	 * @param frame1 the first frame
+	 * @param frame2 the second frame
+	 */
+	public void swapFrame(CyFrame frame1, CyFrame frame2) {
+		int index1 = keyFrameList.indexOf(frame1);
+		int index2 = keyFrameList.indexOf(frame2);
+		keyFrameList.set(index1, frame2);
+		keyFrameList.set(index2, frame1);
 	}
 
 	/**
@@ -701,5 +724,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		return dingVisualLexicon.lookup(type, propertyName);
 	}
 
+	private void updateScrubber(Scrubber scrubber, int frame) {
+		if (scrubber != null)
+			scrubber.frameDisplayed(frame);
+	}
 
 }

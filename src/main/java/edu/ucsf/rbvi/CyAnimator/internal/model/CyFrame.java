@@ -115,7 +115,7 @@ public class CyFrame {
 	private AnnotationLexicon annotationLexicon;
 	private boolean keyFrame = false;
 
-	private static final int IMAGE_WIDTH = 200, IMAGE_HEIGHT = 150;
+	private static final int IMAGE_WIDTH = 100, IMAGE_HEIGHT = 100;
 
 	/**
 	 * Creates this CyFrame by initializing and populating all of the fields.

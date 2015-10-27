@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.jcodec.api.SequenceEncoder;
 import static org.jcodec.common.model.ColorSpace.RGB;
 import org.jcodec.common.model.Picture;
+import org.jcodec.scale.AWTUtil;
 
 import edu.ucsf.rbvi.CyAnimator.internal.io.GifSequenceEncoder;
 // import edu.ucsf.rbvi.CyAnimator.internal.io.VideoCreator;
@@ -59,6 +60,8 @@ public class WriteTask extends AbstractTask {
 
 		// Get the right file/extension
 		File movieFile = createFile();
+		// TODO: Replace SequenceEncoder with a lower-level implementation
+		// so we can change the fps, etc.
 		SequenceEncoder enc = null;
 		if (videoType == 1)
 			enc = new GifSequenceEncoder(movieFile, frameManager.fps, true);
@@ -159,23 +162,7 @@ public class WriteTask extends AbstractTask {
 	}
 
 	private void encodeImage(SequenceEncoder enc, BufferedImage bi) throws IOException {
-		enc.encodeNativeFrame(fromBufferedImage(bi));
-	}
-
-	private Picture fromBufferedImage(BufferedImage src) {
-		Picture dst = Picture.create(src.getWidth(), src.getHeight(), RGB);
-		int[] dstData = dst.getPlaneData(0);
-
-		int off = 0;
-		for (int i = 0; i < src.getHeight(); i++) {
-			for (int j = 0; j < src.getWidth(); j++) {
-				int rgb1 = src.getRGB(j, i);
-				dstData[off++] = (rgb1 >> 16) & 0xff;
-				dstData[off++] = (rgb1 >> 8) & 0xff;
-				dstData[off++] = rgb1 & 0xff;
-			}
-		}
-		return dst;
+		enc.encodeNativeFrame(AWTUtil.fromBufferedImage(bi));
 	}
 
 }

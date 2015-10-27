@@ -35,7 +35,7 @@ public class PlayTask extends AbstractTask {
 	public void run(TaskMonitor monitor) throws Exception {
 		CyNetwork network = appManager.getCurrentNetwork();
 		FrameManager fm = FrameManager.getFrameManager(registrar, network);
-		fm.play();
+		fm.play(null);
 		return;
 	}
 
