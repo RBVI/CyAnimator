@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.jcodec.api.SequenceEncoder;
 import static org.jcodec.common.model.ColorSpace.RGB;
 import org.jcodec.common.model.Picture;
-import org.jcodec.scale.AWTUtil;
+// import org.jcodec.scale.AWTUtil;
 
 import edu.ucsf.rbvi.CyAnimator.internal.io.GifSequenceEncoder;
 // import edu.ucsf.rbvi.CyAnimator.internal.io.VideoCreator;
@@ -77,10 +77,11 @@ public class WriteTask extends AbstractTask {
 		for(int i=0; i<frameCount; i++) {
 			BufferedImage image = 
 					frameManager.getFrame(i).getNetworkImage(scale);
-			if (videoType == 1)
+			if (videoType == 1) {
 				((GifSequenceEncoder)enc).encodeImage(image);
-			else
+			} else {
 				encodeImage(enc, image);
+			}
 			monitor.setProgress(((double)i)/((double)frameCount));
 		}
 		enc.finish();
@@ -140,29 +141,33 @@ public class WriteTask extends AbstractTask {
 	}
 
 	private File createFile() {
+		String separator = System.getProperty("file.separator");
 		String extension = null;
 		// Actually, both of these are H.264/MPEG4
 		if (videoType == 1) 
 			extension = ".gif";
 		else if (videoType == 2) 
 			extension = ".mp4";
-		else if (videoType == 3)
-			extension = ".mov";
 		else
 			return null;
 
 		if (directory == null || directory.length() == 0) {
-			return new File(System.getProperty("user.dir")+"video"+extension);
+			return new File(System.getProperty("user.dir")+separator+"video"+extension);
 		}
 
 		File dir = new File(directory);
-		if (dir.isFile()) return dir;
+		if (!dir.exists() || dir.isFile()) return dir;
 
 		return new File(dir, "video"+extension);
 	}
 
 	private void encodeImage(SequenceEncoder enc, BufferedImage bi) throws IOException {
-		enc.encodeNativeFrame(AWTUtil.fromBufferedImage(bi));
+		try {
+			Picture p = AWTUtil.fromBufferedImage(bi);
+			enc.encodeNativeFrame(p);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

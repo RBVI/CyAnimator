@@ -42,17 +42,17 @@ public class RecordPanel extends JPanel {
 	public RecordPanel() {
 		super();
 
-		String[] choices = { "Frames" , "GIF", "MP4", "MOV/H264"};
+		String[] choices = { "Frames" , "GIF", "MP4/H264"/*, "MKV/VP8" */};
 		String[] resolutions = { "100", "200", "300", "400", "500"};
 		String[] frameCount = { "10", "20", "30", "40", "50"};
 
 		filePath = System.getProperty("user.home");	// Set a reasonable default
-		filePath += System.getProperty("file.separator")+"video.mov";	// Set a reasonable default
+		filePath += System.getProperty("file.separator")+"video.mp4";	// Set a reasonable default
 
 		choicesList = new JComboBox<>(choices);
 		resolutionsList = new JComboBox<>(resolutions);
 		frameCountList = new JComboBox<>(frameCount);
-		choicesList.setSelectedIndex(3);
+		choicesList.setSelectedIndex(2);
 		resolutionsList.setSelectedIndex(0);
 		frameCountList.setSelectedIndex(2);
 

@@ -65,7 +65,7 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 		this.frameManager = frameManager;
 		this.parent = parentDialog;
 
-		updateThumbnails();
+		// updateThumbnails();
 
 		// This will get updated when we draw our timeline the first time
 		setPreferredSize(new Dimension(width,150));
@@ -79,6 +79,11 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 	public void updateThumbnails() {
 		removeAll();
 		keyFrameList = frameManager.getKeyFrameList();
+		if (keyFrameList.size() > 1)
+			parent.enableControlButtons(true);
+		else
+			parent.enableControlButtons(false);
+
 		buttonMap = new HashMap<>();
 
 		int xOffset = 5;
@@ -97,20 +102,18 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 			button.setBounds(bounds);
 			add(button);
 			buttonMap.put(frame, button);
-
-			if (xOffset > width) {
-				width = xOffset + seconds2Pixels(2.0); // Add 2 seconds
-				setPreferredSize(new Dimension(width,150));
-				resized = true;
-			}
 		}
 
 		scrubberPosition = -1;
 
-		if (resized) {
+		if (xOffset > width) {
+			width = xOffset + seconds2Pixels(2.0); // Add 2 seconds
+			setPreferredSize(new Dimension(width,150));
+			resized = true;
 			parent.revalidate();
 			parent.repaint();
 		}
+
 		repaint();
 	}
 

@@ -49,7 +49,7 @@ public class CyAnimatorDialog extends JDialog
 	private FramePanel framePanel;
 	private TimelinePanel timeline;
 	private JScrollPane framePane;
-	private JPanel controlPanel;
+	private ControlPanel controlPanel;
 
 	private JPanel mainPanel;
 
@@ -90,6 +90,8 @@ public class CyAnimatorDialog extends JDialog
 
 		controlPanel = new ControlPanel(frameManager, timeline);
 
+		timeline.updateThumbnails();
+
 		mainPanel.add(framePanel);
 		mainPanel.add(timelineScroller);
 		mainPanel.add(controlPanel);
@@ -113,6 +115,10 @@ public class CyAnimatorDialog extends JDialog
 			//initialize();
 			setVisible(true);
 		}
+	}
+
+	public void enableControlButtons(boolean enable) {
+		controlPanel.enableButtons(enable);
 	}
 
 	public void focusGained(FocusEvent e){

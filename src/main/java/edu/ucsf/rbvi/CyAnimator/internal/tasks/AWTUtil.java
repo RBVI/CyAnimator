@@ -1,4 +1,4 @@
-package org.jcodec.scale;
+package edu.ucsf.rbvi.CyAnimator.internal.tasks;
 
 import static org.jcodec.common.model.ColorSpace.RGB;
 
@@ -11,6 +11,8 @@ import javax.imageio.ImageIO;
 
 import org.jcodec.common.model.ColorSpace;
 import org.jcodec.common.model.Picture;
+import org.jcodec.scale.ColorUtil;
+import org.jcodec.scale.Transform;
 
 /**
  * This class is part of JCodec ( www.jcodec.org ) This software is distributed
