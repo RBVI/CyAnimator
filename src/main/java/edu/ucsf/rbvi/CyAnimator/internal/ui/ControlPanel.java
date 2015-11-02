@@ -36,6 +36,7 @@ import static org.cytoscape.util.swing.IconManager.ICON_STEP_BACKWARD;
 import static org.cytoscape.util.swing.IconManager.ICON_STOP;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
 
 public class ControlPanel extends JPanel implements ActionListener {
 
@@ -193,7 +194,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
 			int choice = recordPanel.getOutputType();
 			int resolution = recordPanel.getResolution();
-			int frameCount = recordPanel.getFrameCount();
+			TimeBase frameCount = recordPanel.getFrameCount();
 			frameManager.updateSettings(frameCount, choice, resolution);
 
 			try {

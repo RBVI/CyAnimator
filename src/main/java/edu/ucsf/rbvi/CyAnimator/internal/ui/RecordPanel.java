@@ -28,10 +28,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
+
 public class RecordPanel extends JPanel {
 	JComboBox<String> choicesList;
 	JComboBox<String> resolutionsList;
-	JComboBox<String> frameCountList;
+	JComboBox<TimeBase> frameCountList;
 	JTextField directoryText;
 	final JFileChooser fc = new JFileChooser();
 	private String filePath = "";
@@ -42,19 +44,18 @@ public class RecordPanel extends JPanel {
 	public RecordPanel() {
 		super();
 
-		String[] choices = { "Frames" , "GIF", "MP4/H264"/*, "MKV/VP8" */};
+		String[] choices = { "Frames" , "GIF", "MP4/H264", "WebM/VP8"};
 		String[] resolutions = { "100", "200", "300", "400", "500"};
-		String[] frameCount = { "10", "20", "30", "40", "50"};
 
 		filePath = System.getProperty("user.home");	// Set a reasonable default
 		filePath += System.getProperty("file.separator")+"video.mp4";	// Set a reasonable default
 
 		choicesList = new JComboBox<>(choices);
 		resolutionsList = new JComboBox<>(resolutions);
-		frameCountList = new JComboBox<>(frameCount);
+		frameCountList = new JComboBox<>(TimeBase.values());
 		choicesList.setSelectedIndex(2);
 		resolutionsList.setSelectedIndex(0);
-		frameCountList.setSelectedIndex(2);
+		frameCountList.setSelectedIndex(2); // Set to 30 FPS by default
 
 		choicesList.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -103,7 +104,7 @@ public class RecordPanel extends JPanel {
 		frameSettingPanel.setPreferredSize(new Dimension(600, 100));
 		frameSettingPanel.setBorder(BorderFactory.createTitledBorder("Frame Options"));
 		frameSettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		frameSettingPanel.add(new JLabel("Frames Per Second: "));
+		frameSettingPanel.add(new JLabel("Frame rate: "));
 		frameSettingPanel.add(frameCountList);
 		frameSettingPanel.add(new JLabel("Resolution: "));
 		frameSettingPanel.add(resolutionsList);
@@ -129,8 +130,8 @@ public class RecordPanel extends JPanel {
 		return (resolutionsList.getSelectedIndex() + 1)*100;
 	}
 
-	public int getFrameCount() {
-		return (frameCountList.getSelectedIndex() + 1)*10;
+	public TimeBase getFrameCount() {
+		return (TimeBase)frameCountList.getSelectedItem();
 	}
 
 	public String getFilePath() {

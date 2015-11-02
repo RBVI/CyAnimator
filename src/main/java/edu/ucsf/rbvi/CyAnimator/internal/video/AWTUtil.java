@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.internal.tasks;
+package edu.ucsf.rbvi.CyAnimator.internal.video;
 
 import static org.jcodec.common.model.ColorSpace.RGB;
 

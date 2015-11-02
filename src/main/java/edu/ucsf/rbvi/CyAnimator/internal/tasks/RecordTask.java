@@ -23,20 +23,21 @@ import org.cytoscape.work.util.ListSingleSelection;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
 
 public class RecordTask extends AbstractTask {
 
 	private CyServiceRegistrar registrar;
 	private CyApplicationManager appManager;
 
-	@Tunable (context="nogui", description="Frames per second")
-	public int fps = 30;
+	@Tunable (context="nogui", description="Frame rate")
+	ListSingleSelection<TimeBase> frameRate = new ListSingleSelection<>(TimeBase.values());
 
 	@Tunable (context="nogui", description="Resolution")
 	public int resolution = 100;
 
 	@Tunable (context="nogui", description="Video Type")
-	ListSingleSelection<String> videoType = new ListSingleSelection<>("Frames" , "GIF", "MP4", "MOV/H264");
+	ListSingleSelection<String> videoType = new ListSingleSelection<>("Frames" , "GIF", "MP4/H.264"/*, "MKV/VP8"*/);
 
 	@Tunable (context="nogui", description="Output video location")
 	public File outputDir;
@@ -55,7 +56,7 @@ public class RecordTask extends AbstractTask {
 		String type = videoType.getSelectedValue();
 		List<String> types = videoType.getPossibleValues();
 		int offset = types.indexOf(type);
-		fm.updateSettings(fps, offset, resolution);
+		fm.updateSettings(frameRate.getSelectedValue(), offset, resolution);
 		fm.recordAnimation(outputDir.getAbsolutePath());
 		return;
 	}

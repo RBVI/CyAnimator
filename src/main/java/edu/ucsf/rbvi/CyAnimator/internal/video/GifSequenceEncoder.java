@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.CyAnimator.internal.io;
+package edu.ucsf.rbvi.CyAnimator.internal.video;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -19,9 +19,9 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.FileImageOutputStream;
 
-import org.jcodec.api.SequenceEncoder;
+import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
 
-public class GifSequenceEncoder extends SequenceEncoder {
+public class GifSequenceEncoder implements SequenceEncoder {
   protected ImageWriter gifWriter;
   protected ImageWriteParam imageWriteParam;
   protected IIOMetadata imageMetaData;
@@ -37,9 +37,13 @@ public class GifSequenceEncoder extends SequenceEncoder {
    *
    * @author Elliot Kroo (elliot[at]kroo[dot]net)
    */
-  public GifSequenceEncoder(File outputFile, int rate, boolean loopContinuously) 
+  public GifSequenceEncoder(File outputFile, TimeBase timebase, boolean loopContinuously) 
 					throws IIOException, IOException {
-		super(outputFile);
+
+		// We need to adjust the rate for NTSC
+		int rate = timebase.getTimeBase();
+		if (rate == 30000 /* NTSC */)
+			rate = 30;  // Close enough
 
     // my method to create a writer
     gifWriter = getWriter(); 
@@ -97,7 +101,7 @@ public class GifSequenceEncoder extends SequenceEncoder {
     gifWriter.prepareWriteSequence(null);
   }
   
-  public void encodeImage(RenderedImage img) throws IOException {
+  public void encodeImage(BufferedImage img) throws IOException {
     gifWriter.writeToSequence(
       new IIOImage(
         img,
@@ -105,7 +109,7 @@ public class GifSequenceEncoder extends SequenceEncoder {
         imageMetaData),
       imageWriteParam);
   }
-  
+
   /**
    * Close this GifSequenceWriter object. This does not close the underlying
    * stream, just finishes off the GIF.
