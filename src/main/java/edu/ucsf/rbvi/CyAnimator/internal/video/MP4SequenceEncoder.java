@@ -36,6 +36,8 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
  */
 @Deprecated
 public class MP4SequenceEncoder implements SequenceEncoder {
+		public static Brand MP4 = Brand.MP4;
+		public static Brand MOV = Brand.MOV;
     private SeekableByteChannel ch;
     private Picture toEncode;
     private Transform transform;
@@ -45,17 +47,18 @@ public class MP4SequenceEncoder implements SequenceEncoder {
     private FramesMP4MuxerTrack outTrack;
     private ByteBuffer _out;
     private int frameNo;
+    private int timeStamp;
     private MP4Muxer muxer;
     private ByteBuffer sps;
     private ByteBuffer pps;
 		private TimeBase timebase;
 
-    public MP4SequenceEncoder(File out, TimeBase timebase) throws IOException {
+    public MP4SequenceEncoder(File out, TimeBase timebase, Brand brand) throws IOException {
         this.ch = NIOUtils.writableFileChannel(out);
 				this.timebase = timebase;
 
         // Muxer that will store the encoded frames
-        muxer = new MP4Muxer(ch, Brand.MP4);
+        muxer = new MP4Muxer(ch, brand);
 
         // Add video track to muxer
         outTrack = muxer.addTrack(TrackType.VIDEO, timebase.getTimeBase());
@@ -73,6 +76,9 @@ public class MP4SequenceEncoder implements SequenceEncoder {
         // MP4
         spsList = new ArrayList<ByteBuffer>();
         ppsList = new ArrayList<ByteBuffer>();
+
+				frameNo = 0;
+				timeStamp = 0;
 
     }
 
@@ -111,11 +117,21 @@ public class MP4SequenceEncoder implements SequenceEncoder {
         if (pps == null && ppsList.size() != 0)
             pps = ppsList.get(0);
 
+				// Create the packet
+        MP4Packet packet = new MP4Packet(result, /* The packet we're encoding */
+				                                 timeStamp, /* The presentation timestamp */
+				                                 timebase.getTimeBase(), /* Our time base */
+																				 timebase.getFrameDuration(), /* The duration of a frame */
+																				 frameNo, /* The frame number */
+																				 nu.type == NALUnitType.IDR_SLICE, /* True if this is an I-frame */
+																				 null, /* Not used */
+                                         timeStamp, /* The presentation timestamp again */
+																				 0 /* Should always be 0 (sample entry) */);
         // Add packet to video track
-        outTrack.addFrame(new MP4Packet(result, frameNo, timebase.getTimeBase(), timebase.getFrameDuration(), frameNo, nu.type == NALUnitType.IDR_SLICE, null,
-                frameNo, 0));
+        outTrack.addFrame(packet);
 
-        frameNo += timebase.getFrameDuration();
+        timeStamp += timebase.getFrameDuration();
+        frameNo++;
     }
 
     public H264Encoder getEncoder() {

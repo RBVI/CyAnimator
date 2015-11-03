@@ -17,6 +17,7 @@ import org.jcodec.common.model.Picture;
 import edu.ucsf.rbvi.CyAnimator.internal.model.BooleanWrapper;
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
 
 import edu.ucsf.rbvi.CyAnimator.internal.video.AWTUtil;
 import edu.ucsf.rbvi.CyAnimator.internal.video.GifSequenceEncoder;
@@ -33,10 +34,10 @@ public class WriteTask extends AbstractTask {
 	boolean canceled = false;
 	String title;
 	String directory;
-	int videoType;
+	VideoType videoType;
 	int videoResolution;
 
-	public WriteTask(FrameManager frameManager, String title, String directory, int videoType, int videoResolution) {
+	public WriteTask(FrameManager frameManager, String title, String directory, VideoType videoType, int videoResolution) {
 		super();
 		this.frameManager = frameManager;
 		this.title = title;
@@ -55,7 +56,7 @@ public class WriteTask extends AbstractTask {
 		// to write each frame as a PNG.  
 		// Otherwise, we're going 
 		// to create the movie directly.
-		if (videoType == 0) {
+		if (videoType == VideoType.FRAMES) {
 			writeFrames(monitor);
 			return;
 		}
@@ -65,14 +66,24 @@ public class WriteTask extends AbstractTask {
 		// TODO: Replace SequenceEncoder with a lower-level implementation
 		// so we can change the fps, etc.
 		SequenceEncoder enc = null;
-		if (videoType == 1)
-			enc = new GifSequenceEncoder(movieFile, frameManager.getTimeBase(), true);
-		else if (videoType == 2)
-			enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase());
-		else if (videoType == 3)
-			enc = new WebMSequenceEncoder(movieFile, frameManager.getTimeBase());
+		switch (videoType) {
+			case GIF:
+				enc = new GifSequenceEncoder(movieFile, frameManager.getTimeBase(), true);
+				break;
+			case MP4:
+				enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MP4);
+				break;
+			case WEBM:
+				// Note: this is broken somewhere in JCodec.  Don't use!
+				enc = new WebMSequenceEncoder(movieFile, frameManager.getTimeBase());
+				break;
+			case MOV:
+				// Note: not really sure there's a value in providing MOV separate from MP4
+				enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MOV);
+				break;
+		}
 
-		monitor.showMessage(Level.INFO, "Creating movie");
+		monitor.showMessage(Level.INFO, "Creating "+videoType.toString()+" movie");
 		monitor.setProgress(0.0);
 
 		int frameCount = frameManager.getFrameCount();
@@ -101,10 +112,6 @@ public class WriteTask extends AbstractTask {
 			curDir = directory;
 		}
 
-		if(videoType != 0){
-		    curDir += "/.CyAnimator";
-		}
-
 		File file = new File(curDir); //+"/outputImgs");
 
 		//make the directory
@@ -126,14 +133,6 @@ public class WriteTask extends AbstractTask {
 			try {
 				BooleanWrapper finished = new BooleanWrapper(false);
 				this.frameManager.getFrame(i).writeImage(name, videoResolution,finished);
-				while (!finished.getValue())
-					try {
-						Thread.sleep(200);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					};
-
 			} catch (IOException e) {
 				monitor.showMessage(Level.ERROR, "Failed to write file "+name);
 				return;
@@ -149,27 +148,16 @@ public class WriteTask extends AbstractTask {
 
 	private File createFile() {
 		String separator = System.getProperty("file.separator");
-		String extension = null;
-		switch(videoType) {
-			case 1:
-				extension = ".gif";
-				break;
-			case 2:
-				extension = ".mp4";
-				break;
-			case 3:
-				extension = ".webm";
-				break;
-		}
+		String extension = videoType.getExt();
 
 		if (directory == null || directory.length() == 0) {
-			return new File(System.getProperty("user.dir")+separator+"video"+extension);
+			return new File(System.getProperty("user.dir")+separator+"video."+extension);
 		}
 
 		File dir = new File(directory);
 		if (!dir.exists() || dir.isFile()) return dir;
 
-		return new File(dir, "video"+extension);
+		return new File(dir, "video."+extension);
 	}
 
 }

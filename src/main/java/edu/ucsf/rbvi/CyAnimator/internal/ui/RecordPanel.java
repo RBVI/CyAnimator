@@ -29,14 +29,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
+import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
 
 public class RecordPanel extends JPanel {
-	JComboBox<String> choicesList;
+	JComboBox<VideoType> choicesList;
 	JComboBox<String> resolutionsList;
 	JComboBox<TimeBase> frameCountList;
 	JTextField directoryText;
 	final JFileChooser fc = new JFileChooser();
-	private String filePath = "";
+	private String defaultPath;
 
 	/**
 	 * 
@@ -44,27 +45,38 @@ public class RecordPanel extends JPanel {
 	public RecordPanel() {
 		super();
 
-		String[] choices = { "Frames" , "GIF", "MP4/H264", "WebM/VP8"};
 		String[] resolutions = { "100", "200", "300", "400", "500"};
 
-		filePath = System.getProperty("user.home");	// Set a reasonable default
-		filePath += System.getProperty("file.separator")+"video.mp4";	// Set a reasonable default
+		defaultPath = System.getProperty("user.home");	// Set a reasonable default
+		defaultPath += System.getProperty("file.separator")+"video."+VideoType.MP4.getExt();	// Set a reasonable default
 
-		choicesList = new JComboBox<>(choices);
+		choicesList = new JComboBox<VideoType>(VideoType.supportedValues());
 		resolutionsList = new JComboBox<>(resolutions);
 		frameCountList = new JComboBox<>(TimeBase.values());
-		choicesList.setSelectedIndex(2);
+		choicesList.setSelectedItem(VideoType.MP4);
 		resolutionsList.setSelectedIndex(0);
-		frameCountList.setSelectedIndex(2); // Set to 30 FPS by default
+		frameCountList.setSelectedItem(TimeBase.THIRTY); // Set to 30 FPS by default
 
 		choicesList.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int type = choicesList.getSelectedIndex();
+				VideoType type = (VideoType)choicesList.getSelectedItem();
 				// No frames/second in just images
-				if (type == 0)
+				if (type == VideoType.FRAMES)
 					frameCountList.setEnabled(false);
 				else
 					frameCountList.setEnabled(true);
+
+				// Update filePath if the user hasn't changed it...
+				if (!directoryText.getText().equals(defaultPath))
+					return;
+
+				// No, we're still the default
+				defaultPath = System.getProperty("user.home");	// Set a reasonable default
+				if (type.equals(VideoType.FRAMES))
+					defaultPath += System.getProperty("file.separator")+"Frames";	// Set a reasonable default
+				else
+					defaultPath += System.getProperty("file.separator")+"video."+type.getExt();	// Set a reasonable default
+				directoryText.setText(defaultPath);
 			}
 		});
 
@@ -76,8 +88,7 @@ public class RecordPanel extends JPanel {
 				int returnVal = fc.showSaveDialog(new JPanel());
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
-					filePath = file.getPath();
-					directoryText.setText(filePath);
+					directoryText.setText(file.getPath());
 				}
 			}
 		});
@@ -89,7 +100,7 @@ public class RecordPanel extends JPanel {
 		directorySettingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 		directorySettingPanel.add(new JLabel("Video location: "));
 		directoryText = new JTextField(30);
-		directoryText.setText(filePath);
+		directoryText.setText(defaultPath);
 		directorySettingPanel.add(directoryText);
 		directorySettingPanel.add(browseButton);
 
@@ -122,8 +133,8 @@ public class RecordPanel extends JPanel {
 		add(settingButtonPanel);
 	}
 
-	public int getOutputType() {
-		return choicesList.getSelectedIndex();
+	public VideoType getOutputType() {
+		return (VideoType)choicesList.getSelectedItem();
 	}
 
 	public int getResolution() {
@@ -135,7 +146,7 @@ public class RecordPanel extends JPanel {
 	}
 
 	public String getFilePath() {
-		return filePath;
+		return directoryText.getText();
 	}
 
 }

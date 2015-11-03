@@ -84,10 +84,6 @@
 			<id>maven-central</id>
 			<url>https://repo1.maven.org/maven2</url>
 		</repository>
-                <repository>
-                        <id>xuggle repo</id>
-                        <url>http://xuggle.googlecode.com/svn/trunk/repo/share/java/</url>
-                </repository>
 	</repositories>
 
 	<dependencies>
@@ -180,12 +176,6 @@
 			<artifactId>org.osgi.core</artifactId>
 			<version>${osgi.api.version}</version>
 		</dependency>
-		<!--dependency>
-			<groupId>xuggle</groupId>
-			<artifactId>xuggle-xuggler</artifactId>
-			<version>5.4</version>
-			<optional>true</optional>
-		</dependency-->
 		<dependency>
 			<groupId>org.jcodec</groupId>
 			<artifactId>jcodec</artifactId>

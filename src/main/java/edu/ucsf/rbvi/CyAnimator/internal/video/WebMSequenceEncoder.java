@@ -59,7 +59,7 @@ public class WebMSequenceEncoder implements SequenceEncoder {
         outTrack = null;
 
         // Allocate a buffer big enough to hold output frames
-        _out = null;
+        _out = ByteBuffer.allocate(1920 * 1080 * 6);
 
 				frameNo = 0;
 
@@ -79,9 +79,7 @@ public class WebMSequenceEncoder implements SequenceEncoder {
 		}
 
     public void encodeNativeFrame(Picture pic) throws IOException {
-        if (toEncode == null) {
-            toEncode = Picture.create(pic.getWidth(), pic.getHeight(), ColorSpace.YUV420);
-        }
+				Picture toEncode = Picture.create(pic.getWidth(), pic.getHeight(), ColorSpace.YUV420);
 
 				if (outTrack == null)
       		outTrack = muxer.createVideoTrack(new Size(pic.getWidth(), pic.getHeight()), "V_VP8");
@@ -95,11 +93,9 @@ public class WebMSequenceEncoder implements SequenceEncoder {
 					_out.clear();
 
         ByteBuffer result = encoder.encodeFrame(toEncode, _out);
-				outTrack.addSampleEntry(result, frameNo-1);
+				outTrack.addSampleEntry(result, frameNo);
 
 				frameNo++;
-
-				muxer.mux(ch);
     }
 
     public void finish() throws IOException {

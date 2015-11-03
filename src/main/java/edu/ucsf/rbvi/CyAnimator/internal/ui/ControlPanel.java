@@ -37,6 +37,7 @@ import static org.cytoscape.util.swing.IconManager.ICON_STOP;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
+import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
 
 public class ControlPanel extends JPanel implements ActionListener {
 
@@ -192,7 +193,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 											 JOptionPane.PLAIN_MESSAGE);
 			if (result != JOptionPane.OK_OPTION) return;
 
-			int choice = recordPanel.getOutputType();
+			VideoType choice = recordPanel.getOutputType();
 			int resolution = recordPanel.getResolution();
 			TimeBase frameCount = recordPanel.getFrameCount();
 			frameManager.updateSettings(frameCount, choice, resolution);

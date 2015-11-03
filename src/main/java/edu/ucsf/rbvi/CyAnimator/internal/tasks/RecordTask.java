@@ -24,6 +24,7 @@ import org.cytoscape.work.util.ListSingleSelection;
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
+import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
 
 public class RecordTask extends AbstractTask {
 
@@ -37,7 +38,7 @@ public class RecordTask extends AbstractTask {
 	public int resolution = 100;
 
 	@Tunable (context="nogui", description="Video Type")
-	ListSingleSelection<String> videoType = new ListSingleSelection<>("Frames" , "GIF", "MP4/H.264"/*, "MKV/VP8"*/);
+	ListSingleSelection<VideoType> videoType = new ListSingleSelection<>(VideoType.supportedValues());
 
 	@Tunable (context="nogui", description="Output video location")
 	public File outputDir;
@@ -53,10 +54,8 @@ public class RecordTask extends AbstractTask {
 	public void run(TaskMonitor monitor) throws Exception {
 		CyNetwork network = appManager.getCurrentNetwork();
 		FrameManager fm = FrameManager.getFrameManager(registrar, network);
-		String type = videoType.getSelectedValue();
-		List<String> types = videoType.getPossibleValues();
-		int offset = types.indexOf(type);
-		fm.updateSettings(frameRate.getSelectedValue(), offset, resolution);
+		VideoType type = videoType.getSelectedValue();
+		fm.updateSettings(frameRate.getSelectedValue(), type, resolution);
 		fm.recordAnimation(outputDir.getAbsolutePath());
 		return;
 	}

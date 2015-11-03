@@ -98,7 +98,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	//frames per second
 	private int fps = 30;
 	private TimeBase tb = TimeBase.THIRTY;
-	private int videoType = 1;
+	private VideoType videoType = VideoType.MP4;
 	private int videoResolution = 100;
 	private CyServiceRegistrar bundleContext;
 	private TaskManager<?,?> taskManager;
@@ -418,7 +418,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * 
 	 */
 	public void recordAnimation(String directory) throws IOException {
-		System.out.println("filePath = "+directory);
 		WriteTask task = new WriteTask(this, "Writing output files", directory, videoType, videoResolution);
 		taskManager.execute(new TaskIterator(task));
 	}
@@ -533,7 +532,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * update frame and video related settings.
 	 * @return
 	 */
-	public void updateSettings(TimeBase timebase, int videoType, int videoResolution){
+	public void updateSettings(TimeBase timebase, VideoType videoType, int videoResolution){
 		this.tb = timebase;
 		// Special handling for NTSC
 		if (tb.equals(TimeBase.NTSC))
