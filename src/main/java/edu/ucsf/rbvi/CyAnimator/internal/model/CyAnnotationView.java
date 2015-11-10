@@ -373,9 +373,10 @@ class CyAnnotationView implements View<CyAnnotation> {
 				aa.setArrowSize(ArrowAnnotation.ArrowEnd.TARGET, (Double)value);
 			} else if (vp.equals(AnnotationLexicon.ANNOTATION_VISIBLE)) {
 				if (!visible) {
-					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_COLOR, null);
-					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, null);
-					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, null);
+					// System.out.println("Setting arrow color to null");
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_COLOR, transparent);
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, transparent);
+					setVisualProperty(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, transparent);
 				}
 			}
 		}
