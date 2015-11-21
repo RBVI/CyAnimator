@@ -1103,9 +1103,10 @@ public class CyFrame {
 
 	private Map<String, String> createArgMap(String annString) {
 		Map<String,String> argMap = new HashMap<>();
-		String[] tokens = annString.split("|");
+		String[] tokens = annString.split("[|]");
 		for (String token: tokens) {
 			String[] pair = token.split("=");
+			if (pair.length != 2) continue;
 			argMap.put(pair[0], pair[1]);
 		}
 		return argMap;
