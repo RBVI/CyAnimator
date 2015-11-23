@@ -65,8 +65,6 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 		this.frameManager = frameManager;
 		this.parent = parentDialog;
 
-		// updateThumbnails();
-
 		// This will get updated when we draw our timeline the first time
 		setPreferredSize(new Dimension(width,150));
 
@@ -259,8 +257,15 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 		}
 	}
 
-	public void updateTimer() {
-		frameManager.updateTimer();
+	public void resetFrames() {
+		frameManager.resetFrames();
+	}
+
+
+	public void updateFrames() {
+		// Let the parent do this so we can
+		// put up an appropriate busy message
+		parent.updateFrames();
 	}
 
 	private int seconds2Pixels(double seconds) {

@@ -39,9 +39,13 @@ public class CaptureTask extends AbstractTask implements ObservableTask {
 	
 	@Override
 	public void run(TaskMonitor monitor) throws Exception {
+		monitor.setTitle("Capturing Frame");
 		if (network == null)
 			network = appManager.getCurrentNetwork();
 		FrameManager fm = FrameManager.getFrameManager(registrar, network);
+		if (!fm.haveDingFeatures()) {
+			monitor.showMessage(TaskMonitor.Level.WARN, "Some visual features are not supported with this renderer");
+		}
 		frameNumber = fm.getFrameCount();
 		capturedFrame = fm.captureCurrentFrame();
 		fm.addKeyFrame(capturedFrame);

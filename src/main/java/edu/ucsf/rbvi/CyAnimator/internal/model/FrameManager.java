@@ -221,7 +221,10 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		return frames.length;
 	}
 
-	public CyFrame getFrame(int i) { return frames[i]; }
+	public CyFrame getFrame(int i) { 
+		if (frames == null) return null;
+		return frames[i]; 
+	}
 
 	public CyFrame[] getFrames() { return frames; }
 
@@ -244,11 +247,27 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 			}
 		}
 
+		// Do we still have a null visual lexicon?  Post a warning
+		//
+
 		interpolatorMap = initializeInterpolators();
+		makeTimer();
 	}
 
 	public <S> S getService(Class<S> serviceClass) {
 		return bundleContext.getService(serviceClass);
+	}
+
+	/*
+	 * If we don't have the dingVisualLexicon, return false.  This
+	 * will allow callers to post a warning message that ding-specific
+	 * features will be ignored.
+	 *
+	 * @return true if we're using ding
+	 */
+	public boolean haveDingFeatures() {
+		if (dingVisualLexicon == null) return false;
+		return true;
 	}
 
 	/**
@@ -290,7 +309,8 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 			keyFrameList.remove(frame);
 		}
 
-		updateTimer();
+		// updateTimer();
+		resetFrames();
 	}
 
 	/**
@@ -333,7 +353,8 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	public void deleteKeyFrame(CyFrame frame){
 		keyFrameList.remove(frame);
 
-		updateTimer();
+		// updateTimer();
+		resetFrames();
 	}
 
 
@@ -354,11 +375,14 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		keyFrameList.add(frame);
 		frame.setID(""+(keyFrameList.size()-1));
 
+		/*
 		if(keyFrameList.size() > 1 && timer != null){ 
 			updateTimer();
 		}else{
 			makeTimer(); 
 		}
+		*/
+		resetFrames();
 	}
 
 
@@ -368,21 +392,15 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * displayed thus animating the array of CyFrames.  
 	 */
 	public void makeTimer(){
-
-		frameIndex = 0;
-
-		//Create a new interpolator
-		InterpolateFrames lint = new InterpolateFrames(this);
-
-		//interpolate between all of the key frames in the list to fill the array
-		frames = lint.makeFrames(keyFrameList);
-
 		//timer delay is set in milliseconds, so 1000/fps gives delay per frame
 		int delay = 1000/fps; 
 
 		ActionListener taskPerformer = new ActionListener() {
 
 			public void actionPerformed(ActionEvent evt) {
+				if (getFrameCount() == 0) 
+					return;
+
 				if(frameIndex == frames.length){ frameIndex = 0;}
 
 				frames[frameIndex].display();
@@ -395,19 +413,38 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		timer = new Timer(delay, taskPerformer);
 	}
 
+	public void makeFrames() {
+		frameIndex = 0;
+
+		//Create a new interpolator
+		InterpolateFrames lint = new InterpolateFrames(this);
+
+		//interpolate between all of the key frames in the list to fill the array
+		frames = lint.makeFrames(keyFrameList);
+	}
+
 
 	/**
 	 * Updates the timer by making a new one while also checking to see whether
 	 * or not the animation was already playing.
 	 */
-	public void updateTimer(){
+	public void updateFrames(){
 		if(timer.isRunning()){ 
 			timer.stop();
-			makeTimer();
+			makeFrames();
 			timer.start();
 		}else{
-			makeTimer();
+			makeFrames();
 		}
+	}
+
+	/**
+	 * Resets the timer if it is running
+	 */
+	public void resetFrames() {
+		if(timer != null && timer.isRunning())
+			timer.stop();
+		frames = null;
 	}
 
 
@@ -426,10 +463,12 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * Starts the the timer and plays the animation.
 	 */
 	public void play(Scrubber scrubber){
-		if(timer == null){ return; }
 		//1000ms in a second, so divided by frames per second gives ms interval 
 		timer.setDelay(1000/fps);
 		currentScrubber = scrubber;
+		timer.stop();
+		if (frames == null)
+			updateFrames();
 		timer.start();
 	}
 
@@ -439,7 +478,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	public void stop(){
 		if(timer == null){ return; }
 		timer.stop();
-		makeTimer();
+		resetFrames();
 	}
 
 	/**
@@ -454,7 +493,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * Steps forward one frame in the animation.
 	 */
 	public void stepForward(Scrubber scrubber){
-		if(timer == null){ return; }
+		if(timer == null || frames == null){ return; }
 		timer.stop();
 
 		//check to see if we have reached the last frame
@@ -470,7 +509,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * Steps backwards one frame in the animation.
 	 */
 	public void stepBackward(Scrubber scrubber){
-		if(timer == null){ return; }
+		if(timer == null || frames == null){ return; }
 		timer.stop();
 
 		//check to see if we are back to the first frame
@@ -512,11 +551,14 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	public void setKeyFrameList(ArrayList<CyFrame> frameList){
 		keyFrameList = frameList;
 
+		/*
 		if(frameList.size() > 1 && timer != null){
 			updateTimer();
 		}else{
 			makeTimer();
 		}
+		*/
+		resetFrames();
 	}
 
 	/**
@@ -597,7 +639,8 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, new SizeInterpolator(true));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_LABEL_POSITION"), new ObjectPositionInterpolator());
+		if (haveDingFeatures())
+			iMap.put(getDingProperty(CyNode.class, "NODE_LABEL_POSITION"), new ObjectPositionInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_LABEL_WIDTH, new LabelWidthInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_NESTED_NETWORK_IMAGE_VISIBLE, new NoneInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_PAINT, new PaintInterpolator());
@@ -615,33 +658,36 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		iMap.put(BasicVisualLexicon.NODE_Y_LOCATION, new PositionInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_Z_LOCATION, new PositionInterpolator());
 
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_1"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_2"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_3"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_4"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_5"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_6"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_7"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_8"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_9"), new CustomGraphicsCrossfadeInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_1"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_2"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_3"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_4"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_5"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_6"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_7"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_8"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_9"), new SizeInterpolator(true));
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_1"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_2"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_3"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_4"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_5"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_6"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_7"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_8"), new ObjectPositionInterpolator());
-		iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_9"), new ObjectPositionInterpolator());
+
+		if (haveDingFeatures()) {
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_1"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_2"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_3"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_4"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_5"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_6"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_7"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_8"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_9"), new CustomGraphicsCrossfadeInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_1"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_2"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_3"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_4"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_5"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_6"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_7"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_8"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_SIZE_9"), new SizeInterpolator(true));
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_1"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_2"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_3"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_4"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_5"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_6"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_7"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_8"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_CUSTOMGRAPHICS_POSITION_9"), new ObjectPositionInterpolator());
+		}
 
 		// Edge properties
 		iMap.put(BasicVisualLexicon.EDGE_LABEL,

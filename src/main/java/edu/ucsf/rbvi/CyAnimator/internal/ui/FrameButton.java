@@ -234,7 +234,7 @@ public class FrameButton extends JLabel {
 				parent.adjustNext(frame, deltaTotal);
 
 			parent.updateThumbnails();
-			parent.updateTimer();
+			parent.resetFrames();
 			xLast = 0;
 			deltaTotal = 0;
 			shiftAll = false;

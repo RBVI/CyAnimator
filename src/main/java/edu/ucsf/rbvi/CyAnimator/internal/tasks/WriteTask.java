@@ -52,6 +52,13 @@ public class WriteTask extends AbstractTask {
 
 	@Override
 	public void run(TaskMonitor monitor) throws Exception {
+		monitor.setTitle("Record Animation");
+
+		if (frameManager.getFrameCount() == 0) {
+			monitor.showMessage(Level.INFO, "Interpolating Frames");
+			frameManager.updateFrames();
+		}
+
 		// If we're writing frames, we want
 		// to write each frame as a PNG.  
 		// Otherwise, we're going 

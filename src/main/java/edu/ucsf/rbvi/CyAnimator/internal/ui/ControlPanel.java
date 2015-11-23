@@ -20,10 +20,12 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
@@ -163,7 +165,12 @@ public class ControlPanel extends JPanel implements ActionListener {
 			command = e.getActionCommand();
 
 		if(command.equals("play")){
-			frameManager.play(timeline);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					timeline.updateFrames();
+					frameManager.play(timeline);
+				}
+			});
 			stopButton.setEnabled(true);
 			pauseButton.setEnabled(true);
 			playButton.setEnabled(false);
@@ -212,4 +219,5 @@ public class ControlPanel extends JPanel implements ActionListener {
 		backwardButton.setEnabled(enable);
 		recordButton.setEnabled(enable);
 	}
+
 }

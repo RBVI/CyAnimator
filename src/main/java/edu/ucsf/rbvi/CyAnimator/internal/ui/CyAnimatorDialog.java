@@ -11,6 +11,7 @@
 package edu.ucsf.rbvi.CyAnimator.internal.ui;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusListener;
@@ -27,6 +28,8 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -48,7 +51,7 @@ public class CyAnimatorDialog extends JDialog
 	private static final long serialVersionUID = 6650485843548244554L;
 	private FramePanel framePanel;
 	private TimelinePanel timeline;
-	private JScrollPane framePane;
+	private JScrollPane timelineScroller;
 	private ControlPanel controlPanel;
 
 	private JPanel mainPanel;
@@ -70,6 +73,12 @@ public class CyAnimatorDialog extends JDialog
 		setPreferredSize(new Dimension(625,260));
 		setSize(new Dimension(625,260));
 		pack();
+		if (!frameManager.haveDingFeatures()) {
+			Object[] options = {"OK"};
+			JOptionPane.showOptionDialog(frame, "CyAnimator does not support some visual attributes for this network",
+			                             "Warning",
+			                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+		}
 	}
 
 	/**
@@ -83,7 +92,7 @@ public class CyAnimatorDialog extends JDialog
 		mainPanel.setLayout(mainbox);	
 
 		timeline = new TimelinePanel(frameManager, this);
-		JScrollPane timelineScroller = new JScrollPane(timeline);
+		timelineScroller = new JScrollPane(timeline);
 		timelineScroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 
 		framePanel = new FramePanel(frameManager, timeline);
@@ -101,6 +110,21 @@ public class CyAnimatorDialog extends JDialog
 
 	public void setSelected(boolean selected) {
 		framePanel.enableDelete(selected);
+	}
+
+	public void updateFrames() {
+		JOptionPane optionPane = new JOptionPane("Interpolating frames");
+		JDialog waitDialog = optionPane.createDialog(this, "Please Wait...");
+		waitDialog.setModal(false);
+		waitDialog.pack();
+		waitDialog.setVisible(true);
+
+		System.out.println("optionPane returns");
+
+		try {Thread.sleep(4000);} catch(Exception e){};
+		//frameManager.updateFrames();
+		waitDialog.setVisible(false);
+		waitDialog.dispose();
 	}
 
 	/**
