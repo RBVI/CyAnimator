@@ -88,7 +88,6 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 
 		int xOffset = 5;
 		boolean first = true;
-		boolean resized = false;
 		for (CyFrame frame: keyFrameList) {
 			if (first) {
 				first = false;
@@ -106,15 +105,19 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 
 		scrubberPosition = -1;
 
-		if (xOffset > width) {
-			width = xOffset + seconds2Pixels(2.0); // Add 2 seconds
-			setPreferredSize(new Dimension(width,150));
-			resized = true;
-			parent.revalidate();
-			parent.repaint();
-		}
+		updateWidth(xOffset);
 
 		repaint();
+	}
+
+	public void updateWidth(int offset) {
+		if ((offset+seconds2Pixels(2.0)) > width) {
+			width = offset + seconds2Pixels(2.0); // Add 2 seconds
+			setPreferredSize(new Dimension(width,150));
+			parent.revalidate();
+			parent.repaint();
+			repaint();
+		}
 	}
 
 	public void setWidth(int width) {
@@ -229,16 +232,19 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 
 	public void adjustFrames(CyFrame frame, int shift) {
 		boolean start = false;
+		int maxBounds = 0;
 		for (CyFrame f: keyFrameList) {
 			if (start) {
 				FrameButton button = buttonMap.get(f);
 				Rectangle bounds = button.getBounds();
 				bounds.x = bounds.x+shift;
+				maxBounds = bounds.x;
 				button.setBounds(bounds);
 			} else if (f.equals(frame)) {
 				start = true;
 			}
 		}
+		updateWidth(maxBounds);
 	}
 
 	public void adjustNext(CyFrame frame, int delta) {

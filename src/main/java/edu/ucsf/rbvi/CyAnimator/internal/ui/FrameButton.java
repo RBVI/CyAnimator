@@ -197,6 +197,8 @@ public class FrameButton extends JLabel {
 					nextFrame = parent.getNextFrame(frame);
 				}
 			}
+
+			parent.updateWidth(bounds.x);
 		}
 
 		@Override

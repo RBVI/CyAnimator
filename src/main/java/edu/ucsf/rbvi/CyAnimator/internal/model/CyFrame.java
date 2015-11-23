@@ -487,12 +487,16 @@ public class CyFrame {
 	}
 	
 	private void handleMissingAnnotations(final CyNetworkView currentView) {
+		long startTime = System.nanoTime();
 		List<Annotation> removeAnnotations = new ArrayList<>();
 		List<Annotation> annotations = annotationManager.getAnnotations(currentView);
 		if (annotations != null) {
 			for (Annotation annotation : annotations) {
 				if (!annotationList.contains(annotation)) {
 					removeAnnotations.add(annotation);
+				} else {
+					CyAnnotationView annView = CyAnnotationView.getAnnotationView(currentView, annotation);
+					annView.setVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE, true);
 				}
 			}
 		}
@@ -588,7 +592,7 @@ public class CyFrame {
 		for (Annotation annotation: annotationPropertyMap.keySet()) {
 			// debug("looking at annotation: "+annotation);
 			CyAnnotationView view = CyAnnotationView.getAnnotationView(annotation, annotationViewList);
-			if (view == null || !annotationPresent(currentView, annotation)) {
+			if (view == null) {
 				// debug("view is null");
 				// Add temporary annotation to view for viewing the annotation which is removed from current network
 				if (!recordAnnotation.containsKey(annotation)) {
@@ -606,21 +610,38 @@ public class CyFrame {
 					// debug("not making copy");
 					view = CyAnnotationView.getAnnotationView(currentView, recordAnnotation.get(annotation));
 				}
+			} else if (!annotationPresent(currentView, annotation)) {
+				// debug("Annotation isn't present");
+				// We have a view, but the annotation isn't present in this view -- just add it
+				annotationManager.addAnnotation(annotation);
+				annotation.update();
+				currentView.updateView();
 			}
+			// debug("ANNOTATION_VISIBLE = "+view.getVisualProperty(AnnotationLexicon.ANNOTATION_VISIBLE));
 			// debug("getting property map");
 			Map<VisualProperty<?>, Object> propertyValues = annotationPropertyMap.get(annotation);
 			for (VisualProperty<?> vp: propertyValues.keySet()) {
 				if (view.isValueLocked(vp))
 					view.clearValueLock(vp);
 				// if (propertyValues.get(vp) != null)
-					// debug("setting visual property "+vp+" to "+propertyValues.get(vp));
+				//  	debug("setting visual property "+vp+" to "+propertyValues.get(vp));
 				view.setVisualProperty(vp, propertyValues.get(vp));
 			}
-			// debug("updating annotation");
+			// debug("updating annotation: "+view.getModel().getAnnotation());
 			view.getModel().getAnnotation().update();
 		}
 		// debug("updating view");
 		currentView.updateView();
+
+		/*
+		if (annotationManager.getAnnotations(currentView) != null) {
+			debug("Annotations: ");
+			for (Annotation ann: annotationManager.getAnnotations(currentView)) {
+				debug("    Annotation: "+ann);
+				debug("                "+serializeAnnotation(ann));
+			}
+		}
+		*/
 	}
 
 	private boolean annotationPresent(CyNetworkView networkView, Annotation annotation) {
@@ -977,6 +998,7 @@ public class CyFrame {
 
 	private Annotation getAnnotationFromList(String uuid, 
 	                                         List<Annotation> annotations) {
+		if (annotations == null) return null;
 		UUID annotationID = UUID.fromString(uuid);
 		for (Annotation a: annotations) {
 			if (a.getUUID().equals(annotationID))
@@ -1141,7 +1163,6 @@ public class CyFrame {
 			}
 
 			public void run() {
-				// System.out.println("Displaying frame: "+frame.toString());
 				handleMissingEdges(currentView);
 				handleMissingNodes(currentView);
 				handleMissingAnnotations(currentView);
