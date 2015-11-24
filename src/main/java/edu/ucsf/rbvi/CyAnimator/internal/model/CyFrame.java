@@ -156,7 +156,8 @@ public class CyFrame {
 		currentNetwork = networkView.getModel();
 
 		// Now get all of our annotations
-		if (annotationManager.getAnnotations(networkView) == null) {
+		if (!frameManager.haveDingFeatures() || 
+		    annotationManager.getAnnotations(networkView) == null) {
 			annotationList = new HashSet<>();
 		} else {
 			annotationList = new HashSet<>(annotationManager.getAnnotations(networkView));
@@ -937,36 +938,38 @@ public class CyFrame {
 		}
 
 		annotationList = new HashSet<>();
-		List<Annotation> allAnnotations = annotationManager.getAnnotations(networkView);
-		for (Object annotationEntry: (JSONArray)frameObject.get("annotations")) {
-			JSONObject jsonAnnotation = (JSONObject) annotationEntry;
-			Annotation annotation = getAnnotationFromList((String)jsonAnnotation.get("uuid"), 
-			                                              allAnnotations);
-			if (annotation == null) {
-				// OK, the annotation didn't get saved, so we need to re-created it.
-				Map<String, String> annMap = 
-								createArgMap((String)jsonAnnotation.get("annotation"));
-				if (annMap != null && annMap.size() > 0) {
-					try {
-						Class<?> annClass = Class.forName(annMap.get("type"));
-						CyAnnotation cyAnn = copyAnnotation(networkView, annClass, annMap);
-						annotation = cyAnn.getAnnotation();
-					} catch (ClassNotFoundException cnfe) {
+		if (frameManager.haveDingFeatures()) {
+			List<Annotation> allAnnotations = annotationManager.getAnnotations(networkView);
+			for (Object annotationEntry: (JSONArray)frameObject.get("annotations")) {
+				JSONObject jsonAnnotation = (JSONObject) annotationEntry;
+				Annotation annotation = getAnnotationFromList((String)jsonAnnotation.get("uuid"), 
+				                                              allAnnotations);
+				if (annotation == null) {
+					// OK, the annotation didn't get saved, so we need to re-created it.
+					Map<String, String> annMap = 
+									createArgMap((String)jsonAnnotation.get("annotation"));
+					if (annMap != null && annMap.size() > 0) {
+						try {
+							Class<?> annClass = Class.forName(annMap.get("type"));
+							CyAnnotation cyAnn = copyAnnotation(networkView, annClass, annMap);
+							annotation = cyAnn.getAnnotation();
+						} catch (ClassNotFoundException cnfe) {
+							continue;
+						}
+					} else {
+						System.out.println("Can't find annotation: "+(String)jsonAnnotation.get("suid"));
 						continue;
 					}
-				} else {
-					System.out.println("Can't find annotation: "+(String)jsonAnnotation.get("suid"));
-					continue;
 				}
+				annotationList.add(annotation);
+				annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>()); 
+				populatePropertyMap((JSONArray)jsonAnnotation.get("properties"), 
+				                     annotationPropertyMap.get(annotation), 
+				                     annotationLexicon, Annotation.class);
 			}
-			annotationList.add(annotation);
-			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>()); 
-			populatePropertyMap((JSONArray)jsonAnnotation.get("properties"), 
-			                     annotationPropertyMap.get(annotation), 
-			                     annotationLexicon, Annotation.class);
+			annotationViewList = 
+						new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(networkView, annotationList));
 		}
-		annotationViewList = 
-					new HashSet<CyAnnotationView>(CyAnnotationView.wrapViews(networkView, annotationList));
 
 		try {
 			// Finally, update our image
@@ -1147,7 +1150,7 @@ public class CyFrame {
 		view.updateView();
 		Graphics2D g2d = (Graphics2D) image.getGraphics();
 		g2d.scale(scale, scale);
-		frameManager.getRenderingEngine().printCanvas(g2d);
+		frameManager.getRenderingEngine(view).printCanvas(g2d);
 		g2d.dispose();
 		return image;
 	}
@@ -1165,12 +1168,14 @@ public class CyFrame {
 			public void run() {
 				handleMissingEdges(currentView);
 				handleMissingNodes(currentView);
-				handleMissingAnnotations(currentView);
+				if (frameManager.haveDingFeatures())
+					handleMissingAnnotations(currentView);
 
 				handleNodes(currentView);
 				handleEdges(currentView);
 				handleNetwork(currentView);
-				handleAnnotations(currentView);
+				if (frameManager.haveDingFeatures())
+					handleAnnotations(currentView);
 
 				eventHelper.flushPayloadEvents();
 				currentView.updateView();

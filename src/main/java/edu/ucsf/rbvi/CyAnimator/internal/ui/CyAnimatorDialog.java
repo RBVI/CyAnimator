@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.Timer;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
@@ -58,9 +59,10 @@ public class CyAnimatorDialog extends JDialog
 
 	private FrameManager frameManager;
 
-	private CyServiceRegistrar bc;
+	private final CyServiceRegistrar bc;
 
-	public CyAnimatorDialog(CyServiceRegistrar bundleContext, CyNetwork network, JFrame frame){
+	public CyAnimatorDialog(final CyServiceRegistrar bundleContext, 
+	                        final CyNetwork network, final JFrame frame){
 		super(frame);
 
 		this.setTitle("CyAnimator");
@@ -73,12 +75,6 @@ public class CyAnimatorDialog extends JDialog
 		setPreferredSize(new Dimension(750,260));
 		setSize(new Dimension(750,260));
 		pack();
-		if (!frameManager.haveDingFeatures()) {
-			Object[] options = {"OK"};
-			JOptionPane.showOptionDialog(frame, "CyAnimator does not support some visual attributes for this network",
-			                             "Warning",
-			                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-		}
 	}
 
 	/**

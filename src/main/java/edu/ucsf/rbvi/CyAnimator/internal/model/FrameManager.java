@@ -111,6 +111,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 
 	private static VisualLexicon dingVisualLexicon;
 	private RenderingEngine<?> dingRenderingEngine;
+	private RenderingEngineManager renderingEngineManager;
 	private Scrubber currentScrubber = null;
 
 	static public FrameManager getFrameManager(CyServiceRegistrar bc, CyNetwork network) {
@@ -239,9 +240,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		taskManager = bundleContext.getService(TaskManager.class);
 		keyFrameList = new ArrayList<CyFrame>();
 
-		RenderingEngineManager rem = bundleContext.getService(RenderingEngineManager.class);
+		renderingEngineManager = bundleContext.getService(RenderingEngineManager.class);
 		// Get the Ding Visual Lexicon
-		for (RenderingEngine<?> engine: rem.getAllRenderingEngines()) {
+		for (RenderingEngine<?> engine: renderingEngineManager.getAllRenderingEngines()) {
 			if (engine.getRendererId().equals("org.cytoscape.ding")) {
 				dingRenderingEngine = engine;
 				if (dingVisualLexicon == null)
@@ -704,71 +705,81 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		iMap.put(BasicVisualLexicon.EDGE_VISIBLE, new VisibleInterpolator(BasicVisualLexicon.EDGE_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.EDGE_WIDTH, new SizeInterpolator(false));
 
-		// Annotation properties
-		iMap.put(AnnotationLexicon.ANNOTATION_X_LOCATION, new PositionInterpolator());
-		iMap.put(AnnotationLexicon.ANNOTATION_Y_LOCATION, new PositionInterpolator());
-		iMap.put(AnnotationLexicon.ANNOTATION_ZOOM, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_CANVAS, new NoneInterpolator());
+		if (haveDingFeatures()) {
+			// Annotation properties
+			iMap.put(AnnotationLexicon.ANNOTATION_X_LOCATION, new PositionInterpolator());
+			iMap.put(AnnotationLexicon.ANNOTATION_Y_LOCATION, new PositionInterpolator());
+			iMap.put(AnnotationLexicon.ANNOTATION_ZOOM, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_CANVAS, new NoneInterpolator());
 
-		// ShapeAnnotation
-		iMap.put(AnnotationLexicon.ANNOTATION_WIDTH, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_HEIGHT, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_COLOR, new ColorInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_OPACITY, new TransparencyInterpolator());
+			// ShapeAnnotation
+			iMap.put(AnnotationLexicon.ANNOTATION_WIDTH, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_HEIGHT, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_COLOR, new ColorInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_OPACITY, new TransparencyInterpolator());
 
-		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_WIDTH, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_COLOR, new ColorInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, new TransparencyInterpolator());
-		iMap.put(AnnotationLexicon.ANNOTATION_SHAPE, 
-		         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,AnnotationLexicon.ANNOTATION_BORDER_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_BORDER_WIDTH, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_BORDER_COLOR, new ColorInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_BORDER_OPACITY, new TransparencyInterpolator());
+			iMap.put(AnnotationLexicon.ANNOTATION_SHAPE, 
+			         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,AnnotationLexicon.ANNOTATION_BORDER_COLOR));
 
-		/*
-		iMap.put(AnnotationLexicon.ANNOTATION_VISIBLE, 
-		         new VisibleInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,
-										                 AnnotationLexicon.ANNOTATION_BORDER_OPACITY,
-																		 AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
-		*/
+			/*
+			iMap.put(AnnotationLexicon.ANNOTATION_VISIBLE, 
+			         new VisibleInterpolator(AnnotationLexicon.ANNOTATION_OPACITY,
+											                 AnnotationLexicon.ANNOTATION_BORDER_OPACITY,
+																			 AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
+			*/
 
-		// Text visual properites
-		iMap.put(AnnotationLexicon.ANNOTATION_TEXT, 
-		         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
-		iMap.put(AnnotationLexicon.ANNOTATION_FONT_SIZE, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_FONT_COLOR, new ColorInterpolator(true));
-		iMap.put(AnnotationLexicon.ANNOTATION_FONT_STYLE, 
-							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
-		iMap.put(AnnotationLexicon.ANNOTATION_FONT_FAMILY, 
-							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+			// Text visual properites
+			iMap.put(AnnotationLexicon.ANNOTATION_TEXT, 
+			         new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_FONT_SIZE, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_FONT_COLOR, new ColorInterpolator(true));
+			iMap.put(AnnotationLexicon.ANNOTATION_FONT_STYLE, 
+								new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_FONT_FAMILY, 
+								new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_FONT_COLOR));
 
-		// Image visual properties
-		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_URL, 
-							new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
-		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_CONTRAST, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_BRIGHTNESS, new SizeInterpolator(false));
-		iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY, new TransparencyInterpolator());
+			// Image visual properties
+			iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_URL, 
+								new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY));
+			iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_CONTRAST, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_BRIGHTNESS, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_IMAGE_OPACITY, new TransparencyInterpolator());
 
-		// Arrow visual properties
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_ANCHOR,
-						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_TYPE,
-						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, new ColorInterpolator(true));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_SIZE, new SizeInterpolator(false));
+			// Arrow visual properties
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_ANCHOR,
+							 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_TYPE,
+							 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_COLOR, new ColorInterpolator(true));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_SOURCE_SIZE, new SizeInterpolator(false));
 
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_WIDTH, new SizeInterpolator(false));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_COLOR, new ColorInterpolator(true));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_WIDTH, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_COLOR, new ColorInterpolator(true));
 
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_ANCHOR,
-						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_TYPE,
-						 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, new ColorInterpolator(true));
-  	iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_SIZE, new SizeInterpolator(false));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_ANCHOR,
+							 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_TYPE,
+							 new CrossfadeInterpolator(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_COLOR, new ColorInterpolator(true));
+			iMap.put(AnnotationLexicon.ANNOTATION_ARROW_TARGET_SIZE, new SizeInterpolator(false));
+		}
 
 		return iMap;
 	}
 
-	public RenderingEngine<?> getRenderingEngine() {
-		return dingRenderingEngine;
+	public RenderingEngine<?> getRenderingEngine(CyNetworkView view) {
+		RenderingEngine<?> reReturn = dingRenderingEngine;
+
+		for (RenderingEngine<?> re: renderingEngineManager.getRenderingEngines(view)) {
+			// if it's ding, use that preferentially
+			if (re == dingRenderingEngine)
+				return dingRenderingEngine;
+			reReturn = re;
+		}
+		return reReturn;
 	}
 
 	VisualProperty<?> getDingProperty(Class <?> type, String propertyName) {
