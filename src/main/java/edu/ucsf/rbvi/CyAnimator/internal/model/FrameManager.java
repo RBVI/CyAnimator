@@ -106,6 +106,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	//keeps track of the current frame being displayed during animation
 	int frameIndex = 0;
 
+	// Whether or not to loop the animation
+	private boolean loop = true;
+
 	private static VisualLexicon dingVisualLexicon;
 	private RenderingEngine<?> dingRenderingEngine;
 	private Scrubber currentScrubber = null;
@@ -300,7 +303,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 				FrameManager.dialogTask = null;
 			}
 			FrameManager.removeFrameManager(this); // Remove ourselves from the list
-			// bundleContext.unregisterService(this, NetworkViewAboutToBeDestroyedListener.class);
 			return;
 		}
 
@@ -309,7 +311,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 			keyFrameList.remove(frame);
 		}
 
-		// updateTimer();
 		resetFrames();
 	}
 
@@ -375,13 +376,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		keyFrameList.add(frame);
 		frame.setID(""+(keyFrameList.size()-1));
 
-		/*
-		if(keyFrameList.size() > 1 && timer != null){ 
-			updateTimer();
-		}else{
-			makeTimer(); 
-		}
-		*/
 		resetFrames();
 	}
 
@@ -401,7 +395,13 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 				if (getFrameCount() == 0) 
 					return;
 
-				if(frameIndex == frames.length){ frameIndex = 0;}
+				if(frameIndex == frames.length){ 
+					frameIndex = 0;
+					if (!loop) {
+						timer.stop();
+						return;
+					}
+				}
 
 				frames[frameIndex].display();
 				frames[frameIndex].clearDisplay();
@@ -414,6 +414,8 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	}
 
 	public void makeFrames() {
+		if (frames != null) return;
+
 		frameIndex = 0;
 
 		//Create a new interpolator
@@ -447,7 +449,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		frames = null;
 	}
 
-
 	/**
 	 * "Records" the animation in the sense that it dumps an image of each frame to 
 	 * a specified directory.  It also numbers the frames automatically so that they
@@ -462,8 +463,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	/**
 	 * Starts the the timer and plays the animation.
 	 */
-	public void play(Scrubber scrubber){
+	public void play(Scrubber scrubber, boolean loop){
 		//1000ms in a second, so divided by frames per second gives ms interval 
+		this.loop = loop;
 		timer.setDelay(1000/fps);
 		currentScrubber = scrubber;
 		timer.stop();
@@ -478,7 +480,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	public void stop(){
 		if(timer == null){ return; }
 		timer.stop();
-		resetFrames();
+		frameIndex = 0;
+		if (currentScrubber != null)
+			updateScrubber(currentScrubber, frameIndex);
 	}
 
 	/**
@@ -551,13 +555,6 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	public void setKeyFrameList(ArrayList<CyFrame> frameList){
 		keyFrameList = frameList;
 
-		/*
-		if(frameList.size() > 1 && timer != null){
-			updateTimer();
-		}else{
-			makeTimer();
-		}
-		*/
 		resetFrames();
 	}
 

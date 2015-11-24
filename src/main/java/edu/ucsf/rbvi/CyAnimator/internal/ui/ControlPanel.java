@@ -12,11 +12,15 @@
 
 package edu.ucsf.rbvi.CyAnimator.internal.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -25,14 +29,18 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import org.apache.log4j.Logger;
 
+import org.cytoscape.application.CyUserLog;
 import org.cytoscape.util.swing.IconManager;
 import static org.cytoscape.util.swing.IconManager.ICON_CIRCLE;
 import static org.cytoscape.util.swing.IconManager.ICON_PAUSE;
 import static org.cytoscape.util.swing.IconManager.ICON_PLAY;
+import static org.cytoscape.util.swing.IconManager.ICON_REPEAT;
 import static org.cytoscape.util.swing.IconManager.ICON_STEP_FORWARD;
 import static org.cytoscape.util.swing.IconManager.ICON_STEP_BACKWARD;
 import static org.cytoscape.util.swing.IconManager.ICON_STOP;
@@ -48,8 +56,8 @@ public class ControlPanel extends JPanel implements ActionListener {
 	 */
 	private static final long serialVersionUID = 6650485843548244554L;
 	private JSlider speedSlider;
-	private FrameManager frameManager;
-	private TimelinePanel timeline;
+	private final FrameManager frameManager;
+	private final TimelinePanel timeline;
 	private RecordPanel recordPanel;
 	private IconManager iconManager;
 	private JButton playButton;
@@ -57,10 +65,14 @@ public class ControlPanel extends JPanel implements ActionListener {
 	private JButton pauseButton;
 	private JButton forwardButton;
 	private JButton backwardButton;
+	private JToggleButton repeatButton;
 	private JButton recordButton;
+	private boolean interpolationComplete = false;
+	private final Logger logger;
 
-	public ControlPanel(FrameManager frameManager, TimelinePanel timeline) {
+	public ControlPanel(final FrameManager frameManager, final TimelinePanel timeline) {
 		super();
+		logger = Logger.getLogger(CyUserLog.NAME);
 		this.frameManager = frameManager;
 		this.timeline = timeline;
 
@@ -105,22 +117,24 @@ public class ControlPanel extends JPanel implements ActionListener {
 		forwardButton.setToolTipText("Step forward one frame");
 		forwardButton.addActionListener(this);
 		forwardButton.setActionCommand("step forward");
-		forwardButton.setToolTipText("Step Forward One Frame");
 
 		backwardButton = new JButton(ICON_STEP_BACKWARD);
 		backwardButton.setFont(iconManager.getIconFont(14.0f));
 		backwardButton.setToolTipText("Step backward one frame");
 		backwardButton.addActionListener(this);
 		backwardButton.setActionCommand("step backward");
-		backwardButton.setToolTipText("Step Backward One Frame");
+
+		repeatButton = new JToggleButton(ICON_REPEAT);
+		repeatButton.setFont(iconManager.getIconFont(14.0f));
+		repeatButton.setToolTipText("Repeat (loop) animation");
+		repeatButton.setSelected(true);
 
 		recordButton = new JButton(ICON_CIRCLE);
 		recordButton.setFont(iconManager.getIconFont(14.0f));
-		recordButton.setToolTipText("Record animation (make movie)frame");
+		recordButton.setToolTipText("Record animation (make movie)");
 		recordButton.setForeground(Color.RED);
 		recordButton.addActionListener(this);
 		recordButton.setActionCommand("record");
-		recordButton.setToolTipText("Record Animation");
 
 		JLabel sliderLabel = new JLabel("Animation Speed: ");
 		sliderLabel.setBorder(BorderFactory.createEmptyBorder(0,5,0,5));
@@ -152,6 +166,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 		add(stopButton);
 		add(backwardButton);
 		add(forwardButton);
+		add(repeatButton);
 		add(recordButton);
 		add(sliderLabel);
 		add(speedSlider);
@@ -165,22 +180,35 @@ public class ControlPanel extends JPanel implements ActionListener {
 			command = e.getActionCommand();
 
 		if(command.equals("play")){
+
+			interpolationComplete = false;
+
+			final ProgressDialog dialog = new ProgressDialog(timeline, "Please wait", "Interpolating frames");
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					timeline.updateFrames();
-					frameManager.play(timeline);
+					dialog.setVisible(true);
+					while (!interpolationComplete) {
+						dialog.update(dialog.getGraphics());
+						try {Thread.sleep(100);} catch (Exception e) {};
+					}
+					dialog.dispose();
+					frameManager.play(timeline, loopAnimation());
 				}
 			});
+
+			new Thread() {
+				public void run() {
+					frameManager.updateFrames();
+					interpolationComplete = true;
+				}
+			}.start();
+
 			stopButton.setEnabled(true);
 			pauseButton.setEnabled(true);
 			playButton.setEnabled(false);
 			recordButton.setEnabled(false);
 		}  else if(command.equals("stop")){
-			frameManager.stop();
-			recordButton.setEnabled(true);
-			stopButton.setEnabled(false);
-			pauseButton.setEnabled(false);
-			playButton.setEnabled(true);
+			stopAnimation();
 		} else if(command.equals("pause")){
 			frameManager.pause();
 			recordButton.setEnabled(true);
@@ -208,9 +236,21 @@ public class ControlPanel extends JPanel implements ActionListener {
 			try {
 				frameManager.recordAnimation(recordPanel.getFilePath());
 			} catch (Exception excp) {
-					//	logger.error("Record of animation failed",excp);
+				logger.error("Record of animation failed",excp);
 			}
 		}
+	}
+
+	public boolean loopAnimation() {
+		return repeatButton.isSelected();
+	}
+
+	public void stopAnimation() {
+		frameManager.stop();
+		recordButton.setEnabled(true);
+		stopButton.setEnabled(false);
+		pauseButton.setEnabled(false);
+		playButton.setEnabled(true);
 	}
 
 	public void enableButtons(boolean enable) {
@@ -219,5 +259,4 @@ public class ControlPanel extends JPanel implements ActionListener {
 		backwardButton.setEnabled(enable);
 		recordButton.setEnabled(enable);
 	}
-
 }

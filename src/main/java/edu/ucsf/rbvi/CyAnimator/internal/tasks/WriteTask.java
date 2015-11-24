@@ -31,7 +31,6 @@ public class WriteTask extends AbstractTask {
 	 */
 	private final FrameManager frameManager;
 	TaskMonitor monitor;
-	boolean canceled = false;
 	String title;
 	String directory;
 	VideoType videoType;
@@ -106,6 +105,8 @@ public class WriteTask extends AbstractTask {
 				encodeImage(enc, image);
 			}
 			*/
+			if (cancelled)
+				break;
 			enc.encodeImage(image);
 			monitor.setProgress(((double)i)/((double)frameCount));
 		}
@@ -135,7 +136,6 @@ public class WriteTask extends AbstractTask {
 			//assign the appropriate path and extension
 			//String name = curDir+"/outputImgs/Frame_"+frame.format(i)+".png";
 			String name = curDir+"/Frame_"+frame.format(i)+".png";
-			if (canceled) return;
 		
 			try {
 				BooleanWrapper finished = new BooleanWrapper(false);
@@ -144,6 +144,9 @@ public class WriteTask extends AbstractTask {
 				monitor.showMessage(Level.ERROR, "Failed to write file "+name);
 				return;
 			}
+
+			if (cancelled)
+				break;
 			monitor.setProgress(((double)i)/((double)this.frameManager.getFrameCount()));
 		}
 		

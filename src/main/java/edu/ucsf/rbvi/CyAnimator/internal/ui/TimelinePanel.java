@@ -40,6 +40,7 @@ import javax.swing.JScrollPane;
 
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
+import edu.ucsf.rbvi.CyAnimator.internal.model.Progress;
 import edu.ucsf.rbvi.CyAnimator.internal.model.Scrubber;
 
 public class TimelinePanel extends JPanel implements ComponentListener, Scrubber { 
@@ -66,7 +67,7 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 		this.parent = parentDialog;
 
 		// This will get updated when we draw our timeline the first time
-		setPreferredSize(new Dimension(width,150));
+		setPreferredSize(new Dimension(width,140));
 
 		addComponentListener(this);
 
@@ -111,7 +112,7 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 	public void updateWidth(int offset) {
 		if ((offset+seconds2Pixels(2.0)) > width) {
 			width = offset + seconds2Pixels(2.0); // Add 2 seconds
-			setPreferredSize(new Dimension(width,150));
+			setPreferredSize(new Dimension(width,140));
 			parent.revalidate();
 			parent.repaint();
 			repaint();
@@ -140,6 +141,10 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 	public void frameDisplayed(int frameNumber) {
 		scrubberPosition = frames2Pixels(frameNumber)+5;
 		repaint();
+		scrollRectToVisible(new Rectangle(scrubberPosition, SCALEOFFSET-2, 1, SCALEOFFSET-7));
+		if (frameNumber == (frameManager.getFrameCount()-1) && !parent.loopAnimation()) {
+			parent.stopAnimation();
+		}
 	}
 
 	public void setScrubber(CyFrame frame) {
@@ -259,13 +264,6 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 
 	public void resetFrames() {
 		frameManager.resetFrames();
-	}
-
-
-	public void updateFrames() {
-		// Let the parent do this so we can
-		// put up an appropriate busy message
-		parent.updateFrames();
 	}
 
 	private int seconds2Pixels(double seconds) {

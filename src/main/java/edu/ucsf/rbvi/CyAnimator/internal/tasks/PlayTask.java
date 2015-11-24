@@ -26,6 +26,9 @@ public class PlayTask extends AbstractTask {
 	private CyServiceRegistrar registrar;
 	private CyApplicationManager appManager;
 
+	@Tunable (description="Repeat (loop) animation")
+	boolean loop = false;
+
 	public PlayTask(CyServiceRegistrar registrar, CyApplicationManager appManager) {
 		this.registrar = registrar;
 		this.appManager = appManager;
@@ -35,7 +38,7 @@ public class PlayTask extends AbstractTask {
 	public void run(TaskMonitor monitor) throws Exception {
 		CyNetwork network = appManager.getCurrentNetwork();
 		FrameManager fm = FrameManager.getFrameManager(registrar, network);
-		fm.play(null);
+		fm.play(null, loop);
 		return;
 	}
 

@@ -17,7 +17,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -51,6 +53,8 @@ public class FrameButton extends JLabel {
 	private int fps = 30; // Frames per second
 	private boolean selected = false;
 	private CyFrame frame;
+	private Robot robot;
+	private boolean ignoreMove = false;
 
 	public FrameButton(TimelinePanel parent, CyFrame frame, ImageIcon icon) {
 		super(icon);
@@ -66,6 +70,11 @@ public class FrameButton extends JLabel {
 		FrameMouseMotionListener listener = new FrameMouseMotionListener(parent, frame);
 		addMouseMotionListener(listener);
 		addMouseListener(listener);
+		try {
+			robot = new Robot();
+		} catch (Exception e) {
+			robot = null;
+		}
 
 	}
 
@@ -93,7 +102,8 @@ public class FrameButton extends JLabel {
 	class FrameMouseMotionListener extends MouseAdapter implements ActionListener {
 		TimelinePanel parent;
 		CyFrame frame;
-		int xLast = 0;
+		int xLast = 0; // The last position of the mouse
+		int xOffset = 0; // The offset in the button of the mouse press
 		int deltaTotal = 0;
 		boolean shiftAll = false;
 		private final int clickInterval;
@@ -149,6 +159,7 @@ public class FrameButton extends JLabel {
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
+			if (ignoreMove) return;
 			int x = e.getXOnScreen();
 			int y = e.getYOnScreen();
 			FrameButton button = (FrameButton)e.getSource();
@@ -167,38 +178,69 @@ public class FrameButton extends JLabel {
 			if (deltaTotal < 0) {
 				// See if we've gone past the previous frame
 				FrameButton prev = parent.getButtonForFrame(previousFrame);
-				if (prev == null)
-					return;
+				if (prev != null) {
+					if (bounds.x <= prev.getBounds().x) {
+						// Need to swap frames
+						parent.swapFrame(prev.getFrame(), frame);
+						// Fix up everyone's interpolation count
+						frame.setInterCount(prev.getFrame().getInterCount());
+						prev.getFrame().setInterCount(1);
+						deltaTotal = 0;
 
-				if (bounds.x <= prev.getBounds().x) {
-					// Need to swap frames
-					parent.swapFrame(prev.getFrame(), frame);
-					// Fix up everyone's interpolation count
-					frame.setInterCount(prev.getFrame().getInterCount());
-					prev.getFrame().setInterCount(1);
-					deltaTotal = 0;
-
-					// Get the new previous frame
-					previousFrame = parent.getPreviousFrame(frame);
+						// Get the new previous frame
+						previousFrame = parent.getPreviousFrame(frame);
+					}
 				}
 			} else {
 				// See if we've gone past the next frame
 				FrameButton next = parent.getButtonForFrame(nextFrame);
-				if (next == null)
-					return;
-				if (bounds.x > next.getBounds().x) {
-					// Need to swap frames
-					parent.swapFrame(next.getFrame(), frame);
-					// Fix up everyone's interpolation count
-					next.getFrame().setInterCount(next.getFrame().getInterCount()+frame.getInterCount());
-					frame.setInterCount(1);
-					deltaTotal = 5;
-					// Get the new next frame
-					nextFrame = parent.getNextFrame(frame);
+				if (next != null) {
+					if (bounds.x > next.getBounds().x) {
+						// Need to swap frames
+						parent.swapFrame(next.getFrame(), frame);
+						// Fix up everyone's interpolation count
+						next.getFrame().setInterCount(next.getFrame().getInterCount()+frame.getInterCount());
+						frame.setInterCount(1);
+						deltaTotal = 5;
+						// Get the new next frame
+						nextFrame = parent.getNextFrame(frame);
+					}
 				}
 			}
 
 			parent.updateWidth(bounds.x);
+			parent.scrollRectToVisible(bounds);
+
+			if (robot != null) {
+				//
+				// Try to keep the mouse in the timeline window to allow the user better control 
+				//
+				Rectangle visibleRect = parent.getVisibleRect();
+				// System.out.println("Timeline visible rect = "+visibleRect);
+				Point parentScreenLocation = parent.getLocationOnScreen(); // Top-left corner
+				// System.out.println("Timeline screen location = "+parent.getLocationOnScreen());
+
+				// System.out.println("xOffset = "+xOffset);
+				// Now warp the mouse, if we need to
+				if (x > (parentScreenLocation.x+visibleRect.x+visibleRect.width-bounds.width+xOffset)) {
+					// System.out.println("Mouse location = "+x+","+y);
+					Point screenLocation = getLocationOnScreen(); // Top-left corner
+					// System.out.println("Screen location = "+screenLocation);
+					// System.out.println("Mouse location = "+x+","+y);
+					xLast = screenLocation.x+xOffset;
+					// System.out.println("Warping mouse to "+xLast);
+					ignoreMove = true;
+					robot.mouseMove(xLast, y);
+					ignoreMove = false;
+				} else if (x < (parentScreenLocation.x+visibleRect.x+xOffset)) {
+					Point screenLocation = getLocationOnScreen(); // Top-left corner
+					xLast = screenLocation.x+xOffset;
+					ignoreMove = true;
+					robot.mouseMove(xLast, y);
+					ignoreMove = false;
+				}
+			}
+
 		}
 
 		@Override
@@ -208,6 +250,7 @@ public class FrameButton extends JLabel {
 		@Override
 		public void mousePressed(MouseEvent e) {
 			xLast = e.getXOnScreen();
+			xOffset = xLast-getLocationOnScreen().x;
 			// Check to see if we're moving everything to our right,
 			// or just us
 			if ((e.getModifiersEx() & (MouseEvent.SHIFT_DOWN_MASK)) == MouseEvent.SHIFT_DOWN_MASK) {

@@ -70,8 +70,8 @@ public class CyAnimatorDialog extends JDialog
 		addWindowListener(this);
 
 		initialize();
-		setPreferredSize(new Dimension(625,260));
-		setSize(new Dimension(625,260));
+		setPreferredSize(new Dimension(750,260));
+		setSize(new Dimension(750,260));
 		pack();
 		if (!frameManager.haveDingFeatures()) {
 			Object[] options = {"OK"};
@@ -112,21 +112,6 @@ public class CyAnimatorDialog extends JDialog
 		framePanel.enableDelete(selected);
 	}
 
-	public void updateFrames() {
-		JOptionPane optionPane = new JOptionPane("Interpolating frames");
-		JDialog waitDialog = optionPane.createDialog(this, "Please Wait...");
-		waitDialog.setModal(false);
-		waitDialog.pack();
-		waitDialog.setVisible(true);
-
-		System.out.println("optionPane returns");
-
-		try {Thread.sleep(4000);} catch(Exception e){};
-		//frameManager.updateFrames();
-		waitDialog.setVisible(false);
-		waitDialog.dispose();
-	}
-
 	/**
 	 * Clear all of our data structures and release our frame manager
 	 */
@@ -144,6 +129,9 @@ public class CyAnimatorDialog extends JDialog
 	public void enableControlButtons(boolean enable) {
 		controlPanel.enableButtons(enable);
 	}
+
+	public boolean loopAnimation() { return controlPanel.loopAnimation(); }
+	public void stopAnimation() { controlPanel.stopAnimation(); }
 
 	public void focusGained(FocusEvent e){
 		timeline.updateThumbnails();
