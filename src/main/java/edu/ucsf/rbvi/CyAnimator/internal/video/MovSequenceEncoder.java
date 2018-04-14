@@ -23,11 +23,11 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
  * 
  * @author The JCodec project
  */
-public class WebMSequenceEncoder extends SequenceEncoder implements SequenceEncoderWrapper {
+public class MovSequenceEncoder extends SequenceEncoder implements SequenceEncoderWrapper {
 		private TimeBase timebase;
 
-    public WebMSequenceEncoder(File out, TimeBase timebase, int fps) throws IOException {
-				super(NIOUtils.writableChannel(out), new Rational(fps,1), Format.MKV, Codec.VP9, null);
+    public MovSequenceEncoder(File out, TimeBase timebase, int fps) throws IOException {
+				super(NIOUtils.writableChannel(out), new Rational(fps,1), Format.MOV, Codec.H264, null);
 				this.timebase = timebase;
     }
 

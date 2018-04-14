@@ -3,7 +3,7 @@ package edu.ucsf.rbvi.CyAnimator.internal.video;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public interface SequenceEncoder {
+public interface SequenceEncoderWrapper {
   public void encodeImage(BufferedImage img) throws IOException;
 
   /**

@@ -19,9 +19,11 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.FileImageOutputStream;
 
+import org.jcodec.api.SequenceEncoder;
+
 import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
 
-public class GifSequenceEncoder implements SequenceEncoder {
+public class GifSequenceEncoder implements SequenceEncoderWrapper {
   protected ImageWriter gifWriter;
   protected ImageWriteParam imageWriteParam;
   protected IIOMetadata imageMetaData;

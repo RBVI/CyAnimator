@@ -59,6 +59,13 @@ public class ColorInterpolator implements FrameInterpolator {
 						cyFrameArray[start+k].putValue(id, property, paints[k]);
 					}
 				}
+			} else {
+				// Doesn't exist in either frame
+				if (includeAlpha) {
+					for(int k=1; k<framenum+1; k++){
+						cyFrameArray[start+k].putValue(id, property, new Color(255,255,255,0));
+					}
+				}
 			}
 		}
 		return cyFrameArray;

@@ -10,6 +10,13 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.TaskMonitor.Level;
 import org.apache.commons.io.FileUtils;
 
+
+import org.jcodec.api.SequenceEncoder;
+import org.jcodec.common.Codec;
+import org.jcodec.common.Format;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.model.ColorSpace;
+import org.jcodec.common.model.Rational;
 import static org.jcodec.common.model.ColorSpace.RGB;
 import org.jcodec.common.model.Picture;
 
@@ -22,7 +29,8 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
 import edu.ucsf.rbvi.CyAnimator.internal.video.AWTUtil;
 import edu.ucsf.rbvi.CyAnimator.internal.video.GifSequenceEncoder;
 import edu.ucsf.rbvi.CyAnimator.internal.video.MP4SequenceEncoder;
-import edu.ucsf.rbvi.CyAnimator.internal.video.SequenceEncoder;
+import edu.ucsf.rbvi.CyAnimator.internal.video.MovSequenceEncoder;
+import edu.ucsf.rbvi.CyAnimator.internal.video.SequenceEncoderWrapper;
 import edu.ucsf.rbvi.CyAnimator.internal.video.WebMSequenceEncoder;
 
 public class WriteTask extends AbstractTask {
@@ -35,14 +43,16 @@ public class WriteTask extends AbstractTask {
 	String directory;
 	VideoType videoType;
 	int videoResolution;
+	int fps;
 
-	public WriteTask(FrameManager frameManager, String title, String directory, VideoType videoType, int videoResolution) {
+	public WriteTask(FrameManager frameManager, String title, String directory, VideoType videoType, int videoResolution, int fps) {
 		super();
 		this.frameManager = frameManager;
 		this.title = title;
 		this.directory = directory;
 		this.videoType = videoType;
 		this.videoResolution = videoResolution;
+		this.fps = fps;
 	}
 
 	public String getTitle() {
@@ -71,21 +81,25 @@ public class WriteTask extends AbstractTask {
 		File movieFile = createFile();
 		// TODO: Replace SequenceEncoder with a lower-level implementation
 		// so we can change the fps, etc.
-		SequenceEncoder enc = null;
+		SequenceEncoderWrapper enc = null;
 		switch (videoType) {
 			case GIF:
 				enc = new GifSequenceEncoder(movieFile, frameManager.getTimeBase(), true);
 				break;
 			case MP4:
-				enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MP4);
+				// enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MP4);
+				// enc = new SequenceEncoder(NIOUtils.writableChannel(movieFile), new Rational(fps,1), Format.MOV, Codec.H264, null);
+				enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), fps);
 				break;
 			case WEBM:
 				// Note: this is broken somewhere in JCodec.  Don't use!
-				enc = new WebMSequenceEncoder(movieFile, frameManager.getTimeBase());
+				enc = new WebMSequenceEncoder(movieFile, frameManager.getTimeBase(), fps);
 				break;
 			case MOV:
 				// Note: not really sure there's a value in providing MOV separate from MP4
-				enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MOV);
+				enc = new MovSequenceEncoder(movieFile, frameManager.getTimeBase(), fps);
+				// enc = new SequenceEncoder(NIOUtils.writableChannel(movieFile), new Rational(fps,1), Format.MOV, Codec.H264, null);
+				// enc = new MP4SequenceEncoder(movieFile, frameManager.getTimeBase(), MP4SequenceEncoder.MOV);
 				break;
 		}
 
@@ -107,6 +121,7 @@ public class WriteTask extends AbstractTask {
 			*/
 			if (cancelled)
 				break;
+			// enc.encodeNativeFrame(AWTUtil.fromBufferedImage(image, ColorSpace.RGB));
 			enc.encodeImage(image);
 			monitor.setProgress(((double)i)/((double)frameCount));
 		}
@@ -156,7 +171,7 @@ public class WriteTask extends AbstractTask {
 
 	}
 
-	private File createFile() {
+	private File createFile() throws Exception {
 		String separator = System.getProperty("file.separator");
 		String extension = videoType.getExt();
 

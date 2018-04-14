@@ -457,7 +457,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	 * 
 	 */
 	public void recordAnimation(String directory) throws IOException {
-		WriteTask task = new WriteTask(this, "Writing output files", directory, videoType, videoResolution);
+		WriteTask task = new WriteTask(this, "Writing output files", directory, videoType, videoResolution, fps);
 		taskManager.execute(new TaskIterator(task));
 	}
 
