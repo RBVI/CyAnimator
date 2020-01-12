@@ -180,6 +180,7 @@ public class CyFrame {
 		networkPropertyMap.put(currentNetwork, new HashMap<VisualProperty<?>, Object>());
 		for (VisualProperty<?> property: interpolatorMap.keySet()) {
 			if (property.getTargetDataType().isAssignableFrom(CyNetwork.class))
+				System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
 				networkPropertyMap.get(currentNetwork).put(property, networkView.getVisualProperty(property));
 		}
 
@@ -582,6 +583,10 @@ public class CyFrame {
 
 	private void handleNetwork(final CyNetworkView currentView) {
 		Map<VisualProperty<?>, Object> propertyValues = networkPropertyMap.get(currentView.getModel());
+		if (propertyValues == null) {
+			System.out.println("propertyValues are null");
+			return;
+		}
 		for (VisualProperty<?> vp: propertyValues.keySet()) {
 			if (currentView.isValueLocked(vp))
 				currentView.clearValueLock(vp);

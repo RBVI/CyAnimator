@@ -37,6 +37,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import org.cytoscape.model.CyEdge;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
@@ -698,12 +699,20 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		// iMap.put(BasicVisualLexicon.EDGE_LABEL_WIDTH, new LabelWidthInterpolator());
 		iMap.put(BasicVisualLexicon.EDGE_LINE_TYPE,
 		         new CrossfadeInterpolator(BasicVisualLexicon.EDGE_TRANSPARENCY));
-		iMap.put(BasicVisualLexicon.EDGE_PAINT, new ColorInterpolator(false));
+		// iMap.put(BasicVisualLexicon.EDGE_PAINT, new ColorInterpolator(false));
+		// iMap.put(BasicVisualLexicon.EDGE_UNSELECTED_PAINT, new ColorInterpolator(false));
+		iMap.put(BasicVisualLexicon.EDGE_STROKE_UNSELECTED_PAINT, new ColorInterpolator(false));
 		// iMap.put(BasicVisualLexicon.EDGE_SOURCE_ARROW_SHAPE, new ArrowShapeInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_SOURCE_ARROW_SIZE, new SizeInterpolator(false));
 		// iMap.put(BasicVisualLexicon.EDGE_TARGET_ARROW_SHAPE, new ArrowShapeInterpolator());
+		iMap.put(BasicVisualLexicon.EDGE_TARGET_ARROW_SIZE, new SizeInterpolator(false));
 		iMap.put(BasicVisualLexicon.EDGE_TRANSPARENCY, new TransparencyInterpolator());
 		iMap.put(BasicVisualLexicon.EDGE_VISIBLE, new VisibleInterpolator(BasicVisualLexicon.EDGE_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.EDGE_WIDTH, new SizeInterpolator(false));
+		if (haveDingFeatures()) {
+			iMap.put(getDingProperty(CyEdge.class, "EDGE_TARGET_ARROW_UNSELECTED_PAINT"), new ColorInterpolator(false));
+			iMap.put(getDingProperty(CyEdge.class, "EDGE_SOURCE_ARROW_UNSELECTED_PAINT"), new ColorInterpolator(false));
+		}
 
 		if (haveDingFeatures()) {
 			// Annotation properties

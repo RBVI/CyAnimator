@@ -110,7 +110,7 @@ public class CyActivator extends AbstractCyActivator {
 			p.setProperty(TITLE, title);
 			p.setProperty(PREFERRED_MENU, "Apps");
 			p.setProperty(IN_MENU_BAR,"true");
-			p.setProperty(MENU_GRAVITY, gravity);
+			// p.setProperty(MENU_GRAVITY, gravity);
 		}
 		if (command != null) {
 			p.setProperty(COMMAND,command);
