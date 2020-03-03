@@ -180,7 +180,7 @@ public class CyFrame {
 		networkPropertyMap.put(currentNetwork, new HashMap<VisualProperty<?>, Object>());
 		for (VisualProperty<?> property: interpolatorMap.keySet()) {
 			if (property.getTargetDataType().isAssignableFrom(CyNetwork.class))
-				System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
+				// System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
 				networkPropertyMap.get(currentNetwork).put(property, networkView.getVisualProperty(property));
 		}
 
@@ -190,6 +190,7 @@ public class CyFrame {
 			if (view != null) {
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyNode.class))
+						// System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
 						nodePropertyMap.get(node).put(property, view.getVisualProperty(property));
 				}
 			}
@@ -200,6 +201,7 @@ public class CyFrame {
 			if (view != null) {
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyEdge.class))
+						// System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
 						edgePropertyMap.get(edge).put(property, view.getVisualProperty(property));
 				}
 			}
@@ -209,7 +211,6 @@ public class CyFrame {
 			annotationPropertyMap.put(annotation, new HashMap<VisualProperty<?>, Object>());
 			CyAnnotationView view = CyAnnotationView.getAnnotationView(annotation, annotationViewList);
 			if (view != null) {
-				// System.out.println("Adding annotation: "+printArgMap(annotation.getArgMap()));
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyAnnotation.class)) {
 						annotationPropertyMap.get(annotation).put(property, view.getVisualProperty(property));
@@ -959,6 +960,7 @@ public class CyFrame {
 							CyAnnotation cyAnn = copyAnnotation(networkView, annClass, annMap);
 							annotation = cyAnn.getAnnotation();
 						} catch (ClassNotFoundException cnfe) {
+							cnfe.printStackTrace();
 							continue;
 						}
 					} else {
@@ -981,6 +983,7 @@ public class CyFrame {
 			display();
 			captureImage(networkView);
 		} catch (IOException ioe) {
+			ioe.printStackTrace();
 		}
 
 	}

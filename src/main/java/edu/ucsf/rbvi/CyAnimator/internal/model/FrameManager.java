@@ -718,7 +718,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 			// Annotation properties
 			iMap.put(AnnotationLexicon.ANNOTATION_X_LOCATION, new PositionInterpolator());
 			iMap.put(AnnotationLexicon.ANNOTATION_Y_LOCATION, new PositionInterpolator());
-			iMap.put(AnnotationLexicon.ANNOTATION_ZOOM, new SizeInterpolator(false));
+			// iMap.put(AnnotationLexicon.ANNOTATION_ZOOM, new SizeInterpolator(false));
 			iMap.put(AnnotationLexicon.ANNOTATION_CANVAS, new NoneInterpolator());
 
 			// ShapeAnnotation

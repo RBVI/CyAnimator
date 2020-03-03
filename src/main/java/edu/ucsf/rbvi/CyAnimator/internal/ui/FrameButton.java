@@ -73,6 +73,7 @@ public class FrameButton extends JLabel {
 		try {
 			robot = new Robot();
 		} catch (Exception e) {
+			e.printStackTrace();
 			robot = null;
 		}
 
