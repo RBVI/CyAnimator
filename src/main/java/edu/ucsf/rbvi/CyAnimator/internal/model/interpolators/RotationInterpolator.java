@@ -52,19 +52,37 @@ public class RotationInterpolator implements FrameInterpolator {
 				continue;
 			}
 
-			double rotationIncrement = (rotationTwo - rotationOne)/(double)framenum;
+			if (rotationOne < 0.0) rotationOne += 360.0;
+			if (rotationTwo < 0.0) rotationTwo += 360.0;
+
+			double rotationDifference = rotationTwo - rotationOne;
+			if (rotationDifference > 180.0) {
+				rotationDifference -= 360.0;
+			} else if (rotationDifference < -180.0) {
+				rotationDifference += 360.0;
+			}
+			double rotationIncrement = rotationDifference/(double)framenum;
+			/*
 			if (rotationOne != 0.0 || rotationTwo != 0.0) {
 				System.out.println("Rotation one = "+rotationOne);
 				System.out.println("Rotation two = "+rotationTwo);
 				System.out.println("Rotation increment = "+rotationIncrement);
 			}
+			*/
 			double rotation = rotationOne;
 			for (int k=1; k < framenum+1; k++) {
+				/*
 				if (rotationOne != 0.0 || rotationTwo != 0.0) {
 					System.out.println("Rotation["+k+"] = "+rotation);
 				}
+				*/
 				cyFrameArray[start+k].putValue(id, property, rotation);
 				rotation += rotationIncrement;
+				if (rotation < 0.0)
+					rotation += 360.0;
+
+				if (rotation > 360.0)
+					rotation -= 360.0;
 			}
 		}
 		return cyFrameArray;
