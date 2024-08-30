@@ -37,9 +37,11 @@ public class SaveSessionListener implements SessionAboutToBeSavedListener {
 			BufferedWriter writer = new BufferedWriter(osw);
 			writer.write("[\n");
 			boolean first = true;
-			for (FrameManager frameManager: FrameManager.getAllFrameManagers()) {
-				frameManager.writeFrames(writer, first);
-				if (first) first = false;
+			if (FrameManager.getAllFrameManagers() != null) {
+				for (FrameManager frameManager: FrameManager.getAllFrameManagers()) {
+					frameManager.writeFrames(writer, first);
+					if (first) first = false;
+				}
 			}
 			writer.write("\n]\n");
 			writer.close();

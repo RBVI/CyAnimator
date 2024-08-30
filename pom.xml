@@ -15,7 +15,7 @@
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 
-	<version>2.2.1</version>
+	<version>2.5.0</version>
 
 	<build>
 		<plugins>
@@ -179,7 +179,7 @@
 		<dependency>
 			<groupId>org.jcodec</groupId>
 			<artifactId>jcodec</artifactId>
-			<version>0.2.3</version>
+			<version>0.2.5</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

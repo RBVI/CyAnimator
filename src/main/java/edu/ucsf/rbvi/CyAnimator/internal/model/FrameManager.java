@@ -69,6 +69,7 @@ import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.CustomGraphicsCross
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.NoneInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ObjectPositionInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.PositionInterpolator;
+import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.RotationInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.SizeInterpolator;
 // import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.ShapeInterpolator;
 import edu.ucsf.rbvi.CyAnimator.internal.model.interpolators.TransparencyInterpolator;
@@ -638,8 +639,10 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		         new CrossfadeInterpolator(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_FONT_SIZE, new SizeInterpolator(true));
 		iMap.put(BasicVisualLexicon.NODE_LABEL_TRANSPARENCY, new TransparencyInterpolator());
-		if (haveDingFeatures())
+		if (haveDingFeatures()) {
 			iMap.put(getDingProperty(CyNode.class, "NODE_LABEL_POSITION"), new ObjectPositionInterpolator());
+			iMap.put(getDingProperty(CyNode.class, "NODE_LABEL_ROTATION"), new RotationInterpolator());
+		}
 		// iMap.put(BasicVisualLexicon.NODE_LABEL_WIDTH, new LabelWidthInterpolator());
 		iMap.put(BasicVisualLexicon.NODE_NESTED_NETWORK_IMAGE_VISIBLE, new NoneInterpolator());
 		// iMap.put(BasicVisualLexicon.NODE_PAINT, new PaintInterpolator());
@@ -712,6 +715,7 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		if (haveDingFeatures()) {
 			iMap.put(getDingProperty(CyEdge.class, "EDGE_TARGET_ARROW_UNSELECTED_PAINT"), new ColorInterpolator(false));
 			iMap.put(getDingProperty(CyEdge.class, "EDGE_SOURCE_ARROW_UNSELECTED_PAINT"), new ColorInterpolator(false));
+			iMap.put(getDingProperty(CyEdge.class, "EDGE_LABEL_ROTATION"), new RotationInterpolator());
 		}
 
 		if (haveDingFeatures()) {
@@ -792,7 +796,11 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 	}
 
 	VisualProperty<?> getDingProperty(Class <?> type, String propertyName) {
-		return dingVisualLexicon.lookup(type, propertyName);
+		VisualProperty vp = dingVisualLexicon.lookup(type, propertyName);
+		if (vp == null) {
+			System.out.println("Unable to find property for "+propertyName+" of type "+type);
+		}
+		return vp;
 	}
 
 	private void updateScrubber(Scrubber scrubber, int frame) {
