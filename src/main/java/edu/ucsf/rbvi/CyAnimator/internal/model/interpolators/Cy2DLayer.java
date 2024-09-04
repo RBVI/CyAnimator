@@ -8,6 +8,7 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.geom.Area;
 import java.awt.geom.AffineTransform;
@@ -44,12 +45,15 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 	List<?> layersOne;
 	List<?> layersTwo;
 	protected Rectangle2D rectangle = null;
+	AffineTransform currentTransform;
 
 	public Cy2DLayer(List<?> layersOne, List<?> layersTwo, float step, Boolean fadeIn) {
 		this.layersOne = layersOne;
 		this.layersTwo = layersTwo;
 		this.step = step;
 		this.fadeIn = fadeIn;
+		currentTransform = new AffineTransform();
+
 		rectangle = new Rectangle2D.Double(0.0, 0.0, 1.0, 1.0);
 		// System.out.println("LayerOne has "+layersOne.size()+" layers and LayerTwo has "+layersTwo.size()+" layers");
 		for (Object l: layersOne) {
@@ -67,7 +71,6 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 				rectangle = rectangle.createUnion(((Cy2DGraphicLayer)l).getBounds2D());
 			}
 		}
-		// System.out.println("Bounds = "+rectangle);
 
 	}
 
@@ -76,6 +79,7 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 		this.layersTwo = layersTwo;
 		this.step = step;
 		this.rectangle = rectangle;
+		currentTransform = new AffineTransform();
 	}
 
 	@Override
@@ -114,6 +118,14 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 
 	@Override
 	public Cy2DLayer transform(AffineTransform xform) {
+		if (xform.isIdentity()) return this;
+
+		currentTransform = xform;
+		final Shape s = xform.createTransformedShape(rectangle);
+    rectangle = s.getBounds2D();
+
+		return this;
+		/*
 		List<CustomGraphicLayer> newLayersOne = new ArrayList<>();
 		for (Object obj: layersOne) {
 			CustomGraphicLayer layer = (CustomGraphicLayer)obj;
@@ -124,15 +136,26 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 			CustomGraphicLayer layer = (CustomGraphicLayer)obj;
 			newLayersTwo.add((CustomGraphicLayer)layer.transform(xform));
 		}
-		// Rectangle2D rect = xform.createTransformedShape(rectangle).getBounds2D();
-		Cy2DLayer newLayer = new Cy2DLayer(layersOne, layersTwo, step, fadeIn);
-		return newLayer;
+		// Cy2DLayer newLayer = new Cy2DLayer(newLayersOne, newLayersTwo, step, fadeIn);
+		rectangle = xform.createTransformedShape(rectangle).getBounds2D();
+		return this;
+		// return newLayer;
+		*/
 	}
 
 	private void renderShapes(List<?> layers, Graphics2D g2, 
 	                          Shape shape, CyNetworkView networkView, View<? extends CyIdentifiable> view) {
+		AffineTransform saveTx = g2.getTransform();
+		g2.transform(currentTransform);
+
+		// Not sure why this is necessary, but for some reason, we need
+		// to scale down by about 10%
+		g2.transform(AffineTransform.getScaleInstance(.91,.91));
+		// System.out.println("Transform = "+g2.getTransform());
 		for (Object obj: layers) {
 			if (obj instanceof PaintedShape) {
+				// Tweak tweak hack hack
+				// g2.transform(AffineTransform.getScaleInstance(.95,.95));
 				PaintedShape ps = (PaintedShape)obj;
 				Shape s = ps.getShape();
 				// System.out.println("s = "+s);
@@ -155,7 +178,8 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 			} else if (obj instanceof ImageCustomGraphicLayer) {
 				// Get the image
 				Rectangle2D bounds = ((ImageCustomGraphicLayer)obj).getBounds2D();
-				final BufferedImage bImg = ((ImageCustomGraphicLayer)obj).getPaint(bounds.getBounds()).getImage();
+				final BufferedImage bImg = ((ImageCustomGraphicLayer)obj).getPaint(bounds).getImage();
+				g2.setTransform(saveTx);
 
 				// Adjust the bounds to fit our node
 				double width = view.getVisualProperty(BasicVisualLexicon.NODE_WIDTH);
@@ -173,10 +197,12 @@ public class Cy2DLayer implements Cy2DGraphicLayer {
 				int h = (int) (bounds.getHeight()/ratio);
 				int x = -w/2;
 				int y = -h/2;
+
 				// draw it
 				g2.drawImage(bImg, x, y, w, h, null);
 
 			}
 		}
+		g2.setTransform(saveTx);
 	}
 }

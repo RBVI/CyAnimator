@@ -183,7 +183,12 @@ public class InterpolateFrames {
 			}
 
 			if (viewSet == null) continue;
-			// System.out.println("Interpolating "+vp+" for frame "+i+" with "+viewSet.size()+" views");
+			/*
+			if (vp.toString().contains("CUSTOMGRAPHICS_3") || vp.toString().contains("CUSTOMGRAPHICS_1")) {
+				System.out.println("Interpolating "+vp+" for frame "+i+" with "+viewSet.size()+" views");
+				System.out.println("Interpolator = "+fi);
+			}
+			*/
 			fi.interpolate(viewSet, frameList.get(i), frameList.get(i+1), vp, start, end, cyFrameArray);
 		}
 		return cyFrameArray;

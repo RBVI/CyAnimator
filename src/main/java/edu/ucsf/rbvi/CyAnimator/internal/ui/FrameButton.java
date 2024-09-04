@@ -241,7 +241,6 @@ public class FrameButton extends JLabel {
 					ignoreMove = false;
 				}
 			}
-
 		}
 
 		@Override

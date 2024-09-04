@@ -190,7 +190,7 @@ public class CyFrame {
 			if (view != null) {
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyNode.class))
-						// System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
+						// System.out.println("Property "+property+"="+view.getVisualProperty(property));
 						nodePropertyMap.get(node).put(property, view.getVisualProperty(property));
 				}
 			}
@@ -201,7 +201,7 @@ public class CyFrame {
 			if (view != null) {
 				for (VisualProperty<?> property: interpolatorMap.keySet()) {
 					if (property.getTargetDataType().isAssignableFrom(CyEdge.class))
-						// System.out.println("Property "+property+"="+networkView.getVisualProperty(property));
+						// System.out.println("Property "+property+"="+view.getVisualProperty(property));
 						edgePropertyMap.get(edge).put(property, view.getVisualProperty(property));
 				}
 			}
