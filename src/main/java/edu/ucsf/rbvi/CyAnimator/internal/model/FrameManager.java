@@ -232,6 +232,9 @@ public class FrameManager implements NetworkViewAboutToBeDestroyedListener {
 		return frames[i]; 
 	}
 
+	public int getFPS() { return fps; }
+	public void setFPS(int fps) { this.fps = fps; }
+
 	public CyFrame[] getFrames() { return frames; }
 
 	public Map<VisualProperty<?>, FrameInterpolator> getInterpolatorMap() { return interpolatorMap; }

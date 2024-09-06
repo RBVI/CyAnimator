@@ -10,7 +10,9 @@
 
 package edu.ucsf.rbvi.CyAnimator.internal.ui;
 
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,10 +24,18 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import java.io.IOException;
+import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+
+import javax.imageio.ImageIO;
 
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -38,12 +48,17 @@ import javax.swing.Timer;
 import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 
+import org.cytoscape.application.swing.CytoPanel;
+import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.application.swing.CytoPanelComponent2;
+import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.application.swing.CytoPanelState;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.service.util.CyServiceRegistrar;
 
-public class CyAnimatorDialog extends JDialog 
-                              implements PropertyChangeListener, 
-																	       FocusListener, WindowListener {
+
+public class CyAnimatorDialog extends JDialog
+	                            implements PropertyChangeListener, WindowListener {
 
 
 	/**
@@ -51,61 +66,34 @@ public class CyAnimatorDialog extends JDialog
 	 */
 	private static final long serialVersionUID = 6650485843548244554L;
 	private FramePanel framePanel;
-	private TimelinePanel timeline;
-	private JScrollPane timelineScroller;
-	private ControlPanel controlPanel;
-
-	private JPanel mainPanel;
 
 	private FrameManager frameManager;
 
 	private final CyServiceRegistrar bc;
+	private CyAnimatorPanel mainPanel;
+	private final String iconURL;
+	private boolean docked = false;
 
 	public CyAnimatorDialog(final CyServiceRegistrar bundleContext, 
-	                        final CyNetwork network, final JFrame frame){
+	                        final CyNetwork network, final JFrame frame, final String iconURL) {
 		super(frame);
-
-		this.setTitle("CyAnimator");
 		bc = bundleContext;
+		this.iconURL = iconURL;
+
+		setTitle("CyAnimator");
 		frameManager = FrameManager.getFrameManager(bc, network);
 
 		addWindowListener(this);
 
-		initialize();
-		setPreferredSize(new Dimension(750,260));
-		setSize(new Dimension(750,260));
+		mainPanel = new CyAnimatorPanel(bundleContext, frameManager, this, iconURL);
+		setContentPane(mainPanel);
+		setPreferredSize(new Dimension(800,200));
+		setSize(new Dimension(800,200));
 		pack();
 	}
 
-	/**
-	 * Create the control buttons, panels, and initialize the main JDialog.
-	 */
-	public void initialize(){
-		mainPanel = new JPanel();
-		mainPanel.addPropertyChangeListener(this);
-
-		BoxLayout mainbox = new BoxLayout(mainPanel, BoxLayout.Y_AXIS);
-		mainPanel.setLayout(mainbox);	
-
-		timeline = new TimelinePanel(frameManager, this);
-		timelineScroller = new JScrollPane(timeline);
-		timelineScroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-
-		framePanel = new FramePanel(frameManager, timeline);
-
-		controlPanel = new ControlPanel(frameManager, timeline);
-
-		timeline.updateThumbnails();
-
-		mainPanel.add(framePanel);
-		mainPanel.add(timelineScroller);
-		mainPanel.add(controlPanel);
-
-		setContentPane(mainPanel);
-	}
-
 	public void setSelected(boolean selected) {
-		framePanel.enableDelete(selected);
+		mainPanel.setSelected(selected);
 	}
 
 	/**
@@ -115,6 +103,32 @@ public class CyAnimatorDialog extends JDialog
 		frameManager = null;
 	}
 
+	/**
+	 * Dock ourselves into the table browser CytoPanel
+	 */
+	public void dock() {
+		docked = true;
+		setVisible(false);
+		setContentPane(new JPanel());
+    bc.registerService(mainPanel, CytoPanelComponent.class, new Properties());
+	}
+
+	/**
+	 * Undock ourselves
+	 */
+	public void undock() {
+		docked = false;
+    bc.unregisterService(mainPanel, CytoPanelComponent.class);
+		setContentPane(mainPanel);
+		revalidate();
+		mainPanel.revalidate();
+		mainPanel.setVisible(true);
+		System.out.println("mainPanel = "+mainPanel);
+		pack();
+		setVisible(true);
+	}
+
+
 	public void propertyChange ( PropertyChangeEvent e ) {
 		if(e.getPropertyName().equals("ATTRIBUTES_CHANGED")){
 			//initialize();
@@ -123,14 +137,14 @@ public class CyAnimatorDialog extends JDialog
 	}
 
 	public void enableControlButtons(boolean enable) {
-		controlPanel.enableButtons(enable);
+		mainPanel.enableControlButtons(enable);
 	}
 
-	public boolean loopAnimation() { return controlPanel.loopAnimation(); }
-	public void stopAnimation() { controlPanel.stopAnimation(); }
+	public boolean loopAnimation() { return mainPanel.loopAnimation(); }
+	public void stopAnimation() { mainPanel.stopAnimation(); }
 
 	public void focusGained(FocusEvent e){
-		timeline.updateThumbnails();
+		mainPanel.updateThumbnails();
 	}
 
 	public void focusLost(FocusEvent e){
@@ -170,6 +184,15 @@ public class CyAnimatorDialog extends JDialog
 		// TODO Auto-generated method stub
 
 	}
+
+  public String getIdentifier() {
+    return "edu.ucsf.rbvi.CyAnimator.CyAnimator";
+  }
+
+  public String getTitle() {
+    return "CyAnimator";
+  }
+
 
 
 }

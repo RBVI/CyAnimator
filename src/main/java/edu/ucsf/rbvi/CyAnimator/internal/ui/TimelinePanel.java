@@ -48,7 +48,7 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 	 * 
 	 */
 	private FrameManager frameManager;
-	private CyAnimatorDialog parent;
+	private CyAnimatorPanel parent;
 	private int fps = 30; // Frames per second
 	private int SCALEOFFSET = 100;
 	private int MAJORTICK = 10;
@@ -61,10 +61,10 @@ public class TimelinePanel extends JPanel implements ComponentListener, Scrubber
 	Map<CyFrame, FrameButton> buttonMap;
 	int width = 600;
 
-	public TimelinePanel(FrameManager frameManager, CyAnimatorDialog parentDialog) {
+	public TimelinePanel(FrameManager frameManager, CyAnimatorPanel parentPanel) {
 		super();
 		this.frameManager = frameManager;
-		this.parent = parentDialog;
+		this.parent = parentPanel;
 
 		// This will get updated when we draw our timeline the first time
 		setPreferredSize(new Dimension(width,140));

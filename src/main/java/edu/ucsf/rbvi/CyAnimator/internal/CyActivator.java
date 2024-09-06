@@ -3,9 +3,13 @@ package edu.ucsf.rbvi.CyAnimator.internal;
 import static org.cytoscape.work.ServiceProperties.COMMAND;
 import static org.cytoscape.work.ServiceProperties.COMMAND_NAMESPACE;
 import static org.cytoscape.work.ServiceProperties.IN_MENU_BAR;
+import static org.cytoscape.work.ServiceProperties.IN_TOOL_BAR;
+import static org.cytoscape.work.ServiceProperties.LARGE_ICON_URL;
 import static org.cytoscape.work.ServiceProperties.MENU_GRAVITY;
 import static org.cytoscape.work.ServiceProperties.PREFERRED_MENU;
 import static org.cytoscape.work.ServiceProperties.TITLE;
+import static org.cytoscape.work.ServiceProperties.TOOL_BAR_GRAVITY;
+
 
 import java.util.Properties;
 
@@ -55,9 +59,14 @@ public class CyActivator extends AbstractCyActivator {
 		if (cyApplication == null) {
 			haveGUI = false;
 		} else {
-			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(registrar);
+			String cyAnimLogoURL = getClass().getResource("/images/CyAnimator.png").toString();
+			CyAnimatorDialogTaskFactory dialogTaskFactory = new CyAnimatorDialogTaskFactory(registrar, cyAnimLogoURL);
 			Properties dialogTaskProperties = new Properties();
 			setStandardProperties(dialogTaskProperties, "CyAnimator", null, "1.0");
+      dialogTaskProperties.setProperty(IN_TOOL_BAR, "TRUE");
+			dialogTaskProperties.setProperty(TOOL_BAR_GRAVITY, "100f");
+      dialogTaskProperties.setProperty(LARGE_ICON_URL, cyAnimLogoURL);
+
 			registerService(context, dialogTaskFactory, NetworkViewTaskFactory.class, dialogTaskProperties);
 		}
 

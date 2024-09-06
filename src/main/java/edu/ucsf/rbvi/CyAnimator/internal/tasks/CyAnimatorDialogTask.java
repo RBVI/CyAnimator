@@ -21,11 +21,13 @@ public class CyAnimatorDialogTask extends AbstractTask {
 	private CyNetwork network;
 	private static Map<CyRootNetwork, CyAnimatorDialog> networkMap = 
 		new HashMap<CyRootNetwork, CyAnimatorDialog>();
+	private String iconURL;
 	
-	public CyAnimatorDialogTask(CyServiceRegistrar bundleContext, CyNetworkView view) {
+	public CyAnimatorDialogTask(CyServiceRegistrar bundleContext, CyNetworkView view, String iconURL) {
 		bc = bundleContext;
 		network = view.getModel();
 		FrameManager.registerDialogTask(this);
+		this.iconURL = iconURL;
 	}
 	
 	@Override
@@ -38,7 +40,7 @@ public class CyAnimatorDialogTask extends AbstractTask {
 		}
 
 		CySwingApplication swingApplication = bc.getService(CySwingApplication.class);
-		CyAnimatorDialog dialog = new CyAnimatorDialog(bc, network, swingApplication.getJFrame());
+		CyAnimatorDialog dialog = new CyAnimatorDialog(bc, network, swingApplication.getJFrame(), iconURL);
 		networkMap.put(root, dialog);
 		dialog.setVisible(true);
 	}

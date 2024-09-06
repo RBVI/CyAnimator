@@ -19,6 +19,11 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -40,11 +45,14 @@ import org.cytoscape.util.swing.IconManager;
 import static org.cytoscape.util.swing.IconManager.ICON_CIRCLE;
 import static org.cytoscape.util.swing.IconManager.ICON_PAUSE;
 import static org.cytoscape.util.swing.IconManager.ICON_PLAY;
+import static org.cytoscape.util.swing.IconManager.ICON_PLUS;
 import static org.cytoscape.util.swing.IconManager.ICON_REPEAT;
 import static org.cytoscape.util.swing.IconManager.ICON_STEP_FORWARD;
 import static org.cytoscape.util.swing.IconManager.ICON_STEP_BACKWARD;
 import static org.cytoscape.util.swing.IconManager.ICON_STOP;
+import static org.cytoscape.util.swing.IconManager.ICON_TRASH_O;
 
+import edu.ucsf.rbvi.CyAnimator.internal.model.CyFrame;
 import edu.ucsf.rbvi.CyAnimator.internal.model.FrameManager;
 import edu.ucsf.rbvi.CyAnimator.internal.model.TimeBase;
 import edu.ucsf.rbvi.CyAnimator.internal.model.VideoType;
@@ -65,12 +73,14 @@ public class ControlPanel extends JPanel implements ActionListener {
 	private JButton pauseButton;
 	private JButton forwardButton;
 	private JButton backwardButton;
+	private JButton deleteButton;
 	private JToggleButton repeatButton;
 	private JButton recordButton;
 	private boolean interpolationComplete = false;
 	private final Logger logger;
+	private CyAnimatorDialog parent;
 
-	public ControlPanel(final FrameManager frameManager, final TimelinePanel timeline) {
+	public ControlPanel(final FrameManager frameManager, final TimelinePanel timeline, final CyAnimatorDialog parent) {
 		super();
 		logger = Logger.getLogger(CyUserLog.NAME);
 		this.frameManager = frameManager;
@@ -86,12 +96,62 @@ public class ControlPanel extends JPanel implements ActionListener {
 			enableButtons(true);
 		else
 			enableButtons(false);
+
+		this.parent = parent;
 	}
 
 	/**
 	 * Create the control buttons, panels, and initialize the main JDialog.
 	 */
 	public void initialize(){
+		JButton captureButton = new JButton(ICON_PLUS);
+		captureButton.setFont(iconManager.getIconFont(14.0f));
+		captureButton.setToolTipText("Add frame");
+		captureButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				try {
+					frameManager.addKeyFrame();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				timeline.updateThumbnails();
+			}
+		});
+		captureButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
+
+		deleteButton = new JButton(ICON_TRASH_O);
+		deleteButton.setFont(iconManager.getIconFont(14.0f));
+		deleteButton.setToolTipText("Delete selected frames");
+		deleteButton.setEnabled(false);
+		deleteButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				// Get a list of selected frames
+				List<CyFrame> removeFrames = new ArrayList<>();
+				int interpOffset = 0;
+				for (CyFrame frame: frameManager.getKeyFrameList()) {
+					// Delete the frame from our timeline
+					FrameButton button = timeline.getButtonForFrame(frame);
+					if (button != null && button.isSelected()) {
+						removeFrames.add(frame);
+						interpOffset += frame.getInterCount();
+					} else {
+						frame.setInterCount(frame.getInterCount()+interpOffset);
+						interpOffset = 0;
+					}
+				}
+				// Remove them
+				for (CyFrame frame: removeFrames) {
+					frameManager.deleteKeyFrame(frame);
+				}
+				timeline.updateThumbnails();
+				timeline.selectionChanged();
+			}
+		});
+		deleteButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
+
 		playButton = new JButton(ICON_PLAY);
 		playButton.setFont(iconManager.getIconFont(14.0f));
 		playButton.setToolTipText("Show animation");
@@ -148,6 +208,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
 					//fps is frames per second
 					int fps = source.getValue();
+					frameManager.setFPS(fps);
 					//fps = fps/60;
 					if(frameManager.timer == null){ return; }
 					// System.out.println("FPS: "+fps);
@@ -158,8 +219,50 @@ public class ControlPanel extends JPanel implements ActionListener {
 			}
 		});
 
+		JButton clearButton = new JButton("Clear");
+		clearButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				// Get a list of selected frames
+				// Remove them
+				List<CyFrame> removeFrames = new ArrayList<>();
+				for (CyFrame frame: frameManager.getKeyFrameList()) {
+					// Delete the frame from our timeline
+					removeFrames.add(frame);
+				}
+
+				for (CyFrame frame: removeFrames) {
+					frameManager.deleteKeyFrame(frame);
+				}
+
+				timeline.updateThumbnails();
+			}
+		});
+		clearButton.setAlignmentX(JButton.LEFT_ALIGNMENT);
+
+		JButton dockButton = new JButton("Dock");
+
+		dockButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e){
+				if (dockButton.getText() == "Dock") {
+					dockButton.setText("Undock");
+					parent.dock();
+				} else {
+					dockButton.setText("Dock");
+					parent.undock();
+				}
+			}
+		});
+
 		BoxLayout box = new BoxLayout(this, BoxLayout.X_AXIS);
 		setLayout(box);
+
+		add(captureButton);
+		add(Box.createRigidArea(new Dimension(10,0)));
+		add(deleteButton);
+		add(Box.createHorizontalGlue());
+		add(Box.createRigidArea(new Dimension(10,0)));
 
 		add(playButton);
 		add(pauseButton);
@@ -170,6 +273,11 @@ public class ControlPanel extends JPanel implements ActionListener {
 		add(recordButton);
 		add(sliderLabel);
 		add(speedSlider);
+
+		add(Box.createHorizontalGlue());
+		add(Box.createRigidArea(new Dimension(10,0)));
+		add(clearButton);
+		add(dockButton);
 	}
 
 
@@ -230,6 +338,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 
 			VideoType choice = recordPanel.getOutputType();
 			int resolution = recordPanel.getResolution();
+			int fps = frameManager.getFPS(); // Get the current FPS so we can restore it after the record is done
 			TimeBase frameCount = recordPanel.getFrameCount();
 			frameManager.updateSettings(frameCount, choice, resolution);
 
@@ -238,6 +347,7 @@ public class ControlPanel extends JPanel implements ActionListener {
 			} catch (Exception excp) {
 				logger.error("Record of animation failed",excp);
 			}
+			frameManager.setFPS(fps);
 		}
 	}
 
@@ -258,5 +368,9 @@ public class ControlPanel extends JPanel implements ActionListener {
 		forwardButton.setEnabled(enable);
 		backwardButton.setEnabled(enable);
 		recordButton.setEnabled(enable);
+	}
+
+	public void enableDelete(boolean enable) {
+		deleteButton.setEnabled(enable);
 	}
 }
